@@ -1,0 +1,11 @@
+:root {
+  --ia-color-action-primary: #F76707;
+  --ia-color-accent-signal: #4361EE;
+  --ia-color-surface-ink: #1B1812;
+  --ia-color-surface-cloud: #F7F5F0;
+  --ia-color-text-primary: #1B1812;
+}
+
+body { margin: 0; background: var(--ia-color-surface-cloud); color: var(--ia-color-text-primary); }
+.mantine-Title-root:is(h1, h2, h3) { text-transform: uppercase; }
+:focus-visible { outline: 2px solid var(--ia-color-accent-signal); outline-offset: 2px; }

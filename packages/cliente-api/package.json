@@ -1,0 +1,11 @@
+{
+  "name": "@despacho/cliente-api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": { ".": "./src/index.ts" },
+  "dependencies": {
+    "axios": "^1.7.0",
+    "@despacho/tipos-compartidos": "0.1.0"
+  }
+}

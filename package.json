@@ -1,0 +1,13 @@
+{
+  "name": "despacho-frontend",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": ["apps/*", "packages/*"],
+  "scripts": {
+    "dev:administrativo": "npm run dev -w @despacho/administrativo",
+    "dev:repartidor": "npm run dev -w @despacho/repartidor",
+    "build": "npm run build -w @despacho/administrativo && npm run build -w @despacho/repartidor",
+    "typecheck": "npm run typecheck -w @despacho/administrativo && npm run typecheck -w @despacho/repartidor"
+  },
+  "engines": { "node": ">=20", "npm": ">=10" }
+}
