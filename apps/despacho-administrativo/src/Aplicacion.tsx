@@ -2,6 +2,9 @@ import { AppShell, Box, Burger, Group, NavLink, Stack, Text, Title } from '@mant
 import { useDisclosure } from '@mantine/hooks';
 import { IconMapPin, IconCalendar, IconAlertTriangle, IconTruck, IconPackage } from '@tabler/icons-react';
 import { Link, Navigate, Route, Routes, useLocation } from 'react-router-dom';
+import { PaginaZonas } from './features/zonas/PaginaZonas';
+import { FormularioZona } from './features/zonas/FormularioZona';
+import { PanelTarifa } from './features/zonas/PanelTarifa';
 
 const secciones = [
   { ruta: '/zonas', titulo: 'Zonas y tarifas', descripcion: 'Gestión de cobertura y tarifas · F-01', endpoint: 'GET /api/v1/zonas', Icono: IconMapPin },
@@ -42,7 +45,11 @@ export function Aplicacion() {
     <AppShell.Main>
       <Routes>
         <Route path="/" element={<Navigate to="/zonas" replace />} />
-        {secciones.map(({ ruta, titulo, descripcion, endpoint }) => <Route key={ruta} path={`${ruta}/*`} element={<PaginaPendiente titulo={titulo} descripcion={descripcion} endpoint={endpoint} />} />)}
+        <Route path="/zonas" element={<PaginaZonas />} />
+        <Route path="/zonas/nueva" element={<FormularioZona />} />
+        <Route path="/zonas/:id/editar" element={<FormularioZona />} />
+        <Route path="/zonas/:id/tarifas" element={<PanelTarifa />} />
+        {secciones.filter(({ ruta }) => ruta !== '/zonas').map(({ ruta, titulo, descripcion, endpoint }) => <Route key={ruta} path={`${ruta}/*`} element={<PaginaPendiente titulo={titulo} descripcion={descripcion} endpoint={endpoint} />} />)}
         <Route path="*" element={<PaginaPendiente titulo="Página no encontrada" descripcion="La ruta solicitada no existe." endpoint="—" />} />
       </Routes>
     </AppShell.Main>
