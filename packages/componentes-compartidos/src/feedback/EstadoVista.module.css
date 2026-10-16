@@ -1,0 +1,55 @@
+.raiz {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.raiz .titulo {
+  font-family: var(--mantine-font-family);
+  font-size: var(--mantine-font-size-xl);
+  line-height: 1.4;
+}
+
+.icono {
+  color: var(--mantine-color-gray-7);
+}
+
+.raiz .aviso {
+  background-color: var(--mantine-color-red-0);
+}
+
+.carga :global(.mantine-Skeleton-root)::after {
+  background-color: var(--mantine-color-cloud-2);
+}
+
+.accion {
+  max-width: 100%;
+}
+
+.raiz .boton {
+  min-height: 44px;
+  height: auto;
+  max-width: 100%;
+}
+
+.boton :global(.mantine-Button-label) {
+  white-space: normal;
+  padding-block: var(--mantine-spacing-xs);
+}
+
+.raiz .boton:focus-visible {
+  outline: 2px solid var(--ia-color-accent-signal, var(--mantine-color-signal-7));
+  outline-offset: 2px;
+}
+
+.boton[data-variant='filled'] {
+  --button-hover-color: var(--mantine-color-white);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .carga :global(.mantine-Skeleton-root)::before,
+  .carga :global(.mantine-Skeleton-root)::after,
+  .boton :global(.mantine-Loader-root)::before,
+  .boton :global(.mantine-Loader-root)::after {
+    animation: none;
+  }
+}

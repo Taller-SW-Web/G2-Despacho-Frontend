@@ -1,6 +1,10 @@
 import { createTheme } from '@mantine/core';
 import type { MantineColorsTuple } from '@mantine/core';
 
+export { EstadoVista } from './feedback/EstadoVista';
+export type { PropiedadesEstadoVista } from './feedback/EstadoVista';
+export type { EstadoConsulta, AccionUi } from './tipos-ui';
+
 const orange: MantineColorsTuple = ['#FFF4E6', '#FCE3D0', '#FFD8A8', '#FFC078', '#FFA94D', '#FF922B', '#FD7E14', '#F76707', '#C2410C', '#9A3412'];
 const volt: MantineColorsTuple = ['#FBFEE0', '#F5FCC2', '#EEF7B0', '#E4F48A', '#D9EF5E', '#CFEA33', '#C8E81A', '#C3E504', '#9DB803', '#5C6B00'];
 const signal: MantineColorsTuple = ['#EEF0FE', '#E1E6FB', '#C3CDF8', '#A2B1F4', '#8297F2', '#6A82F0', '#5670EF', '#4361EE', '#3550D4', '#1B2A99'];
