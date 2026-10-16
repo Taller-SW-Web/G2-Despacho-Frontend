@@ -61,7 +61,16 @@ Revisión adicional en navegador con el [ejemplo de desarrollo](../../apps/despa
 
 La simulación demora tres segundos y no modifica datos de negocio. JSDOM no verifica layout; las comprobaciones visuales y de teclado se hicieron en navegador. La preferencia de movimiento reducido no se emuló en esa revisión. No se declara una auditoría completa WCAG, una prueba con lector de pantalla ni la integración real de F-04/F-03. La revisión humana y la publicación siguen pendientes.
 
-## 5. Referencias
+## 5. Compatibilidad con las especificaciones actualizadas
+
+Revisión del 16/10/2026 contra Specs `54b785d13f25bc3017cc407332446b3ac83b243e`: CR-12 y CCR-12-01/02 no cambiaron; no requiere modificar el componente. Los nuevos planes de F-04 componen [recepción](https://github.com/Taller-SW-Web/G2-Despacho-Specs/blob/54b785d13f25bc3017cc407332446b3ac83b243e/especificaciones/ES-F04-03-ConfirmarRecepcionPaquete/plan.md), [reprogramación](https://github.com/Taller-SW-Web/G2-Despacho-Specs/blob/54b785d13f25bc3017cc407332446b3ac83b243e/especificaciones/ES-F04-04-ReprogramarDespachoFallido/plan.md) y [cierre](https://github.com/Taller-SW-Web/G2-Despacho-Specs/blob/54b785d13f25bc3017cc407332446b3ac83b243e/especificaciones/ES-F04-05-CerrarDespachoComoDevueltoAOrigen/plan.md) como formularios locales con Mantine, con su propia validación e identidad de comando [cite: 3].
+
+El consumidor debe conservar incidencia, versión y contenido enviados. Una respuesta perdida exige consultar antes de repetir; un conflicto exige renovar y revisar. `procesando` bloquea durante el envío y `confirmacionDeshabilitada` permite mantener bloqueada la confirmación durante esa recuperación. La consulta, el reconocimiento de éxito y la decisión de cerrar pertenecen al consumidor; el modal genérico no interpreta códigos HTTP ni añade reintentos automáticos.
+
+Se volvió a ejecutar `npm test` en `feature/f04-modal-confirmacion`: 14 pruebas aprobadas. La evidencia visual original sigue correspondiendo al código sin cambios.
+
+## 6. Referencias
 
 1. ECR-01 en la revisión indicada: CR-12, CCR-12-01/02, patrón CR-01 y reglas transversales.
 2. Sistema de diseño de la misma revisión: superposiciones, confirmación, tokens, accesibilidad y cierre móvil.
+3. Specs `54b785d`, CR-12; planes de ES-F04-03/04/05 y Gestión §§5.2.1–5.2.3: formularios y recuperación de comandos.
