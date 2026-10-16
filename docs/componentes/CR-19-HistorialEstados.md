@@ -2,17 +2,17 @@
 
 **Fecha:** 16/10/2026, America/Lima. **Responsable:** Gerardo, con asistencia de Codex.
 
-**Rama:** `feature/f04-historial-estados`, creada desde `main` e incorporando la dependencia CR-08 hasta `abce8df`. Código, ejemplo y pruebas de este incremento: `d5604fa10ba987bd0165c9f88eb25c6671a924f3`.
+**Rama:** `feature/f04-historial-estados`, creada desde `main` e incorporando la dependencia CR-08 hasta `abce8df`. Código, ejemplo y pruebas iniciales: `d5604fa10ba987bd0165c9f88eb25c6671a924f3`; ajuste a la zona de Lima y prueba de medianoche: `532f7884a51ec3305b7f83858c3a60f7c3c5169d`.
 
 **Estado:** implementación y verificación aislada realizadas. Revisión humana de Max, coordinación con Rhamses sobre el soporte de CR-09, PR e integración consumidora pendientes.
 
 ## 1. Entradas y alcance
 
-Fuentes del repositorio de especificaciones en `dd614bdfeb439ded41c74b73b5d59d9c1724f5fb`:
+Fuentes del repositorio de especificaciones en `54b785d13f25bc3017cc407332446b3ac83b243e`:
 
-- [CR-19 y CCR-19-01](https://github.com/Taller-SW-Web/G2-Despacho-Specs/blob/dd614bdfeb439ded41c74b73b5d59d9c1724f5fb/disenio/componentes-react.md#cr-19-historialestados): propiedades, eventos y trazabilidad ICR-08/TCR-08. CR-08 y CR-09 son sus dependencias; DC-04/DC-06 limitan la integración real [cite: 1].
-- [Sistema de diseño](https://github.com/Taller-SW-Web/G2-Despacho-Specs/blob/dd614bdfeb439ded41c74b73b5d59d9c1724f5fb/disenio/SYSTEM-DESIGN.md): §§5.5, 16.1 y 23; fechas, catálogo de estados y Timeline dentro de tarjeta [cite: 2].
-- [Contrato de Gestión, recepción en centro](https://github.com/Taller-SW-Web/G2-Despacho-Specs/blob/dd614bdfeb439ded41c74b73b5d59d9c1724f5fb/integraciones/api-contract-gestion-despachos.md): §5.2, la recepción conserva el estado `FALLIDO` [cite: 3].
+- [CR-19 y CCR-19-01](https://github.com/Taller-SW-Web/G2-Despacho-Specs/blob/54b785d13f25bc3017cc407332446b3ac83b243e/disenio/componentes-react.md#cr-19-historialestados): propiedades, eventos y trazabilidad ICR-08/TCR-08. CR-08 y CR-09 son sus dependencias [cite: 1].
+- [Sistema de diseño](https://github.com/Taller-SW-Web/G2-Despacho-Specs/blob/54b785d13f25bc3017cc407332446b3ac83b243e/disenio/SYSTEM-DESIGN.md): §§5.5, 16.1 y 23; fechas, catálogo de estados y Timeline dentro de tarjeta [cite: 2].
+- [Contrato de Gestión](https://github.com/Taller-SW-Web/G2-Despacho-Specs/blob/54b785d13f25bc3017cc407332446b3ac83b243e/integraciones/api-contract-gestion-despachos.md): §§5.2.1 y 5.3, recepción sin cambio de `FALLIDO`, DTO de historial y presentación en `America/Lima` [cite: 3].
 
 El componente presenta eventos confirmados por el servidor. Una recepción sin transición muestra su descripción, fecha y estado disponible; no crea un estado «Recibido». No registra pulsaciones locales como auditoría ni consulta servicios.
 
@@ -33,8 +33,10 @@ import { HistorialEstados } from '@despacho/componentes-compartidos';
 
 Las variables y el callback del ejemplo pertenecen a la pantalla consumidora. Cada entrada requiere `id`, `fechaServidor` y `descripcionEvento`; admite `estadoAnterior`, `estadoNuevo`, `ejecutor` y `observacion` opcionales, también nulos.
 
+Gestión §5.3 ya define el DTO real. Su futuro adaptador debe traducir la operación, origen manual/automático y datos pertinentes a los textos de presentación, sin volcar JSON interno ni inventar nombres de usuario. El servidor entrega empates por `id` ascendente; el componente conserva ese orden recibido. Este incremento mantiene la interfaz de CR-19 y no implementa todavía la consulta del detalle.
+
 - Ordena una copia por instante del servidor y conserva el orden recibido en empates, tanto ascendentes como descendentes. Los campos opcionales ausentes no se deducen de otros eventos.
-- Mantiene el instante original en `time[datetime]`. Muestra `DD/MM/YYYY HH:mm` con Day.js y locale español, en la zona del dispositivo indicada en el bloque. Esto permite revisar la UI aislada; no cierra el acuerdo de zona operativa de DC-06.
+- Mantiene el instante original en `time[datetime]`. Muestra `DD/MM/YYYY HH:mm` con Day.js y locale español, fijando `America/Lima` conforme a Gestión §5.3 y sin depender de la zona del navegador. La etiqueta visible indica «Hora de Lima».
 - Fechas vacías, civiles, sin zona o no interpretables muestran «Fecha no disponible» y quedan al final, con orden estable. Nunca se sustituye una fecha ausente por la hora actual.
 - Usa CR-08 para los siete estados de consulta. Fuera de `datos` retira eventos anteriores; `datos` sin entradas muestra vacío. `alReintentar` se emite sin argumentos y solo existe un botón cuando se proporciona el callback.
 - Conserva observaciones completas, saltos de línea y ajuste en una columna. La tarjeta tiene encabezado H3 y lista accesible; los eventos tienen descripción H4.
@@ -49,9 +51,11 @@ Comandos desde la raíz del frontend: `npm test`, `npm run typecheck`, `npm run 
 
 | Registro | Evidencia | Resultado observado |
 |---|---|---|
-| EVCR-19-01 | [Pruebas de CR-19](../../packages/componentes-compartidos/src/dominio/HistorialEstados.test.tsx), CCR-19-01 → TCR-08 | 27 pruebas aprobadas: recepción sin transición, fechas reales, orden estable y por instante, colección inmutable, opcionales, recuperación, estados de consulta y textos completos. |
-| EVCR-19-02 | [Pruebas del soporte de estados](../../packages/componentes-compartidos/src/dominio/BadgeEstado.test.tsx) y dependencia CR-08 | 13 pruebas del contexto despacho y 18 de EstadoVista aprobadas; total de esta rama: 58 pruebas en tres archivos. |
+| EVCR-19-01 | [Pruebas de CR-19](../../packages/componentes-compartidos/src/dominio/HistorialEstados.test.tsx), CCR-19-01 → TCR-08 | 28 pruebas aprobadas: recepción sin transición, fechas reales, medianoche de Lima, orden estable y por instante, colección inmutable, opcionales, recuperación, estados de consulta y textos completos. |
+| EVCR-19-02 | [Pruebas del soporte de estados](../../packages/componentes-compartidos/src/dominio/BadgeEstado.test.tsx) y dependencia CR-08 | 13 pruebas del contexto despacho y 18 de EstadoVista aprobadas; total de esta rama: 59 pruebas en tres archivos. |
 | EVCR-19-03 | Compatibilidad e higiene | TypeScript del paquete compartido, ejemplo y ambas aplicaciones aprobado; builds administrativo y repartidor aprobados; diff sin errores de espacios. |
+
+La última ejecución de pruebas usó `TZ=Asia/Tokyo`; Node confirmó esa zona. El caso de medianoche mantuvo `16/10/2026 23:59` y `17/10/2026 00:00` en Lima para instantes UTC consecutivos, conservando sus atributos originales. En PowerShell se reproduce con `$env:TZ = 'Asia/Tokyo'` antes de `npm test`.
 
 [Ejemplo de desarrollo](../../apps/despacho-administrativo/ejemplos/historial-estados.tsx): `http://127.0.0.1:5173/ejemplos/historial-estados.html`. Fechas y personas son fixtures, sin operaciones de backend.
 
@@ -66,7 +70,7 @@ En error se recorrió el botón con Tab y se activó con Enter: foco visible, ca
 
 ## 4. Límites y entrega
 
-DC-04 sigue pendiente para el DTO real de historial y DC-06 para la zona operativa. Este modelo no define un contrato HTTP. La consulta, autorización del servidor y adaptación al detalle de incidencia deben verificarse al integrar el consumidor. Esta evidencia no acredita esos servicios ni cierra las especificaciones funcionales.
+El contrato vigente ya define el DTO de historial y la zona `America/Lima` para el detalle de F-04. La revisión final incorporó esa decisión a las fechas del componente; las cuestiones generales DC-04/DC-06 no se cierran desde este incremento. La consulta, autorización del servidor y adaptación al detalle de incidencia deben verificarse al integrar el consumidor. Esta evidencia no acredita esos servicios ni cierra las especificaciones funcionales.
 
 El registro se conserva en `docs/` del frontend. Las especificaciones y sus estados no se modifican desde este incremento. Los commits permanecen locales; la revisión humana y entrega por PR siguen pendientes.
 
@@ -74,4 +78,4 @@ El registro se conserva en `docs/` del frontend. Las especificaciones y sus esta
 
 1. Documento de componentes de la revisión indicada en §1: CR-19, CCR-19-01, ICR-08/TCR-08, CR-08/09 y DC-04/06.
 2. Sistema de diseño de la misma revisión: §§5.5, 16.1 y 23.
-3. Contrato de Gestión de la misma revisión: §5.2, recepción física sin cambio del estado del despacho.
+3. Contrato de Gestión de la misma revisión: §§5.2.1 y 5.3, recepción física, historial y fechas del detalle.
