@@ -38,6 +38,23 @@ packages/
 
 Cada app tiene su propio comando de construcción y configuración de Vercel. Al configurar los proyectos, usar `apps/despacho-administrativo` y `apps/despacho-repartidor` como directorios raíz, con el repositorio completo disponible para instalar los workspaces de npm.
 
+## Componentes compartidos y pruebas
+
+Los componentes se importan desde `@despacho/componentes-compartidos`. CR-08 `EstadoVista` recibe el estado de consulta y las acciones del consumidor; solo muestra el contenido cuando el estado es `datos`. La pantalla debe colocar también los filtros protegidos dentro de ese contenido para retirarlos al perder permisos.
+
+```bash
+npm test
+npm run test:watch
+npm run typecheck
+npm run build
+```
+
+Las pruebas del paquete compartido usan Vitest, Testing Library y JSDOM. `typecheck` comprueba ese paquete, sus pruebas y las dos aplicaciones. JSDOM simula el navegador y no comprueba layout ni autorización de servicios reales.
+
+Para revisar los estados de CR-08, ejecutar `npm run dev:administrativo` y abrir [el ejemplo de desarrollo](http://localhost:5173/ejemplos/estado-vista.html). Utiliza la aplicación Vite existente y datos de prueba; su entrada HTML no se incluye en la construcción de producción. Permite revisar carga, datos, vacío, sin coincidencias, error, acceso denegado, recurso inexistente y acciones bloqueadas.
+
+La [evidencia de CR-08](./docs/componentes/CR-08-EstadoVista.md) registra fuentes, comandos, capturas y límites de la verificación. La integración con la pantalla de F-04 se verifica en su propia tarea SDD.
+
 ## Integración pendiente
 
 La autenticación corresponde al módulo Seguridad y Usuarios. El frontend aún no inicia sesión ni protege rutas: faltan el flujo de acceso de ese módulo y los endpoints de negocio del backend. Al implementarlos, usar el JWT humano en `Authorization: Bearer`, conectar las páginas con el cliente de `packages/cliente-api` y consultar el contrato único en `../despacho-docs/integraciones/api-contract.md`. La variable `VITE_API_BASE_URL` es pública; no guardar secretos en variables `VITE_*`.

@@ -1,0 +1,107 @@
+.raiz .contenido {
+  min-width: 0;
+  color: var(--ia-color-text-primary, var(--mantine-color-ink-9));
+  overflow-wrap: anywhere;
+}
+
+.raiz .cabecera {
+  align-items: flex-start;
+  gap: var(--mantine-spacing-sm);
+}
+
+.encabezado {
+  flex: 1;
+  min-width: 0;
+}
+
+.raiz .titulo {
+  font-family: var(--mantine-font-family-headings);
+  font-size: var(--mantine-h3-font-size);
+  line-height: var(--mantine-h3-line-height);
+  font-weight: 700;
+  text-transform: uppercase;
+  min-width: 0;
+}
+
+.advertencia,
+.informacion {
+  flex-shrink: 0;
+  margin-top: var(--mantine-spacing-xs);
+}
+
+.advertencia {
+  color: var(--mantine-color-yellow-8);
+}
+
+.informacion {
+  color: var(--mantine-color-blue-8);
+}
+
+.raiz .error {
+  background-color: var(--mantine-color-red-0);
+}
+
+.acciones {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--mantine-spacing-sm);
+}
+
+.raiz .boton {
+  min-height: 44px;
+  height: auto;
+  max-width: 100%;
+}
+
+.boton :global(.mantine-Button-label) {
+  white-space: normal;
+  padding-block: var(--mantine-spacing-xs);
+}
+
+.raiz .cerrar {
+  min-width: 44px;
+  min-height: 44px;
+  flex-shrink: 0;
+}
+
+.raiz .boton:focus-visible,
+.raiz .cerrar:focus-visible {
+  outline: 2px solid var(--ia-color-accent-signal, var(--mantine-color-signal-7));
+  outline-offset: 2px;
+}
+
+.raiz .principal:where(:hover, :active):not(:disabled) {
+  color: var(--mantine-color-white);
+}
+
+@media (max-width: 35.999em) {
+  .raiz .interior {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  .raiz .contenido {
+    flex-basis: 100%;
+    max-height: calc(100dvh - var(--mantine-spacing-md));
+    border-radius: var(--mantine-radius-lg) var(--mantine-radius-lg) 0 0;
+  }
+
+  .raiz .cuerpo {
+    padding-bottom: calc(var(--mantine-spacing-lg) + env(safe-area-inset-bottom, 0px));
+  }
+
+  .acciones {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .raiz .boton {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .boton :global(.mantine-Loader-root)::after {
+    animation: none;
+  }
+}

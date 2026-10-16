@@ -1,0 +1,23 @@
+.raiz {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.raiz .cuerpoEvento {
+  min-width: 0;
+}
+
+.fecha {
+  font-variant-numeric: tabular-nums;
+  color: var(--mantine-color-gray-7);
+}
+
+.observacion {
+  white-space: pre-wrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .raiz :global(.mantine-Skeleton-root)::after {
+    animation: none;
+  }
+}

@@ -1,0 +1,30 @@
+
+> despacho-frontend@0.1.0 build
+> npm run build -w @despacho/administrativo && npm run build -w @despacho/repartidor
+
+
+> @despacho/administrativo@0.1.0 build
+> tsc --noEmit && vite build
+
+vite v5.4.21 building for production...
+transforming...
+✓ 7123 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                   0.70 kB │ gzip:   0.40 kB
+dist/assets/index-DjOnrGlL.css  265.94 kB │ gzip:  38.60 kB
+dist/assets/index-BCaIWlqs.js   360.70 kB │ gzip: 112.07 kB
+✓ built in 42.90s
+
+> @despacho/repartidor@0.1.0 build
+> tsc --noEmit && vite build
+
+vite v5.4.21 building for production...
+transforming...
+✓ 7123 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                   0.70 kB │ gzip:   0.39 kB
+dist/assets/index-DjOnrGlL.css  265.94 kB │ gzip:  38.60 kB
+dist/assets/index-1UscbSll.js   359.03 kB │ gzip: 111.51 kB
+✓ built in 10.01s

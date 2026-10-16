@@ -1,0 +1,1 @@
+Archivo de prueba para simular un fallo de decodificación de imagen. No contiene evidencia real.

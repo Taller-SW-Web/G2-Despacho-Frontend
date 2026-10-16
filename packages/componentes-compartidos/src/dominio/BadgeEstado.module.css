@@ -1,0 +1,63 @@
+.raiz {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--mantine-spacing-xs);
+  max-width: 100%;
+}
+
+.raiz .insignia {
+  height: auto;
+  min-height: 1.5rem;
+  max-width: 100%;
+  padding-block: var(--mantine-spacing-xs);
+  text-transform: none;
+  letter-spacing: normal;
+  color: var(--ia-color-text-primary, var(--mantine-color-ink-9));
+  font-size: var(--mantine-font-size-sm);
+}
+
+.raiz .insignia[data-size='sm'] {
+  font-size: var(--mantine-font-size-xs);
+}
+
+.insignia .etiqueta {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+  overflow-wrap: anywhere;
+  line-height: 1.4;
+}
+
+.insignia .icono {
+  display: block;
+  color: var(--estado-icono, var(--mantine-color-gray-7));
+}
+
+.raiz .insignia[data-semantica='neutral'] {
+  background: var(--mantine-color-cloud-2);
+}
+
+.raiz .insignia[data-semantica='info'] {
+  background: var(--mantine-color-blue-0);
+  --estado-icono: var(--mantine-color-blue-8);
+}
+
+.raiz .insignia[data-semantica='success'] {
+  background: var(--mantine-color-green-0);
+  --estado-icono: var(--mantine-color-green-8);
+}
+
+.raiz .insignia[data-semantica='warning'] {
+  background: var(--mantine-color-yellow-0);
+  --estado-icono: var(--mantine-color-yellow-8);
+}
+
+.raiz .insignia[data-semantica='error'] {
+  background: var(--mantine-color-red-0);
+  --estado-icono: var(--mantine-color-red-8);
+}
+
+.raiz .insignia[data-texto-secundario] {
+  color: var(--mantine-color-gray-7);
+}

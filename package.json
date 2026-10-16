@@ -7,7 +7,9 @@
     "dev:administrativo": "npm run dev -w @despacho/administrativo",
     "dev:repartidor": "npm run dev -w @despacho/repartidor",
     "build": "npm run build -w @despacho/administrativo && npm run build -w @despacho/repartidor",
-    "typecheck": "npm run typecheck -w @despacho/administrativo && npm run typecheck -w @despacho/repartidor"
+    "typecheck": "npm run typecheck -w @despacho/componentes-compartidos && npm run typecheck -w @despacho/administrativo && npm run typecheck -w @despacho/repartidor",
+    "test": "npm run test -w @despacho/componentes-compartidos",
+    "test:watch": "npm run test:watch -w @despacho/componentes-compartidos"
   },
   "engines": { "node": ">=20", "npm": ">=10" }
 }
