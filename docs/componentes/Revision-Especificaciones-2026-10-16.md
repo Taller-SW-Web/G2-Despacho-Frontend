@@ -24,10 +24,27 @@ En evidencia, el consumidor usa `venceEn`; el visor no fija un TTL ni autoriza d
 - CR-19 conserva la verificación ya realizada contra esta misma revisión de Specs: 59 pruebas aprobadas con `TZ=Asia/Tokyo`, TypeScript y builds de ambas aplicaciones. No se repitieron esas pruebas ni los builds al cambiar solo documentación.
 - Las implementaciones visuales permanecen iguales a las ya capturadas; esta revisión cambia documentación y pruebas. Se comprobaron enlaces locales y `git diff --check`.
 
-Cada componente conserva su rama. Las comprobaciones con consumidores simulados acreditan presentación y composición, no los endpoints reales, permisos del servidor ni la integración completa de F-04. Los commits permanecen locales; revisión humana y entrega por PR pendientes.
+Cada componente conserva su rama de origen. Las comprobaciones con consumidores simulados acreditan presentación y composición, no los endpoints reales, permisos del servidor ni la integración completa de F-04. La preparación conjunta de la entrega se registra en §4; revisión humana y PR pendientes.
 
 ## 3. Referencias
 
 1. [Componentes React, Specs 54b785d](https://github.com/Taller-SW-Web/G2-Despacho-Specs/blob/54b785d13f25bc3017cc407332446b3ac83b243e/disenio/componentes-react.md): CR-08/12/18/19 y límites entre componentes y consumidores.
 2. [Contrato de Gestión, misma revisión](https://github.com/Taller-SW-Web/G2-Despacho-Specs/blob/54b785d13f25bc3017cc407332446b3ac83b243e/integraciones/api-contract-gestion-despachos.md): §§5.2 y 5.3; [UI del detalle](https://github.com/Taller-SW-Web/G2-Despacho-Specs/blob/54b785d13f25bc3017cc407332446b3ac83b243e/especificaciones/ES-F04-02-ConsultarDetalleIncidencia/ui.md).
 3. [Contrato de Operación §3.4, misma revisión](https://github.com/Taller-SW-Web/G2-Despacho-Specs/blob/54b785d13f25bc3017cc407332446b3ac83b243e/integraciones/api-contract-operacion-reparto.md#34-autorizar-la-lectura-de-evidencia): acceso temporal y recurso correcto.
+
+## 4. Entrega conjunta hacia develop
+
+**Rama preparada:** `feature/f04-componentes-compartidos`. **Destino del PR manual:** `develop`. **Base remota incorporada:** `a79d30e0b59c0db6ca18f83e082fe7d8303bba7e`. Código integrado y verificado en `37ada78`, antes de este registro documental.
+
+Se incorporaron las cuatro ramas de componentes y `origin/develop`, tras actualizar el remoto. La unión con `develop` fue limpia. Hubo dos conflictos al combinar las exportaciones de las ramas de componentes en `packages/componentes-compartidos/src/index.ts`; se resolvieron conservando `tema`, CR-08/12/18/19, sus tipos y el soporte de CR-09 para despacho. Se verificó que las cuatro ramas son antecesoras de la entrega.
+
+La implementación administrativa de zonas, tarifas, sesión y cliente API incorporada desde `develop` conserva su contenido: `git diff --exit-code origin/develop -- apps/despacho-administrativo/src packages/cliente-api apps/despacho-repartidor/src` terminó sin diferencias.
+
+| Comprobación conjunta | Resultado |
+|---|---|
+| `npm test` con `TZ=Asia/Tokyo` | 99 pruebas aprobadas en cinco archivos: CR-08 (18), CR-12 (14), CR-18 (26), CR-19 (28) y soporte de estados (13). |
+| `npm run typecheck` | Paquete, pruebas, ejemplos y ambas aplicaciones aprobados. |
+| `npm run build` | Ambas aplicaciones compiladas. Vite emitió un aviso por el chunk administrativo de 761,54 kB; no impidió la compilación. |
+| Higiene y preparación | `git diff --check` y enlaces locales sin errores; `origin/develop` es antecesor de la entrega. |
+
+Las pruebas conjuntas verifican la convivencia de los componentes en el frontend actualizado. La consulta y las mutaciones reales de F-04 siguen en sus tareas SDD. El PR debe usar `develop` como base y esta rama como origen; su creación y revisión quedan a cargo del usuario y del equipo.
