@@ -9,12 +9,15 @@ import { Notifications } from '@mantine/notifications';
 import { BrowserRouter } from 'react-router-dom';
 import { tema } from '@despacho/componentes-compartidos';
 import { Aplicacion } from './Aplicacion';
+import { SesionProveedor } from './sesion/SesionProveedor';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <MantineProvider theme={tema} defaultColorScheme="light">
       <Notifications position="top-right" limit={3} />
-      <BrowserRouter><Aplicacion /></BrowserRouter>
+      <SesionProveedor>
+        <BrowserRouter><Aplicacion /></BrowserRouter>
+      </SesionProveedor>
     </MantineProvider>
   </React.StrictMode>,
 );
