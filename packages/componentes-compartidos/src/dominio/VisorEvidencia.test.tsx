@@ -25,6 +25,38 @@ function preparar(cambios: Partial<PropiedadesVisorEvidencia> = {}) {
   return { ...render(<VisorEvidencia {...propiedades} />, { wrapper: ProveedorPruebas }), propiedades };
 }
 
+type ReferenciaPrueba = { idDespacho: string; idIncidencia: string; idEvidencia: string };
+type RespuestaPrueba = { idDespacho: string; idEvidencia: string; urlLectura: string; venceEn: string };
+const referenciaInicial: ReferenciaPrueba = { idDespacho: 'DEMO-A', idIncidencia: 'INC-A', idEvidencia: 'EVI-A' };
+const respuestaInicial: RespuestaPrueba = { idDespacho: 'DEMO-A', idEvidencia: 'EVI-A', urlLectura: urlA, venceEn: '2026-10-16T20:00:00Z' };
+
+/** Doble del futuro consumidor: el visor no recibe ni verifica estas identidades. */
+function crearConsumidorSimulado() {
+  const pendientes: ((respuesta: RespuestaPrueba) => void)[] = [];
+  function Contenedor({ referencia }: { referencia: ReferenciaPrueba }) {
+    const [consulta, cambiarConsulta] = useState<{ referencia: ReferenciaPrueba; respuesta?: RespuestaPrueba }>();
+    const { idDespacho, idIncidencia, idEvidencia } = referencia;
+    useEffect(() => {
+      let vigente = true;
+      const solicitud = new Promise<RespuestaPrueba>((resolver) => { pendientes.push(resolver); });
+      void solicitud.then((respuesta) => {
+        if (!vigente) return;
+        const coincide = respuesta.idDespacho === idDespacho && respuesta.idEvidencia === idEvidencia;
+        cambiarConsulta({ referencia, respuesta: coincide ? respuesta : undefined });
+      });
+      return () => { vigente = false; };
+    }, [idDespacho, idIncidencia, idEvidencia]);
+    const coincide = consulta?.referencia.idDespacho === idDespacho
+      && consulta.referencia.idIncidencia === idIncidencia
+      && consulta.referencia.idEvidencia === idEvidencia;
+    const acceso = coincide
+      ? consulta.respuesta ? { estado: 'lista' as const, urlAutorizada: consulta.respuesta.urlLectura } : { estado: 'error' as const }
+      : { estado: 'carga' as const };
+    return <VisorEvidencia {...acceso} abierto descripcion={`Evidencia de ${idDespacho}, incidencia ${idIncidencia}`} alCerrar={vi.fn()} alSolicitarAcceso={vi.fn()} alFallarImagen={vi.fn()} />;
+  }
+  return { Contenedor, pendientes };
+}
+
 describe('CR-18 VisorEvidencia', () => {
   it('cerrado no monta la imagen ni su URL', () => {
     preparar({ abierto: false });
@@ -178,26 +210,32 @@ describe('CCR-18-02: retirar evidencia anterior', () => {
     expect(siguiente).toHaveStyle({ visibility: 'visible' });
   });
 
-  it('con un contenedor y adaptador simulados descarta la respuesta tardía del despacho anterior', async () => {
-    const pendientes = new Map<string, (url: string) => void>();
-    const solicitarAcceso = (recurso: string) => new Promise<string>((resolver) => { pendientes.set(recurso, resolver); });
-    function Contenedor({ recurso }: { recurso: string }) {
-      const [acceso, cambiarAcceso] = useState<{ recurso: string; url: string }>();
-      useEffect(() => {
-        let vigente = true;
-        void solicitarAcceso(recurso).then((url) => { if (vigente) cambiarAcceso({ recurso, url }); });
-        return () => { vigente = false; };
-      }, [recurso]);
-      const consulta = acceso?.recurso === recurso ? { estado: 'lista' as const, urlAutorizada: acceso.url } : { estado: 'carga' as const };
-      return <VisorEvidencia {...consulta} abierto descripcion={`Evidencia del despacho ${recurso}`} alCerrar={vi.fn()} alSolicitarAcceso={vi.fn()} alFallarImagen={vi.fn()} />;
-    }
-    const { rerender } = render(<Contenedor recurso="DEMO-A" />, { wrapper: ProveedorPruebas });
-    rerender(<Contenedor recurso="DEMO-B" />);
+  it.each([
+    ['despacho', { idDespacho: 'DEMO-B', idIncidencia: 'INC-B', idEvidencia: 'EVI-B' }],
+    ['evidencia dentro del mismo despacho', { ...referenciaInicial, idEvidencia: 'EVI-B' }],
+    ['incidencia dentro del mismo despacho', { ...referenciaInicial, idIncidencia: 'INC-B' }],
+  ] as const)('el consumidor simulado descarta la respuesta anterior al cambiar de %s', async (_, referencia) => {
+    const { Contenedor, pendientes } = crearConsumidorSimulado();
+    const { rerender } = render(<Contenedor referencia={referenciaInicial} />, { wrapper: ProveedorPruebas });
+    rerender(<Contenedor referencia={referencia} />);
     expect(document.querySelector('img')).not.toBeInTheDocument();
-    await act(async () => pendientes.get('DEMO-B')!(urlB));
-    expect(screen.getByAltText('Evidencia del despacho DEMO-B')).toHaveAttribute('src', urlB);
-    await act(async () => pendientes.get('DEMO-A')!(urlA));
+    await act(async () => pendientes[1]({ ...respuestaInicial, idDespacho: referencia.idDespacho, idEvidencia: referencia.idEvidencia, urlLectura: urlB }));
+    const imagen = screen.getByAltText(`Evidencia de ${referencia.idDespacho}, incidencia ${referencia.idIncidencia}`);
+    expect(imagen).toHaveAttribute('src', urlB);
+    await act(async () => pendientes[0](respuestaInicial));
     expect(document.body.innerHTML).not.toContain(urlA);
-    expect(screen.getByAltText('Evidencia del despacho DEMO-B')).toHaveAttribute('src', urlB);
+    expect(imagen).toHaveAttribute('src', urlB);
+  });
+
+  it.each([
+    { ...respuestaInicial, idDespacho: 'OTRO-DESPACHO' },
+    { ...respuestaInicial, idEvidencia: 'OTRA-EVIDENCIA' },
+  ])('el consumidor simulado no entrega una autorización de otro recurso al visor: %j', async (respuesta) => {
+    const { Contenedor, pendientes } = crearConsumidorSimulado();
+    render(<Contenedor referencia={referenciaInicial} />, { wrapper: ProveedorPruebas });
+    await act(async () => pendientes[0](respuesta));
+    expect(document.querySelector('img')).not.toBeInTheDocument();
+    expect(document.body.innerHTML).not.toContain(urlA);
+    expect(screen.getByRole('heading', { name: 'No pudimos mostrar la evidencia' })).toBeInTheDocument();
   });
 });
