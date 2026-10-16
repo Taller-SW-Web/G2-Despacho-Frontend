@@ -13,6 +13,7 @@ export const tema = createTheme({
   fontFamily: 'Inter, system-ui, sans-serif',
   headings: { fontFamily: 'Oswald, sans-serif', fontWeight: '700' },
   defaultRadius: 'sm',
+  spacing: { xs: '0.25rem', sm: '0.5rem', md: '1rem', lg: '1.5rem', xl: '2rem' },
   components: {
     Button: { defaultProps: { size: 'md', radius: 'sm' } },
     Card: { defaultProps: { radius: 'md', padding: 'md', withBorder: true } },
