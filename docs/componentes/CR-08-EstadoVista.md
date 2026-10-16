@@ -89,8 +89,15 @@ La preferencia de movimiento reducido del navegador estaba desactivada. Se revis
 - `spec.md`, `ui.md`, `plan.md`, `tasks.md` y `evidence.md` permanecen en el repositorio de especificaciones; este registro documenta el código y las comprobaciones del frontend.
 - Código y pruebas guardados en `957e4e2603b64ebca51c6c6a82317d82604648df`; PR pendiente. Las referencias de código de este registro apuntan a los archivos de la rama. Revisión humana funcional y visual propuesta: Max. El uso de Codex no acredita esa revisión.
 
-## 7. Referencias
+## 7. Compatibilidad con las especificaciones actualizadas
+
+Revisión de compatibilidad del 16/10/2026 contra Specs `54b785d13f25bc3017cc407332446b3ac83b243e`: CR-08 y CCR-08-01 no cambiaron. La nueva [UI del detalle de incidencia](https://github.com/Taller-SW-Web/G2-Despacho-Specs/blob/54b785d13f25bc3017cc407332446b3ac83b243e/especificaciones/ES-F04-02-ConsultarDetalleIncidencia/ui.md) exige distinguir despacho inexistente de despacho sin incidencia; `titulo` y `descripcion` permiten presentar ambos mensajes. El contenedor interpreta los códigos contractuales. La conservación de datos autorizados durante un refresco fallido también pertenece al contenedor; `sinPermiso` sigue retirando el contenido protegido. No se requiere cambiar el componente [cite: 4].
+
+Se volvió a ejecutar `npm test` en `feature/f04-estado-vista`: 18 pruebas aprobadas. La evidencia visual original sigue correspondiendo al código sin cambios.
+
+## 8. Referencias
 
 1. ECR-01 de la revisión indicada en §1: CR-08, CCR-08-01 y §§1.3–1.5, 4.2, 4.5 y 4.6.
 2. Sistema de diseño de la misma revisión: §§4–8, 12.7, 13.4, 13.12 y 17.
 3. ES-F04-01 de la misma revisión: T-01/T-02 y registro previsto EV-02.
+4. Specs `54b785d`, CR-08; ES-F04-02 `ui.md`, §§4–5: errores por recurso, actualización y autorización.
