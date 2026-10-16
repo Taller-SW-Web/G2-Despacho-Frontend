@@ -1,17 +1,21 @@
 import { Badge, Box, Text } from '@mantine/core';
+import { IconHourglass, IconPackageImport } from '@tabler/icons-react';
 import { estadoNoDisponible, obtenerEstadoDespacho } from './estados';
 import clases from './BadgeEstado.module.css';
 
-/** Subconjunto CR-09 necesario para CR-19; no implementa los demás contextos. */
+/** CR-09: contextos de despacho y recepción requeridos por F-04. */
 export type PropiedadesBadgeEstado = {
-  contexto: 'despacho';
+  contexto: 'despacho' | 'recepcion';
   valor: unknown;
   size?: 'sm' | 'md';
   complemento?: string;
 };
 
 export function BadgeEstado({ contexto, valor, size = 'md', complemento }: PropiedadesBadgeEstado) {
-  const configuracion = contexto === 'despacho' ? obtenerEstadoDespacho(valor) : estadoNoDisponible;
+  const configuracion: ReturnType<typeof obtenerEstadoDespacho> = contexto === 'despacho' ? obtenerEstadoDespacho(valor)
+    : valor === 'PENDIENTE_RETORNO' ? { etiqueta: 'Pendiente de retorno', semantica: 'warning', Icono: IconHourglass }
+    : valor === 'RECIBIDO_EN_CENTRO' ? { etiqueta: 'Recibido en centro', semantica: 'success', Icono: IconPackageImport }
+    : estadoNoDisponible;
   const { Icono } = configuracion;
   return <Box component="span" className={clases.raiz}>
     <Badge

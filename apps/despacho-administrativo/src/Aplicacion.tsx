@@ -1,7 +1,8 @@
-import { AppShell, Box, Burger, Group, NavLink, Stack, Text, Title } from '@mantine/core';
-import { useDisclosure } from '@mantine/hooks';
-import { IconMapPin, IconCalendar, IconAlertTriangle, IconTruck, IconPackage } from '@tabler/icons-react';
-import { Link, Navigate, Route, Routes, useLocation } from 'react-router-dom';
+import { Box, Stack, Text, Title } from '@mantine/core';
+import { IconMapPin, IconCalendar, IconAlertTriangle, IconTruck } from '@tabler/icons-react';
+import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
+import { ShellAdministrativo } from '@despacho/componentes-compartidos';
+import { PaginaEntregasFallidas } from './features/entregas-fallidas/PaginaEntregasFallidas';
 import { PaginaZonas } from './features/zonas/PaginaZonas';
 import { FormularioZona } from './features/zonas/FormularioZona';
 import { PanelTarifa } from './features/zonas/PanelTarifa';
@@ -26,32 +27,20 @@ function PaginaPendiente({ titulo, descripcion, endpoint }: { titulo: string; de
 }
 
 export function Aplicacion() {
-  const [abierto, { toggle, close }] = useDisclosure(false);
   const ubicacion = useLocation();
+  const navegar = useNavigate();
 
-  return <AppShell header={{ height: 64 }} navbar={{ width: 252, breakpoint: 'sm', collapsed: { mobile: !abierto } }} padding="lg">
-    <AppShell.Header>
-      <Group h="100%" px="lg" bg="ink.9" c="white">
-        <Burger opened={abierto} onClick={toggle} hiddenFrom="sm" size="sm" color="white" aria-label="Abrir menú" />
-        <IconPackage size={26} aria-hidden="true" />
-        <Text fw={700}>DESPACHO · ADMINISTRACIÓN</Text>
-      </Group>
-    </AppShell.Header>
-    <AppShell.Navbar p="md">
-      <Stack gap="xs">
-        {secciones.map(({ ruta, titulo, Icono }) => <NavLink key={ruta} component={Link} to={ruta} label={titulo} leftSection={<Icono size={20} />} active={ubicacion.pathname.startsWith(ruta)} onClick={close} />)}
-      </Stack>
-    </AppShell.Navbar>
-    <AppShell.Main>
+  return <ShellAdministrativo destinos={secciones.map(({ ruta, titulo, Icono }) => ({ id: ruta, ruta, etiqueta: titulo, icono: <Icono size={20} aria-hidden="true" /> }))}
+    destinoActivo={secciones.find(({ ruta }) => ubicacion.pathname.startsWith(ruta))?.ruta ?? null} alNavegar={(_, ruta) => navegar(ruta)}>
       <Routes>
         <Route path="/" element={<Navigate to="/zonas" replace />} />
         <Route path="/zonas" element={<PaginaZonas />} />
         <Route path="/zonas/nueva" element={<FormularioZona />} />
         <Route path="/zonas/:id/editar" element={<FormularioZona />} />
         <Route path="/zonas/:id/tarifas" element={<PanelTarifa />} />
-        {secciones.filter(({ ruta }) => ruta !== '/zonas').map(({ ruta, titulo, descripcion, endpoint }) => <Route key={ruta} path={`${ruta}/*`} element={<PaginaPendiente titulo={titulo} descripcion={descripcion} endpoint={endpoint} />} />)}
+        <Route path="/entregas-fallidas" element={<PaginaEntregasFallidas />} />
+        {secciones.filter(({ ruta }) => ruta !== '/zonas' && ruta !== '/entregas-fallidas').map(({ ruta, titulo, descripcion, endpoint }) => <Route key={ruta} path={`${ruta}/*`} element={<PaginaPendiente titulo={titulo} descripcion={descripcion} endpoint={endpoint} />} />)}
         <Route path="*" element={<PaginaPendiente titulo="Página no encontrada" descripcion="La ruta solicitada no existe." endpoint="—" />} />
       </Routes>
-    </AppShell.Main>
-  </AppShell>;
+  </ShellAdministrativo>;
 }

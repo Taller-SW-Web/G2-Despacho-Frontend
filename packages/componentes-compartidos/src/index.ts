@@ -2,6 +2,12 @@ import { createTheme } from '@mantine/core';
 import type { MantineColorsTuple } from '@mantine/core';
 
 export { EstadoVista } from './feedback/EstadoVista';
+export { ShellAdministrativo } from './estructura/ShellAdministrativo';
+export { EncabezadoPagina } from './estructura/EncabezadoPagina';
+export { BarraFiltros } from './listados/BarraFiltros';
+export { TablaDatos } from './listados/TablaDatos';
+export type { ColumnaDatos } from './listados/TablaDatos';
+export { TarjetaKpi } from './indicadores/TarjetaKpi';
 export type { PropiedadesEstadoVista } from './feedback/EstadoVista';
 export type { EstadoConsulta, AccionUi } from './tipos-ui';
 export { BadgeEstado } from './dominio/BadgeEstado';

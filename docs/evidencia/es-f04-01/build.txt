@@ -1,0 +1,35 @@
+
+> despacho-frontend@0.1.0 build
+> npm run build -w @despacho/administrativo && npm run build -w @despacho/repartidor
+
+
+> @despacho/administrativo@0.1.0 build
+> tsc --noEmit && vite build
+
+vite v5.4.21 building for production...
+transforming...
+✓ 7338 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                   0.70 kB │ gzip:   0.40 kB
+dist/assets/index-VPG98bE6.css  268.47 kB │ gzip:  39.14 kB
+dist/assets/index-buWZ7mIV.js   840.38 kB │ gzip: 260.09 kB
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 1m
+
+> @despacho/repartidor@0.1.0 build
+> tsc --noEmit && vite build
+
+vite v5.4.21 building for production...
+transforming...
+✓ 7146 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                   0.70 kB │ gzip:   0.39 kB
+dist/assets/index-DjOnrGlL.css  265.94 kB │ gzip:  38.60 kB
+dist/assets/index-CdkA-ufw.js   371.88 kB │ gzip: 116.68 kB
+✓ built in 39.16s
