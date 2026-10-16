@@ -23,7 +23,7 @@ export function SesionProveedor({ children }: { children: ReactNode }) {
       obtenerToken: () => {
         const token = localStorage.getItem(CLAVE_TOKEN);
         if (token) return token;
-        const tokenDesarrollo = import.meta.env.VITE_DEV_TOKEN;
+        const tokenDesarrollo = import.meta.env.DEV ? import.meta.env.VITE_DEV_TOKEN : undefined;
         return typeof tokenDesarrollo === 'string' && tokenDesarrollo.length > 0
           ? tokenDesarrollo
           : null;

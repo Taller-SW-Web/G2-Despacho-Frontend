@@ -5,7 +5,7 @@ Monorepositorio con dos aplicaciones React, TypeScript y Vite. La aplicación ad
 ## Requisitos
 
 - Node.js 20 o superior y npm 10 o superior.
-- API Gateway disponible para consumir datos reales. El backend actual solo contiene la inicialización de sus tres servicios; las pantallas de este repositorio son puntos de partida sin datos simulados.
+- API Gateway disponible para consumir datos reales. El listado de entregas fallidas está conectado a la API de ES-F04-01; su [guía de ejecución y evidencia](./docs/ES-F04-01-ConsultarEntregasFallidas.md) describe la demo local. Las demás pantallas mantienen su alcance propio.
 
 ## Inicio local
 
@@ -57,6 +57,6 @@ La [evidencia de CR-08](./docs/componentes/CR-08-EstadoVista.md) registra fuente
 
 ## Integración pendiente
 
-La autenticación corresponde al módulo Seguridad y Usuarios. El frontend aún no inicia sesión ni protege rutas: faltan el flujo de acceso de ese módulo y los endpoints de negocio del backend. Al implementarlos, usar el JWT humano en `Authorization: Bearer`, conectar las páginas con el cliente de `packages/cliente-api` y consultar el contrato único en `../despacho-docs/integraciones/api-contract.md`. La variable `VITE_API_BASE_URL` es pública; no guardar secretos en variables `VITE_*`.
+La autenticación corresponde al módulo Seguridad y Usuarios. El proveedor provisional existente suministra un JWT humano al cliente API; ES-F04-01 retira contenido protegido ante `401/403`. El flujo de inicio de sesión del equipo permanece pendiente. La demo utiliza únicamente el emisor temporal documentado. La variable `VITE_API_BASE_URL` es pública; no guardar secretos en variables `VITE_*`.
 
 La guía de stack `arquitectura/stack-frontend.md` aún describe React 18 y Tailwind. Esta inicialización sigue la especificación de interfaz más concreta de `disenio/SYSTEM-DESIGN.md` §15: React 19.2, TypeScript y Mantine 9.6.2. La organización de dos apps sigue `arquitectura/c4-contenedores.md` §7.
