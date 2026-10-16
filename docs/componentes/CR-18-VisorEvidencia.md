@@ -10,7 +10,7 @@
 
 - [Contrato CR-18 y reglas transversales, revisión dd614bd](https://github.com/Taller-SW-Web/G2-Despacho-Specs/blob/dd614bdfeb439ded41c74b73b5d59d9c1724f5fb/disenio/componentes-react.md#cr-18-visorevidencia): propiedades, eventos, `CCR-18-01/02`, CR-08 y subconjunto CR-18 de `TCR-07` [cite: 1].
 - [Sistema de diseño, misma revisión](https://github.com/Taller-SW-Web/G2-Despacho-Specs/blob/dd614bdfeb439ded41c74b73b5d59d9c1724f5fb/disenio/SYSTEM-DESIGN.md): §§12.6, 17, 22 y 23; imagen completa, diálogo y hoja inferior móvil [cite: 2].
-- [API de Operación §3](https://github.com/Taller-SW-Web/G2-Despacho-Specs/blob/dd614bdfeb439ded41c74b73b5d59d9c1724f5fb/integraciones/api-contract-operacion-reparto.md#3-api-de-f-03-operación-del-repartidor): autorización temporal de lectura mediante `POST /api/v1/evidencias/{idEvidencia}/acceso`. CR-18 aplica esta fuente canónica conforme a DC-03; no redefine almacenamiento ni payloads [cite: 3].
+- [API de Operación §3.4, revisión 54b785d](https://github.com/Taller-SW-Web/G2-Despacho-Specs/blob/54b785d13f25bc3017cc407332446b3ac83b243e/integraciones/api-contract-operacion-reparto.md#34-autorizar-la-lectura-de-evidencia): autorización temporal de lectura mediante `POST /api/v1/evidencias/{idEvidencia}/acceso`, ahora detallada en el contrato. CR-18 aplica esta fuente canónica conforme a DC-03; no redefine almacenamiento ni payloads [cite: 3].
 
 El visor presenta una evidencia autorizada y distingue carga, imagen lista, ausencia, expiración, error y falta de permisos. No consulta APIs, deduce autorizaciones ni construye rutas de almacenamiento.
 
@@ -19,9 +19,11 @@ El visor presenta una evidencia autorizada y distingue carga, imagen lista, ause
 Se exportan `VisorEvidencia`, `PropiedadesVisorEvidencia` y `EstadoVisorEvidencia` desde `@despacho/componentes-compartidos`. [Código](../../packages/componentes-compartidos/src/dominio/VisorEvidencia.tsx) y [estilos](../../packages/componentes-compartidos/src/dominio/VisorEvidencia.module.css).
 
 ```tsx
-const accesoVigente = consulta?.idDespacho === idDespacho
-  ? consulta.acceso
-  : { estado: 'carga' as const };
+// Identidad de la consulta guardada por el contenedor, junto con el acceso adaptado.
+const corresponde = consulta?.idDespacho === idDespacho
+  && consulta.idIncidencia === idIncidencia
+  && consulta.idEvidencia === idEvidencia;
+const accesoVigente = corresponde ? consulta.acceso : { estado: 'carga' as const };
 
 <VisorEvidencia
   {...accesoVigente}
@@ -33,7 +35,7 @@ const accesoVigente = consulta?.idDespacho === idDespacho
 />
 ```
 
-El contenedor vincula cada respuesta con el despacho solicitado, descarta respuestas tardías y entrega carga sin URL anterior al cambiar de recurso. CR-18 no recibe un identificador del despacho con el que pueda verificar esa correspondencia. Al cerrar, el contenedor retira su referencia temporal; al reabrir solicita el acceso pertinente. Las URLs no se guardan en almacenamiento del navegador, logs ni evidencia de pruebas.
+El contenedor vincula cada solicitud con despacho, incidencia y evidencia, valida que los `idDespacho` e `idEvidencia` de la respuesta coincidan y descarta respuestas de solicitudes anteriores. El `idIncidencia` pertenece al contexto de la consulta, no a la respuesta de autorización. Al cambiar cualquiera de esas referencias entrega carga sin URL anterior. CR-18 no recibe esos identificadores ni verifica esa correspondencia. Al cerrar, el contenedor retira su referencia temporal; al reabrir solicita el acceso pertinente. Las URLs no se guardan en almacenamiento del navegador, logs ni evidencia de pruebas.
 
 En `lista` los tipos requieren `urlAutorizada`; una cadena vacía se trata como error sin crear una imagen. La foto permanece oculta tras un skeleton hasta completar su carga, usa `fit="contain"` y se vuelve a montar al cambiar la referencia. Al salir de `lista`, cerrar o fallar la imagen, la foto y su URL se retiran del DOM, incluso durante la transición de cierre. No hay enlace público ni imagen alternativa de respaldo.
 
@@ -43,7 +45,7 @@ Se reutiliza CR-08 para las respuestas de consulta. `mensajeSinEvidencia` permit
 
 ## 3. Verificación
 
-Entorno: Windows, Node.js 22.16.0, npm 10.9.2, React 19.3.0, Mantine 9.6.2 y Vitest 3.2.7. Verificación sobre el código del commit indicado, sin dependencias nuevas.
+Entorno: Windows, Node.js 22.16.0, npm 10.9.2, React 19.3.0, Mantine 9.6.2 y Vitest 3.2.7. Verificación inicial sobre el código del commit indicado, sin dependencias nuevas. La revisión posterior contra las especificaciones actualizadas se registra en §6.
 
 | Trazabilidad | Comprobación | Resultado |
 |---|---|---|
@@ -67,8 +69,19 @@ Ejecutar `npm run dev:administrativo` y abrir [visor-evidencia.html](http://loca
 
 Estas comprobaciones no acreditan el endpoint de autorización, permisos reales, almacenamiento ni los criterios funcionales de ES-F03-08/ES-F04-02. JSDOM no comprueba layout; esa parte se revisó en navegador. No se emuló movimiento reducido ni se ejecutó una auditoría WCAG o con lector de pantalla. La revisión humana y la publicación permanecen pendientes.
 
-## 6. Referencias
+## 6. Compatibilidad con las especificaciones actualizadas
+
+Revisión del 16/10/2026 contra Specs `54b785d13f25bc3017cc407332446b3ac83b243e`: la interfaz CR-18 y CCR-18-01/02 no cambiaron. Operación §3.4 y ES-F04-02 concretan el acceso; el visor ya permite retirar la imagen y solicitar renovación explícita. No se cambia su API ni se trasladan consultas/autorización al componente [cite: 3, 4].
+
+- El consumidor usa `venceEn` de la respuesta; no fija cinco minutos en la UI. `401/403` retiran el acceso y `404/409/503` de autorización no se convierten en una ausencia legítima ni en otra fotografía.
+- El detalle distingue `SIN_EVIDENCIA` de `REFERENCIA_AUSENTE`: «No intentado — sin foto» solo en el primer caso confirmado. La referencia ausente en un fallo real se informa en el bloque del detalle, sin solicitar la foto de otra incidencia.
+- Se amplían los dobles de consumidor para comprobar respuestas tardías al cambiar despacho, evidencia o incidencia, y autorizaciones que devuelven identificadores ajenos. Esto acredita el patrón de composición simulado, no la implementación del futuro adaptador HTTP.
+
+Pruebas actualizadas en `a34143366895d890ad0cf12781eb583d3a56b41d`: `npm test` aprobó 26 pruebas de CR-18 y 18 de CR-08, 44 en total. `npm run typecheck` aprobó paquete, ejemplo y ambas aplicaciones. No cambió código de ejecución, estilos ni dependencias; las capturas y builds originales siguen correspondiendo a esa implementación.
+
+## 7. Referencias
 
 1. ECR-01 de la revisión indicada: CR-18, CCR-18-01/02, CR-01/08, reglas transversales y DC-03.
 2. Sistema de diseño de la misma revisión: superposiciones, evidencias y accesibilidad.
-3. Contrato de Operación de la misma revisión: API de F-03 y autorización temporal de evidencia.
+3. Specs `54b785d`, Operación §3.4: autorización temporal de evidencia, identidad y recuperación.
+4. [ES-F04-02, UI §§3–5](https://github.com/Taller-SW-Web/G2-Despacho-Specs/blob/54b785d13f25bc3017cc407332446b3ac83b243e/especificaciones/ES-F04-02-ConsultarDetalleIncidencia/ui.md) y Gestión §5.3 de la misma revisión: evidencia de la incidencia actual y estados de referencia.
