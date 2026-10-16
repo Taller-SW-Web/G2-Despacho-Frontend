@@ -10,6 +10,8 @@ export { HistorialEstados } from './dominio/HistorialEstados';
 export type { EntradaHistorialEstados, PropiedadesHistorialEstados } from './dominio/HistorialEstados';
 export { ModalConfirmacion } from './formularios/ModalConfirmacion';
 export type { PropiedadesModalConfirmacion } from './formularios/ModalConfirmacion';
+export { VisorEvidencia } from './dominio/VisorEvidencia';
+export type { EstadoVisorEvidencia, PropiedadesVisorEvidencia } from './dominio/VisorEvidencia';
 
 const orange: MantineColorsTuple = ['#FFF4E6', '#FCE3D0', '#FFD8A8', '#FFC078', '#FFA94D', '#FF922B', '#FD7E14', '#F76707', '#C2410C', '#9A3412'];
 const volt: MantineColorsTuple = ['#FBFEE0', '#F5FCC2', '#EEF7B0', '#E4F48A', '#D9EF5E', '#CFEA33', '#C8E81A', '#C3E504', '#9DB803', '#5C6B00'];
