@@ -2,10 +2,15 @@ import { useId } from 'react';
 import { Card, Group, Skeleton, Stack, Text, Timeline, Title } from '@mantine/core';
 import dayjs from 'dayjs';
 import 'dayjs/locale/es';
+import utc from 'dayjs/plugin/utc';
+import timezone from 'dayjs/plugin/timezone';
 import { BadgeEstado } from './BadgeEstado';
 import { EstadoVista } from '../feedback/EstadoVista';
 import type { EstadoConsulta } from '../tipos-ui';
 import clases from './HistorialEstados.module.css';
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 /** Modelo de presentación; el adaptador del consumidor transforma el DTO real. */
 export type EntradaHistorialEstados = {
@@ -83,12 +88,12 @@ export function HistorialEstados({ entradas, estado, orden = 'ascendente', titul
         alAccionar={() => alReintentar?.()}
       >
         <Stack gap="lg">
-          <Text size="sm" c="gray.7">Hora del dispositivo: {Intl.DateTimeFormat().resolvedOptions().timeZone}</Text>
+          <Text size="sm" c="gray.7">Hora de Lima</Text>
           <Timeline role="list" aria-label={titulo} bulletSize={20} lineWidth={2} classNames={{ itemBody: clases.cuerpoEvento }}>
             {ordenadas.map(({ entrada, instante }) => <Timeline.Item key={entrada.id} role="listitem" title={<Text component="h4" m={0} fw={600}>{entrada.descripcionEvento}</Text>}>
               <Stack gap="sm" mt="sm">
                 {Number.isFinite(instante)
-                  ? <Text component="time" dateTime={entrada.fechaServidor} className={clases.fecha} size="sm">{dayjs(entrada.fechaServidor).locale('es').format('DD/MM/YYYY HH:mm')}</Text>
+                  ? <Text component="time" dateTime={entrada.fechaServidor} className={clases.fecha} size="sm">{dayjs(instante).tz('America/Lima').locale('es').format('DD/MM/YYYY HH:mm')}</Text>
                   : <Text size="sm" c="gray.7">Fecha no disponible</Text>}
                 <EstadosEvento entrada={entrada} />
                 {entrada.ejecutor?.trim() && <Text size="sm">Registrado por: {entrada.ejecutor}</Text>}

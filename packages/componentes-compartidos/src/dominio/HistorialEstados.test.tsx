@@ -112,6 +112,16 @@ describe('CR-19 HistorialEstados / CCR-19-01', () => {
     }
   });
 
+  it('presenta los instantes en Lima y conserva el día operativo al cruzar la medianoche UTC', () => {
+    preparar({ entradas: [
+      { id: 'antes-medianoche', fechaServidor: '2026-10-17T04:59:00Z', descripcionEvento: 'Último evento del día en Lima' },
+      { id: 'medianoche', fechaServidor: '2026-10-17T05:00:00Z', descripcionEvento: 'Primer evento del día en Lima' },
+    ] });
+    expect(screen.getByText('Hora de Lima')).toBeInTheDocument();
+    expect(screen.getByText('16/10/2026 23:59')).toHaveAttribute('datetime', '2026-10-17T04:59:00Z');
+    expect(screen.getByText('17/10/2026 00:00')).toHaveAttribute('datetime', '2026-10-17T05:00:00Z');
+  });
+
   it.each(['fecha inválida', '2026-10-16', '2026-10-16T10:00:00', ''])('ante una fecha no utilizable (%s) no fabrica un instante', (fechaServidor) => {
     preparar({ entradas: [{ ...recepcion, fechaServidor }] });
     expect(screen.getByText('Fecha no disponible')).toBeInTheDocument();
