@@ -40,9 +40,14 @@ export function Aplicacion() {
   const sesion = useSesion();
 
   return <ShellAdministrativo destinos={secciones.map(({ ruta, titulo, Icono }) => ({ id: ruta, ruta, etiqueta: titulo, icono: <Icono size={20} aria-hidden="true" /> }))}
-    usuario={{ nombre: 'Sesión provisional', etiquetaPerfil: 'Identidad no disponible' }} logoUrl="" rutaInicio="/"
+    usuario={sesion.modoDemo
+      ? { nombre: 'Demostración', etiquetaPerfil: 'Gestor de despacho' }
+      : { nombre: 'Sesión provisional', etiquetaPerfil: 'Identidad no disponible' }} logoUrl="" rutaInicio="/"
     alCerrarSesion={() => { sesion.guardarToken(null); window.location.assign('/'); }}
     destinoActivo={secciones.find(({ ruta }) => ubicacion.pathname.startsWith(ruta))?.ruta ?? null} alNavegar={(_, ruta) => navegar(ruta)}>
+      {sesion.modoDemo && <Alert mb="lg" color="yellow" title="Modo demostración">
+        Los cambios se guardan en la base de datos configurada para esta demostración.
+      </Alert>}
       {import.meta.env.DEV && <Alert mb="lg" color="blue" title="Pruebas locales F-01">
         <Anchor component={Link} to="/desarrollo/f01">Preparar sesión y probar cobertura / cotización</Anchor>
       </Alert>}
