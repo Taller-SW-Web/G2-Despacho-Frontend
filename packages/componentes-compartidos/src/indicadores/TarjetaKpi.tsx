@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { Box, Group, Paper, Skeleton, Stack, Text, UnstyledButton } from '@mantine/core';
+import clases from './TarjetaKpi.module.css';
 
 export type PropiedadesTarjetaKpi = {
   id: string; etiqueta: string; valor: number | string | null; descripcion?: string; icono?: ReactNode;
@@ -13,13 +14,13 @@ export function TarjetaKpi({ id, etiqueta, valor, descripcion, icono, selecciona
   accionable = false, disabled = false, tono = 'neutral', alSeleccionar }: PropiedadesTarjetaKpi) {
   const bordeEstado = tono === 'neutral' ? {} : { borderTop: `4px solid var(--mantine-color-${tonos[tono].replace('.', '-')})` };
   const contenido = <Stack gap="xs">
-    <Group justify="space-between" wrap="nowrap"><Text fw={600} c="dimmed">{etiqueta}</Text><Box c={tonos[tono]} aria-hidden="true">{icono}</Box></Group>
+    <Group justify="space-between" wrap="nowrap"><Text size="sm" fw={600} c="dimmed">{etiqueta}</Text><Box c={tonos[tono]} aria-hidden="true" className={clases.icono}>{icono}</Box></Group>
     {cargando ? <Skeleton height={38} w={90} /> : <Text c="ink.9" fz={28} lh="36px" ff="var(--mantine-font-family-headings)" fw={700} style={{ fontVariantNumeric: 'tabular-nums' }}>{valor ?? 'No disponible'}</Text>}
-    {descripcion && <Text size="sm" c="dimmed">{descripcion}</Text>}
+    {descripcion && <Text size="xs" c="dimmed">{descripcion}</Text>}
   </Stack>;
-  return accionable ? <UnstyledButton type="button" p="md" w="100%" h="100%" disabled={disabled || cargando}
+  return accionable ? <UnstyledButton type="button" p="md" w="100%" h="100%" className={clases.tarjeta} data-accionable disabled={disabled || cargando}
     aria-pressed={seleccionada} aria-label={`${etiqueta}: ${cargando ? 'Cargando' : valor ?? 'No disponible'}`}
-    onClick={() => alSeleccionar?.(id)} style={{ border: `2px solid ${seleccionada ? 'var(--ia-color-action-primary-hover)' : 'var(--ia-color-border-default)'}`, ...bordeEstado, borderRadius: 'var(--mantine-radius-md)', background: 'var(--mantine-color-white)', cursor: disabled ? 'not-allowed' : 'pointer' }}>
+    onClick={() => alSeleccionar?.(id)} style={{ border: `2px solid ${seleccionada ? 'var(--ia-color-action-primary-hover)' : 'var(--ia-color-border-default)'}`, ...bordeEstado, borderRadius: 'var(--mantine-radius-md)', cursor: disabled ? 'not-allowed' : 'pointer' }}>
     {contenido}
-  </UnstyledButton> : <Paper p="md" radius="md" withBorder style={bordeEstado}>{contenido}</Paper>;
+  </UnstyledButton> : <Paper p="md" radius="md" withBorder className={clases.tarjeta} style={bordeEstado}>{contenido}</Paper>;
 }

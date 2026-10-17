@@ -1,4 +1,5 @@
 .raiz, .textos { min-width: 0; overflow-wrap: anywhere; }
+.textos h1 { margin: 0; }
 .fila { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--mantine-spacing-md); }
 .textos { flex: 1; }
 .acciones { display: flex; flex-wrap: wrap; gap: var(--mantine-spacing-sm); }

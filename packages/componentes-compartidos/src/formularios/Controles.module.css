@@ -25,6 +25,7 @@
 
 .entrada.entrada:focus-within {
   --input-bd: var(--ia-color-accent-signal);
+  border-color: var(--ia-color-accent-signal);
 }
 
 .entrada.entrada:focus-visible {
@@ -32,7 +33,26 @@
   outline-offset: 2px;
 }
 
-.tituloAlerta.tituloAlerta { color: var(--ia-color-text-primary); }
+.alerta.alerta { border: 1px solid var(--ia-color-border-default); }
+.tituloAlerta.tituloAlerta, .mensajeAlerta.mensajeAlerta { color: var(--ia-color-text-primary); }
+.tituloAlerta.tituloAlerta { font-size: var(--mantine-font-size-md); line-height: var(--mantine-line-height-md); font-weight: 600; }
+.mensajeAlerta.mensajeAlerta { font-size: var(--mantine-font-size-md); line-height: var(--mantine-line-height-md); }
+.notificacion.notificacion { border-color: var(--ia-color-border-default); box-shadow: var(--mantine-shadow-sm); }
+.tituloNotificacion.tituloNotificacion { font-family: var(--mantine-font-family); font-size: var(--mantine-font-size-md); font-weight: 600; }
+.mensajeNotificacion.mensajeNotificacion { color: var(--ia-color-text-primary); font-size: var(--mantine-font-size-sm); line-height: var(--mantine-line-height-sm); }
+.etiquetaCampo.etiquetaCampo { font-size: var(--mantine-font-size-sm); line-height: var(--mantine-line-height-sm); font-weight: 600; margin-bottom: var(--mantine-spacing-xs); }
+.ayudaCampo.ayudaCampo { color: var(--ia-color-text-secondary); font-size: var(--mantine-font-size-xs); line-height: var(--mantine-line-height-xs); }
+.errorCampo.errorCampo { color: var(--ia-color-error-default); font-size: var(--mantine-font-size-sm); line-height: var(--mantine-line-height-sm); }
+.entrada.entrada { border-color: var(--ia-color-border-default); color: var(--ia-color-text-primary); border-radius: var(--mantine-radius-sm); }
+.entrada.entrada[data-error] { border-color: var(--ia-color-error-default); }
+.entrada.entrada::placeholder { color: var(--ia-color-text-disabled); }
+.entrada.entrada:disabled { background: var(--ia-color-surface-cloud-subtle); color: var(--ia-color-text-disabled); }
+.boton :global(svg) { flex-shrink: 0; }
+
+@media (max-width: 47.99em) {
+  .boton.boton { min-height: 44px; }
+  .entrada.entrada:not(textarea) { min-height: 44px; }
+}
 
 .opcion.opcion { align-items: center; }
 .etiquetaOpcion.etiquetaOpcion { display: flex; align-items: center; min-height: 2.75rem; }

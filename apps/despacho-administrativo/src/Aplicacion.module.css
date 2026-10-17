@@ -1,0 +1,1 @@
+.herramientasDesarrollo { display: flex; flex-wrap: wrap; align-items: center; gap: var(--mantine-spacing-md); padding-bottom: var(--mantine-spacing-sm); margin-bottom: var(--mantine-spacing-lg); border-bottom: 1px solid var(--ia-color-border-default); }

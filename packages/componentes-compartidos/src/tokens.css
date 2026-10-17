@@ -27,7 +27,11 @@
   --ia-color-info-background: #E7F5FF;
 }
 
-body { margin: 0; background: var(--ia-color-surface-cloud); color: var(--ia-color-text-primary); }
+:root[data-mantine-color-scheme='light'] {
+  --mantine-color-dimmed: var(--ia-color-text-secondary);
+}
+
+body { margin: 0; background: var(--ia-color-surface-cloud); color: var(--ia-color-text-primary); font-family: var(--mantine-font-family); line-height: var(--mantine-line-height-md); }
 
 /* Mayúsculas solo en H1–H3; H4–H6 vuelven a Inter. */
 .mantine-Title-root:is(h1, h2, h3) { text-transform: uppercase; }
@@ -38,3 +42,7 @@ body { margin: 0; background: var(--ia-color-surface-cloud); color: var(--ia-col
 
 /* Cifras alineadas en tablas, KPI y capacidades. */
 .ia-num { font-variant-numeric: tabular-nums; }
+
+@media (prefers-reduced-motion: reduce) {
+  .mantine-Skeleton-root::before, .mantine-Skeleton-root::after { animation: none; }
+}

@@ -2,7 +2,11 @@
   min-width: 0;
   color: var(--ia-color-text-primary);
   overflow-wrap: anywhere;
+  border: 1px solid var(--ia-color-border-default);
 }
+.raiz .cabecera, .raiz .cuerpo { padding-inline: var(--mantine-spacing-lg); }
+.raiz .cabecera { padding-top: var(--mantine-spacing-lg); padding-bottom: var(--mantine-spacing-md); }
+.raiz .cuerpo { padding-bottom: var(--mantine-spacing-lg); }
 
 .raiz .cabecera {
   align-items: flex-start;
@@ -87,6 +91,7 @@
   }
 
   .raiz .cuerpo {
+    padding-inline: var(--mantine-spacing-md);
     padding-bottom: calc(var(--mantine-spacing-lg) + env(safe-area-inset-bottom, 0px));
   }
 
@@ -97,7 +102,9 @@
 
   .raiz .boton {
     width: 100%;
+    min-height: 50px;
   }
+  .raiz .cabecera { padding: var(--mantine-spacing-md); }
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -103,7 +103,7 @@ export function VisorEvidencia({
     className={clases.raiz}
     classNames={{ inner: clases.interior, content: clases.contenido, title: clases.titulo, header: clases.cabecera, body: clases.cuerpo }}
   >
-    <Modal.Overlay />
+    <Modal.Overlay backgroundOpacity={0.55} />
     <Modal.Content ref={contenido}>
       <Modal.Header>
         <Modal.Title>Evidencia del despacho</Modal.Title>

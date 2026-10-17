@@ -77,7 +77,7 @@ export function HistorialEstados({ entradas, estado, orden = 'ascendente', titul
 
   return <Card component="section" aria-labelledby={idTitulo} className={clases.raiz}>
     <Stack gap="lg">
-      <Title order={3} id={idTitulo}>{titulo}</Title>
+      <Title order={3} id={idTitulo} className={clases.titulo}>{titulo}</Title>
       <EstadoVista
         estado={estadoVista}
         esqueleto={esqueleto}

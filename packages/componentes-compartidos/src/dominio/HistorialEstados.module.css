@@ -6,6 +6,8 @@
 .raiz .cuerpoEvento {
   min-width: 0;
 }
+.titulo.titulo { font-family: var(--mantine-font-family); font-size: var(--mantine-h4-font-size); line-height: var(--mantine-h4-line-height); text-transform: none; }
+.raiz :global(.mantine-Timeline-item) { border-color: var(--ia-color-border-default); }
 
 .fecha {
   font-variant-numeric: tabular-nums;

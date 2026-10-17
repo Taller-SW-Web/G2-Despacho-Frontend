@@ -1,6 +1,6 @@
 import { lazy, Suspense } from 'react';
-import { Alert, Anchor, Box, Loader, Stack, Text, Title } from '@mantine/core';
-import { IconMapPin, IconCalendar, IconAlertTriangle, IconTruck, IconUsers } from '@tabler/icons-react';
+import { Anchor, Box, Loader, Stack, Text, Title } from '@mantine/core';
+import { IconMapPin, IconCalendarTime, IconChartBar, IconPackageOff, IconTruck, IconUsers } from '@tabler/icons-react';
 import { Link, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { ShellAdministrativo } from '@despacho/componentes-compartidos';
 import { PaginaEntregasFallidas } from './features/entregas-fallidas/PaginaEntregasFallidas';
@@ -13,13 +13,14 @@ import { PaginaRepartidores } from './features/flota/PaginaRepartidores';
 import { PaginaFurgonetas } from './features/flota/PaginaFurgonetas';
 import { PaginaProgramacion } from './features/programacion/PaginaProgramacion';
 import { PaginaJornadas } from './features/jornadas/PaginaJornadas';
+import clases from './Aplicacion.module.css';
 
 const ProbadorF01 = import.meta.env.DEV ? lazy(() => import('./features/zonas/desarrollo/ProbadorF01')) : null;
 
 const secciones = [
-  { ruta: '/jornadas', titulo: 'Jornadas y monitoreo', descripcion: 'Disponibilidad y capacidad diaria · F-06', endpoint: 'GET /api/v1/flota/monitoreo', Icono: IconCalendar },
-  { ruta: '/programacion', titulo: 'Programación', descripcion: 'Cola de despachos y asignación · F-02', endpoint: 'GET /api/v1/despachos/pendientes', Icono: IconCalendar },
-  { ruta: '/entregas-fallidas', titulo: 'Entregas fallidas', descripcion: 'Incidencias y reprogramación · F-04', endpoint: 'GET /api/v1/despachos/fallidos', Icono: IconAlertTriangle },
+  { ruta: '/programacion', titulo: 'Programación', descripcion: 'Cola de despachos y asignación · F-02', endpoint: 'GET /api/v1/despachos/pendientes', Icono: IconCalendarTime },
+  { ruta: '/jornadas', titulo: 'Monitoreo de flota', descripcion: 'Disponibilidad y capacidad diaria · F-06', endpoint: 'GET /api/v1/flota/monitoreo', Icono: IconChartBar },
+  { ruta: '/entregas-fallidas', titulo: 'Entregas fallidas', descripcion: 'Incidencias y reprogramación · F-04', endpoint: 'GET /api/v1/despachos/fallidos', Icono: IconPackageOff },
   { ruta: '/repartidores', titulo: 'Repartidores', descripcion: 'Catálogo de repartidores · F-05', endpoint: 'GET /api/v1/repartidores', Icono: IconUsers },
   { ruta: '/furgonetas', titulo: 'Vehículos', descripcion: 'Catálogo de furgonetas · F-05', endpoint: 'GET /api/v1/furgonetas', Icono: IconTruck },
   { ruta: '/zonas', titulo: 'Zonas y tarifas', descripcion: 'Gestión de cobertura y tarifas · F-01', endpoint: 'GET /api/v1/zonas', Icono: IconMapPin },
@@ -42,15 +43,17 @@ export function Aplicacion() {
   const navegar = useNavigate();
   const sesion = useSesion();
 
-  return <ShellAdministrativo destinos={secciones.map(({ ruta, titulo, Icono }) => ({ id: ruta, ruta, etiqueta: titulo, icono: <Icono size={20} aria-hidden="true" /> }))}
+  return <ShellAdministrativo destinos={secciones.map(({ ruta, titulo, Icono }) => ({ id: ruta, ruta, etiqueta: titulo, icono: <Icono size={24} aria-hidden="true" /> }))}
     usuario={sesion.modoDemo
       ? { nombre: 'Demostración', etiquetaPerfil: 'Gestor de despacho' }
       : { nombre: 'Sesión provisional', etiquetaPerfil: 'Identidad no disponible' }} logoUrl="" rutaInicio="/"
     alCerrarSesion={() => { sesion.guardarToken(null); window.location.assign('/'); }}
     destinoActivo={secciones.find(({ ruta }) => ubicacion.pathname.startsWith(ruta))?.ruta ?? null} alNavegar={(_, ruta) => navegar(ruta)}>
-      {import.meta.env.DEV && <Alert mb="lg" color="blue" title="Pruebas locales F-01">
-        <Anchor component={Link} to="/desarrollo/f01">Preparar sesión y probar cobertura / cotización</Anchor>
-      </Alert>}
+      {import.meta.env.DEV && <Box component="aside" className={clases.herramientasDesarrollo} aria-label="Herramientas de desarrollo">
+        <Text size="xs" c="dimmed">Entorno local</Text>
+        <Anchor component={Link} to="/desarrollo/f01" size="xs" c="orange.8">Preparar sesión de prueba</Anchor>
+        <Anchor href="/ejemplos/componentes-compartidos.html" size="xs" c="orange.8">Ver componentes compartidos</Anchor>
+      </Box>}
       <Routes>
         {ProbadorF01 && <Route path="/desarrollo/f01" element={<Suspense fallback={<Loader />}><ProbadorF01 /></Suspense>} />}
         <Route path="/" element={<Navigate to="/zonas" replace />} />

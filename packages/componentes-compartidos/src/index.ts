@@ -1,7 +1,8 @@
-import { Notification, createTheme, defaultVariantColorsResolver, getThemeColor } from '@mantine/core';
+import { Alert, Notification, createTheme, defaultVariantColorsResolver, getThemeColor } from '@mantine/core';
 import type { MantineColorsTuple } from '@mantine/core';
 import controles from './formularios/Controles.module.css';
 
+export { logoInkaAthletics } from './marca';
 export { accionesUi, accionesIconoUi, camposFormulario } from './formularios/patrones';
 export { BarraAccionesFija } from './estructura/BarraAccionesFija';
 export type { PropiedadesBarraAccionesFija } from './estructura/BarraAccionesFija';
@@ -77,14 +78,14 @@ export const tema = createTheme({
     const color = normalizarColor(entrada.color ?? entrada.theme.primaryColor);
     const colores = defaultVariantColorsResolver({ ...entrada, color });
     const { colors, black } = entrada.theme;
-    // §16.0: fondos semánticos claros; warning y neutral con texto ink (§4.4, §4.5).
+    // §4.4 y §16.0: el texto sobre fondos semánticos claros conserva el contraste ink.
     if (entrada.variant === 'light' && esSemantico(color)) {
       const nombre = nombreColor(color);
       return { ...colores, background: colors[nombre][0], hover: colors[nombre][1],
-        color: nombre === 'yellow' ? black : colors[nombre][8], hoverColor: nombre === 'yellow' ? black : colors[nombre][8] };
+        color: black, hoverColor: black };
     }
     if (entrada.variant === 'light' && nombreColor(color) === 'gray') {
-      return { ...colores, background: colors.cloud[2], hover: colors.cloud[3], color: colors.gray[7], hoverColor: colors.gray[7] };
+      return { ...colores, background: colors.cloud[2], hover: colors.cloud[3], color: black, hoverColor: black };
     }
     if (color !== 'orange' && !color.startsWith('orange.')) return colores;
     if (entrada.variant === 'outline' || entrada.variant === 'subtle') return {
@@ -106,13 +107,18 @@ export const tema = createTheme({
     ActionIcon: { defaultProps: { variant: 'subtle', color: 'orange.8', size: 'lg' } },
     Badge: { defaultProps: { size: 'sm', radius: 'xl', variant: 'light' } },
     Card: { defaultProps: { radius: 'md', padding: 'md', withBorder: true } },
+    Paper: { defaultProps: { radius: 'md' } },
     Modal: { defaultProps: { radius: 'lg', overlayProps: { backgroundOpacity: 0.55 } } },
     Drawer: { defaultProps: { position: 'right', size: 560 } },
     Table: { defaultProps: { verticalSpacing: 'sm', horizontalSpacing: 'md', highlightOnHover: true } },
     // §4.4: sobre fondos semánticos el contenido va en text/primary; el icono conserva el color semántico.
-    Alert: { classNames: { title: controles.tituloAlerta } },
+    Alert: Alert.extend({ defaultProps: { variant: 'light', radius: 'sm' },
+      classNames: { root: controles.alerta, title: controles.tituloAlerta, message: controles.mensajeAlerta },
+      vars: (theme, { color }) => ({ root: { '--alert-color': getThemeColor(normalizarColor(color ?? theme.primaryColor), theme) } }),
+    }),
     Notification: Notification.extend({
       defaultProps: { radius: 'md', withBorder: true },
+      classNames: { root: controles.notificacion, title: controles.tituloNotificacion, description: controles.mensajeNotificacion },
       vars: (theme, { color }) => ({ root: { '--notification-color': color ? getThemeColor(normalizarColor(color), theme) : undefined } }),
     }),
     TextInput: { defaultProps: { size: 'md' } },
@@ -125,6 +131,7 @@ export const tema = createTheme({
     MultiSelect: { defaultProps: { size: 'md', nothingFoundMessage: 'Sin resultados' } },
     TagsInput: { defaultProps: { size: 'md' } },
     Input: { classNames: { input: controles.entrada } },
+    InputWrapper: { classNames: { label: controles.etiquetaCampo, description: controles.ayudaCampo, error: controles.errorCampo } },
   },
 });
 

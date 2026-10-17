@@ -8,6 +8,7 @@
   text-align: start;
 }
 .tarjeta[data-checked] { border-color: var(--ia-color-action-primary); background: var(--ia-color-action-primary-soft); }
+.tarjeta:not(:disabled):not([data-checked]):hover { border-color: var(--ia-color-action-primary-hover); }
 .tarjeta:disabled { cursor: not-allowed; background: var(--ia-color-surface-cloud-subtle); }
 .tarjeta:disabled[data-bloqueo-funcional] { border-color: var(--ia-color-error-default); }
 .identidad { min-width: 0; }

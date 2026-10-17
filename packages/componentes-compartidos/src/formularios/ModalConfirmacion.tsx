@@ -50,7 +50,7 @@ export function ModalConfirmacion({
       className={clases.raiz}
       classNames={{ inner: clases.interior, content: clases.contenido, header: clases.cabecera, title: clases.titulo, body: clases.cuerpo }}
     >
-      <Modal.Overlay />
+      <Modal.Overlay backgroundOpacity={0.55} />
       <Modal.Content ref={contenido} aria-busy={procesando}>
         <Modal.Header>
           <Group gap="sm" wrap="nowrap" align="flex-start" className={clases.encabezado}>

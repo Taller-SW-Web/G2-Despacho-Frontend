@@ -1,5 +1,6 @@
 import { Card, Group, Stack, Text, UnstyledButton } from '@mantine/core';
 import { BadgeEstado } from './BadgeEstado';
+import clases from './TarjetaDespacho.module.css';
 
 export type TarjetaDespachoProps = {
   idDespacho: string;
@@ -38,10 +39,11 @@ export function TarjetaDespacho({
       onClick={() => alAbrir(idDespacho)}
       aria-label={`Abrir despacho ${codigo}, ${direccion}`}
       w="100%"
-      style={{ display: 'block', textAlign: 'left', borderRadius: 'var(--mantine-radius-md)' }}
+      className={clases.raiz}
     >
       {/* §16.2 y §16.5: siguiente con action/primary-soft; resuelto con cloud-subtle y texto secundario, sin opacidad. */}
       <Card
+        className={clases.tarjeta}
         bg={siguiente ? 'var(--ia-color-action-primary-soft)' : resuelto ? 'var(--ia-color-surface-cloud-subtle)' : 'white'}
         c={resuelto ? 'var(--ia-color-text-secondary)' : undefined}
         style={{
@@ -65,7 +67,7 @@ export function TarjetaDespacho({
           </Text>
           <Stack gap={6} style={{ minWidth: 0, flex: 1 }}>
             <Group justify="space-between" align="flex-start" gap="xs" wrap="nowrap">
-              <Text fw={700} size="md" style={{ overflowWrap: 'anywhere' }}>{codigo}</Text>
+              <Text fw={700} size="md" className={clases.codigo}>{codigo}</Text>
               <BadgeEstado contexto="despacho" valor={estado} size="sm" />
             </Group>
             {siguiente && <BadgeEstado contexto="etiqueta" valor="SIGUIENTE" size="sm" />}

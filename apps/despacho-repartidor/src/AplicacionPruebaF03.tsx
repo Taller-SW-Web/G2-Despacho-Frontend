@@ -6,11 +6,10 @@ import {
 import { useDisclosure } from '@mantine/hooks';
 import { IconClipboardList, IconDoorExit, IconRoute } from '@tabler/icons-react';
 import {
-  BadgeEstado, CapturaEvidencia, ModalConfirmacion, ShellRepartidor, TarjetaDespacho, TarjetaKpi,
+  BadgeEstado, CapturaEvidencia, ModalConfirmacion, ShellRepartidor, TarjetaDespacho, TarjetaKpi, logoInkaAthletics,
 } from '@despacho/componentes-compartidos';
 import type { DestinoRepartidor, FaseCapturaEvidencia } from '@despacho/componentes-compartidos';
 import { Navigate, Route, Routes, useLocation, useNavigate, useParams } from 'react-router-dom';
-import logoRepartidor from './assets/logo-athletics.png';
 
 const usuarioPrueba = 'repartidor.prueba';
 const clavePrueba = 'Ruta2026!';
@@ -189,7 +188,7 @@ function AccesoPrueba({ alIngresar }: { alIngresar: () => void }) {
   return (
     <Stack mih="100dvh" justify="center" maw={440} mx="auto" p="lg" gap="xl">
       <Stack gap="xs" ta="center">
-        <Image src={logoRepartidor} alt="ATHLETICS" w={320} h={125} fit="cover" mx="auto" />
+        <Image src={logoInkaAthletics} alt="ATHLETICS" w={320} h={125} fit="cover" mx="auto" />
         <Title order={1}>Acceso de repartidor</Title>
         <Text c="dimmed">Ingresa para consultar tu jornada y los despachos asignados.</Text>
       </Stack>
