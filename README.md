@@ -68,6 +68,7 @@ npm run test:f05
 npm run test:administrativo
 ```
 
+
 ## Frontend y pruebas locales de F-01
 
 Zonas y tarifas están integradas con el contrato vigente del backend: selección desde el catálogo real de distritos y códigos postales agrupados por distrito, creación, edición, filtros, activación/desactivación y configuración de tarifas.
@@ -80,6 +81,15 @@ La [guía F-01 de ejecución y evidencia](./docs/F-01-PruebasLocales.md) explica
 npm run test:f01
 npm run test:f01:e2e
 ```
+
+El paquete compartido exporta `ShellRepartidor`, `TarjetaDespacho` y
+`CapturaEvidencia`; la aplicación del repartidor integra el shell y el estado
+bloqueado de captura. Las tarjetas se conectarán a la ruta cuando se integre el
+endpoint. La carga de evidencias y las transiciones siguen pendientes de integrar
+con la API de Operación. No habilitar la captura real hasta acordar la política
+de archivos (formatos, tamaño y procesamiento); los componentes visuales no
+realizan llamadas HTTP.
+
 
 ## Integración pendiente de autenticación
 

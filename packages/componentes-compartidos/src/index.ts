@@ -94,3 +94,14 @@ export const tema = createTheme({
     Input: { classNames: { input: controles.entrada } },
   },
 });
+
+export { ShellRepartidor } from './layout/ShellRepartidor';
+export type { DestinoRepartidor } from './layout/ShellRepartidor';
+export { TarjetaDespacho } from './dominio/TarjetaDespacho';
+export type { TarjetaDespachoProps } from './dominio/TarjetaDespacho';
+export { CapturaEvidencia } from './formularios/CapturaEvidencia';
+export type {
+  CapturaEvidenciaProps,
+  FaseCapturaEvidencia,
+  PoliticaArchivoEvidencia,
+} from './formularios/CapturaEvidencia';

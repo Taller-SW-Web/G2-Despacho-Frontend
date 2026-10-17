@@ -1,6 +1,6 @@
 # CR-03 ShellAdministrativo
 
-**Responsable:** Rhamses. **Fecha:** 16/10/2026, America/Bogota.
+**Responsable:** Rhamses. **Revisión:** identificada por el historial de Git.
 **Fuente:** Specs local `91db8f8`, `disenio/componentes-react.md` §§1, CR-03 y 4.5; `SYSTEM-DESIGN.md` §§6, 17 y 18 [cite: 1].
 
 ## 1. Alcance y contrato

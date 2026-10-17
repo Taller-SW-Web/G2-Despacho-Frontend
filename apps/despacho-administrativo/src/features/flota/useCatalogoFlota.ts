@@ -6,7 +6,7 @@ import { mensajeError, sinPermiso } from './api';
 import type { ClienteApi } from '../../cliente/useClienteApi';
 
 export type FiltrosCatalogo = Record<string, string>;
-export type DefinicionFiltro = { clave: string; etiqueta: string; opciones?: { value: string; label: string }[] };
+export type DefinicionFiltro = { clave: string; etiqueta: string; opciones?: { value: string; label: string }[]; maximoCaracteres?: number };
 
 export function useCatalogoFlota<T>(listar: (cliente: ClienteApi, parametros: URLSearchParams, signal: AbortSignal) => Promise<Pagina<T>>,
   definiciones: DefinicionFiltro[]) {
@@ -18,7 +18,7 @@ export function useCatalogoFlota<T>(listar: (cliente: ClienteApi, parametros: UR
     const pagina = Number(actuales.get('pagina') ?? 1);
     const tamanoPagina = Number(actuales.get('tamanoPagina') ?? 50);
     const errores: string[] = [];
-    if (!Number.isSafeInteger(pagina) || pagina < 1) errores.push('La página debe ser un entero positivo.');
+    if (!Number.isSafeInteger(pagina) || pagina < 1 || pagina > 2147483647) errores.push('La página debe ser un entero entre 1 y 2147483647.');
     if (![20, 50, 100].includes(tamanoPagina)) errores.push('Selecciona un tamaño de página válido.');
     const filtros: FiltrosCatalogo = {};
     const solicitud = new URLSearchParams({ pagina: String(pagina), tamanoPagina: String(tamanoPagina) });
@@ -26,6 +26,7 @@ export function useCatalogoFlota<T>(listar: (cliente: ClienteApi, parametros: UR
       const valor = actuales.get(filtro.clave)?.trim() ?? '';
       filtros[filtro.clave] = valor;
       if (valor && filtro.opciones && !filtro.opciones.some((opcion) => opcion.value === valor)) errores.push(`Revisa el filtro ${filtro.etiqueta.toLowerCase()}.`);
+      if (valor && filtro.maximoCaracteres && valor.length > filtro.maximoCaracteres) errores.push(`El filtro ${filtro.etiqueta.toLowerCase()} admite como máximo ${filtro.maximoCaracteres} caracteres.`);
       if (valor) solicitud.set(filtro.clave, valor);
     }
     return { filtros, pagina, tamanoPagina, errores, solicitud };
