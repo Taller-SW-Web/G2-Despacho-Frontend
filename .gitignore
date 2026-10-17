@@ -15,6 +15,8 @@ docs/componentes/*
 docs/evidencia/*
 !docs/evidencia/cr-01-02-13/
 !docs/F-01-PruebasLocales.md
+!docs/F-02-ProgramacionAsignacion.md
+!docs/evidencia/f02/
 test-results/
 playwright-report/
 

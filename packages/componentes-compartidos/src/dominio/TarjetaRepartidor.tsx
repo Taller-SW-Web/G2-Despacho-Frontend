@@ -1,4 +1,5 @@
 import { useId } from 'react';
+import type { ReactNode } from 'react';
 import { Box, Group, Radio, Stack, Text } from '@mantine/core';
 import { IconAlertCircle } from '@tabler/icons-react';
 import { BadgeEstado } from './BadgeEstado';
@@ -14,18 +15,24 @@ export type PropiedadesTarjetaRepartidor = {
   placa: string;
   zona: string;
   estadoOperativo: unknown;
-  metricas: [MetricaRepartidor & { metrica: 'peso' }, MetricaRepartidor & { metrica: 'volumen' }, MetricaRepartidor & { metrica: 'paquetes' }];
   seleccionada?: boolean;
   disabled?: boolean;
   motivoDeshabilitado?: string;
   alSeleccionar: (idRepartidor: string) => void;
-};
+} & ({
+  metricas: [MetricaRepartidor & { metrica: 'peso' }, MetricaRepartidor & { metrica: 'volumen' }, MetricaRepartidor & { metrica: 'paquetes' }];
+  detalleCapacidad?: never;
+} | {
+  /** Para proveedores que solo publican remanente: no fabricar usados/límites. */
+  metricas?: never;
+  detalleCapacidad: ReactNode;
+});
 
 /** CR-20: usar dentro de Radio.Group con label="Repartidor" y valor controlado. */
-export function TarjetaRepartidor({ idRepartidor, nombre, placa, zona, estadoOperativo, metricas,
+export function TarjetaRepartidor({ idRepartidor, nombre, placa, zona, estadoOperativo, metricas, detalleCapacidad,
   seleccionada = false, disabled = false, motivoDeshabilitado, alSeleccionar }: PropiedadesTarjetaRepartidor) {
   const id = useId();
-  return <Radio.Card value={idRepartidor} checked={seleccionada && !disabled} disabled={disabled}
+  return <Radio.Card value={idRepartidor} checked={seleccionada && !disabled} disabled={disabled} data-bloqueo-funcional={disabled && Boolean(motivoDeshabilitado) || undefined}
     type="button" radius="sm" p="md" className={clases.tarjeta}
     aria-labelledby={`${id}-nombre`} aria-describedby={`${id}-detalle${disabled && motivoDeshabilitado ? ` ${id}-motivo` : ''}`}
     onClick={() => { if (!disabled) alSeleccionar(idRepartidor); }}
@@ -53,7 +60,7 @@ export function TarjetaRepartidor({ idRepartidor, nombre, placa, zona, estadoOpe
       </Group>
       <Text id={`${id}-detalle`} size="sm" c="gray.7"><span className="ia-num">{placa}</span> · {zona}</Text>
       <Stack gap="md">
-        {metricas.map((metrica) => <BarraOcupacion key={metrica.metrica} {...metrica} />)}
+        {metricas ? metricas.map((metrica) => <BarraOcupacion key={metrica.metrica} {...metrica} />) : detalleCapacidad}
       </Stack>
       {disabled && motivoDeshabilitado && <Box id={`${id}-motivo`} className={clases.motivo}>
         <IconAlertCircle size={20} aria-hidden="true" />
