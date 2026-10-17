@@ -68,6 +68,14 @@ npm run test:f05
 npm run test:administrativo
 ```
 
+El paquete compartido exporta `ShellRepartidor`, `TarjetaDespacho` y
+`CapturaEvidencia`; la aplicación del repartidor integra el shell y el estado
+bloqueado de captura. Las tarjetas se conectarán a la ruta cuando se integre el
+endpoint. La carga de evidencias y las transiciones siguen pendientes de integrar
+con la API de Operación. No habilitar la captura real hasta acordar la política
+de archivos (formatos, tamaño y procesamiento); los componentes visuales no
+realizan llamadas HTTP.
+
 ## Integración pendiente de autenticación
 
 Los patrones **CR-01 AccionesUi**, **CR-02 CamposFormulario** y **CR-13 BarraAccionesFija**, asignados a Valqui, se documentan en la [guía de uso y evidencia](./docs/componentes/CR-01-02-13-ControlesValqui.md). El paquete exporta `accionesUi`, `accionesIconoUi`, `camposFormulario` y `BarraAccionesFija`. Para revisar controles, carga, bloqueos y reserva dinámica del pie, abrir [su ejemplo de desarrollo](http://localhost:5173/ejemplos/controles-valqui.html).
