@@ -59,6 +59,14 @@ Los componentes de Tarqui —CR-05 `EncabezadoPagina`, CR-06 `BarraFiltros`, CR-
 
 Los contratos, pruebas y dependencias están documentados en [CR-03 ShellAdministrativo](./docs/componentes/CR-03-ShellAdministrativo.md), [CR-09 BadgeEstado](./docs/componentes/CR-09-BadgeEstado.md) y [CR-15 NotificacionOperacion](./docs/componentes/CR-15-NotificacionOperacion.md). El [ejemplo de desarrollo](http://localhost:5173/ejemplos/componentes-rhamses.html) permite recorrer navegación, catálogo de estados y notificaciones con datos simulados. No se incluye en producción.
 
+## Detalle de incidencias de F-04
+
+Desde `Ver detalle` en entregas fallidas se abre `/entregas-fallidas/:idDespacho`, conservando filtros, página y tamaño en la URL para regresar. La vista presenta la última incidencia, su recepción, historial completo, comunicaciones y decisiones permitidas por Gestión. Consulta de nuevo cada 30 segundos mientras está activa, bloquea las decisiones al actualizar o fallar y descarta respuestas de otro recurso.
+
+La fotografía se solicita por separado a Operación y se presenta en el visor compartido. Al vencer, cerrar, cambiar de incidencia o perder autorización se retiran la imagen y la URL temporal. Los destinos de recepción, reprogramación y cierre quedan preparados en `DestinosDetalleIncidencia`, con identidad y versión; sus formularios pertenecen a ES-F04-03/04/05 y siguen pendientes. Se muestran como acciones aún no disponibles cuando no existe un destino integrado.
+
+Las nueve pruebas nuevas utilizan fixtures y APIs simuladas; ejecutar `npm run test -w @despacho/administrativo -- src/features/entregas-fallidas/PaginaDetalleIncidencia.test.tsx`. `npm run test:f04` incluye también la regresión del listado y la sesión. La integración con servicios reales, teclado del visor y revisión visual en móvil siguen registradas en la [evidencia SDD](../G2-Despacho-Specs/especificaciones/ES-F04-02-ConsultarDetalleIncidencia/evidence.md).
+
 ## Frontend de F-05
 
 Los catálogos administrativos de repartidores y furgonetas están disponibles en `/repartidores` y `/furgonetas`. Incluyen alta, edición, baja lógica, asociación de cuenta de Seguridad y cambios de estado, reutilizando los componentes compartidos. `/flota` redirige al catálogo de repartidores. El [registro técnico de F-05](./docs/F-05-GestionRepartidoresFurgonetas.md) detalla pruebas, diferencias entre especificaciones y las decisiones de transporte pendientes de ratificar antes de la integración real.

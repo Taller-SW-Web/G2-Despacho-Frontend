@@ -37,6 +37,7 @@ export function SesionProveedor({ children }: { children: ReactNode }) {
           localStorage.removeItem(CLAVE_TOKEN);
           localStorage.setItem('despacho.sesionCerrada', 'true');
         }
+        window.dispatchEvent(new Event('despacho:sesion'));
       },
     }),
     [],
