@@ -68,6 +68,19 @@ npm run test:f05
 npm run test:administrativo
 ```
 
+## Frontend y pruebas locales de F-01
+
+Zonas y tarifas están integradas con el contrato vigente del backend: selección desde el catálogo real de distritos y códigos postales agrupados por distrito, creación, edición, filtros, activación/desactivación y configuración de tarifas.
+
+Para probar desde el navegador, abrir [el probador local F-01](http://localhost:5173/desarrollo/f01), generar la sesión de gestor y pulsar **Abrir zonas y tarifas**. El probador permite además emitir un token técnico independiente y consultar cobertura o calcular cotizaciones. La herramienta está disponible únicamente durante el desarrollo.
+
+La [guía F-01 de ejecución y evidencia](./docs/F-01-PruebasLocales.md) explica el arranque con Supabase, las nueve operaciones verificadas y las pruebas automatizadas.
+
+```bash
+npm run test:f01
+npm run test:f01:e2e
+```
+
 ## Integración pendiente de autenticación
 
 Los patrones **CR-01 AccionesUi**, **CR-02 CamposFormulario** y **CR-13 BarraAccionesFija**, asignados a Valqui, se documentan en la [guía de uso y evidencia](./docs/componentes/CR-01-02-13-ControlesValqui.md). El paquete exporta `accionesUi`, `accionesIconoUi`, `camposFormulario` y `BarraAccionesFija`. Para revisar controles, carga, bloqueos y reserva dinámica del pie, abrir [su ejemplo de desarrollo](http://localhost:5173/ejemplos/controles-valqui.html).

@@ -1,21 +1,20 @@
 import { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import {
   Alert,
-  Badge,
   Button,
   Drawer,
+  Fieldset,
   Group,
   Loader,
   NumberInput,
   Stack,
   Text,
-  Title,
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { IconAlertTriangle, IconDeviceFloppy, IconLock } from '@tabler/icons-react';
 import { useClienteApi } from '../../cliente/useClienteApi';
-import { guardarTarifa, obtenerTarifaVigente, obtenerZona, problemaDe } from './api/zonasApi';
+import { detalleProblema, guardarTarifa, obtenerTarifaVigente, obtenerZona, problemaDe } from './api/zonasApi';
 import { BadgeEstadoZona } from './BadgeEstadoZona';
 import type { SolicitudTarifa, Zona } from './tipos';
 
@@ -49,6 +48,7 @@ export function PanelTarifa() {
   const cliente = useClienteApi();
   const navegar = useNavigate();
   const { id } = useParams<{ id: string }>();
+  const [parametros] = useSearchParams();
 
   const [zona, setZona] = useState<Zona | null>(null);
   const [tieneTarifa, setTieneTarifa] = useState(false);
@@ -59,11 +59,17 @@ export function PanelTarifa() {
   const [erroresCampos, setErroresCampos] = useState<Record<string, string>>({});
   const [errorGeneral, setErrorGeneral] = useState<string | null>(null);
   const [guardando, setGuardando] = useState(false);
+  const [revision, setRevision] = useState(0);
 
   useEffect(() => {
     if (!id) return;
     let activo = true;
     setCargando(true);
+    setErrorCarga(null);
+    setDenegado(false);
+    setZona(null);
+    setTieneTarifa(false);
+    setCampos(CAMPOS_VACIOS);
     Promise.all([obtenerZona(cliente, id), obtenerTarifaVigente(cliente, id)])
       .then(([zonaCargada, tarifa]) => {
         if (!activo) return;
@@ -74,7 +80,7 @@ export function PanelTarifa() {
             tarifaBase: tarifa.tarifaBase,
             pesoIncluidoKg: tarifa.pesoIncluidoKg,
             recargoKgAdicional: tarifa.recargoKgAdicional,
-            factorVolumetrico: tarifa.factorVolumetrico,
+            factorVolumetrico: tarifa.factorVolumetrico ?? '',
             plazoEstimadoDiasHabiles: tarifa.plazoEstimadoDiasHabiles,
           });
         }
@@ -84,9 +90,10 @@ export function PanelTarifa() {
         const problema = problemaDe(error);
         if (problema?.status === 401 || problema?.status === 403) {
           setDenegado(true);
+          setZona(null);
           return;
         }
-        setErrorCarga('No se pudo cargar la tarifa. Revisa tu conexión e inténtalo de nuevo.');
+        setErrorCarga(problema?.status === 404 ? 'La zona solicitada no existe.' : 'No se pudo cargar la tarifa. Revisa tu conexión e inténtalo de nuevo.');
       })
       .finally(() => {
         if (activo) setCargando(false);
@@ -94,9 +101,9 @@ export function PanelTarifa() {
     return () => {
       activo = false;
     };
-  }, [cliente, id]);
+  }, [cliente, id, revision]);
 
-  const cerrar = () => navegar('/zonas');
+  const cerrar = () => { if (!guardando) navegar(`/zonas${parametros.size ? `?${parametros}` : ''}`); };
   const inactiva = zona?.estado === 'INACTIVO';
 
   const actualizar = (campo: keyof Campos) => (valor: ValorCampo) =>
@@ -120,7 +127,7 @@ export function PanelTarifa() {
   };
 
   const guardar = async () => {
-    if (!zona) return;
+    if (!zona || inactiva || guardando) return;
     const errores = validar();
     setErroresCampos(errores);
     setErrorGeneral(null);
@@ -143,11 +150,12 @@ export function PanelTarifa() {
         color: 'teal',
         title: 'Tarifa guardada',
       });
-      cerrar();
+      navegar(`/zonas${parametros.size ? `?${parametros}` : ''}`);
     } catch (error) {
       const problema = problemaDe(error);
       if (problema?.status === 401 || problema?.status === 403) {
         setDenegado(true);
+        setZona(null);
         return;
       }
       if (problema?.status === 400 || problema?.status === 404) {
@@ -156,7 +164,7 @@ export function PanelTarifa() {
           erroresServidor[campo] = motivo;
         });
         setErroresCampos(erroresServidor);
-        setErrorGeneral(problema.detail ?? 'La tarifa contiene campos inválidos.');
+        setErrorGeneral(detalleProblema(error, 'La tarifa contiene campos inválidos.'));
         return;
       }
       setErrorGeneral('No se pudo guardar la tarifa. Revisa tu conexión e inténtalo de nuevo.');
@@ -171,12 +179,11 @@ export function PanelTarifa() {
       onClose={cerrar}
       position="right"
       size={560}
-      title={
-        <Stack gap={4}>
-          <Title order={3}>Tarifas de {zona?.nombre ?? ''}</Title>
-          {zona ? <BadgeEstadoZona estado={zona.estado} /> : null}
-        </Stack>
-      }
+      closeOnEscape={!guardando}
+      closeOnClickOutside={!guardando}
+      withCloseButton={!guardando}
+      title={`Tarifas de ${zona?.nombre ?? ''}`}
+      closeButtonProps={{ 'aria-label': 'Cerrar tarifas' }}
     >
       {cargando ? (
         <Group justify="center" py="xl">
@@ -189,9 +196,11 @@ export function PanelTarifa() {
       ) : errorCarga ? (
         <Alert color="red" variant="light" icon={<IconAlertTriangle size={18} />}>
           {errorCarga}
+          <Button mt="sm" onClick={() => setRevision((valor) => valor + 1)}>Reintentar tarifa</Button>
         </Alert>
       ) : (
         <Stack gap="md">
+          {zona && <BadgeEstadoZona estado={zona.estado} />}
           {inactiva ? (
             <Alert color="orange" variant="light" icon={<IconAlertTriangle size={18} />}>
               Activa la zona para configurar su tarifa.
@@ -214,6 +223,7 @@ export function PanelTarifa() {
             </Alert>
           ) : null}
 
+          <Fieldset variant="unstyled" disabled={guardando || inactiva}><Stack gap="md">
           <NumberInput
             label="Tarifa base"
             prefix={`${MONEDA} `}
@@ -271,10 +281,11 @@ export function PanelTarifa() {
           <Text size="sm" c="dimmed">
             Moneda fija: {MONEDA}. Las tarifas se expresan en soles.
           </Text>
+          </Stack></Fieldset>
 
           <Alert variant="light" color="gray" title="Cómo se calcula">
             Peso cotizable = peso total + (volumen total × factor volumétrico). Costo = tarifa base +
-            recargo por kg × (peso cotizable − peso incluido).
+            recargo por kg × máximo(0, peso cotizable − peso incluido).
           </Alert>
 
           <Group justify="flex-end" gap="sm">
@@ -284,12 +295,13 @@ export function PanelTarifa() {
             <Button
               leftSection={<IconDeviceFloppy size={18} />}
               loading={guardando}
-              disabled={inactiva}
+              disabled={inactiva || aNumero(campos.tarifaBase) === null || aNumero(campos.pesoIncluidoKg) === null}
               onClick={() => void guardar()}
             >
               Guardar tarifa
             </Button>
           </Group>
+          {(aNumero(campos.tarifaBase) === null || aNumero(campos.pesoIncluidoKg) === null) && <Text size="sm" c="dimmed">Completa la tarifa base y el peso incluido para guardar.</Text>}
         </Stack>
       )}
     </Drawer>

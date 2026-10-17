@@ -5,13 +5,22 @@ export type OrigenDelimitacion = 'DISTRITOS' | 'DIBUJO';
 export type Distrito = {
   id: string;
   nombre: string;
+  codigosPostales: string[];
+};
+
+export type DistritoCatalogo = {
+  id: string;
+  nombre: string;
+  provincia: string;
+  departamento: string;
+  ubigeo: string;
 };
 
 export type Tarifa = {
   tarifaBase: number;
   pesoIncluidoKg: number;
   recargoKgAdicional: number;
-  factorVolumetrico: number;
+  factorVolumetrico: number | null;
   moneda: string;
   plazoEstimadoDiasHabiles: number;
   actualizadoEn: string;
@@ -23,7 +32,6 @@ export type Zona = {
   estado: EstadoZona;
   origenDelimitacion: OrigenDelimitacion;
   distritos: Distrito[];
-  codigosPostales: string[];
   tarifaVigente: Tarifa | null;
   creadoEn: string;
   actualizadoEn: string;
@@ -40,8 +48,7 @@ export type PaginaZonas = {
 export type SolicitudZona = {
   nombre: string;
   estado: EstadoZona;
-  distritos: string[];
-  codigosPostales: string[];
+  distritos: { distrito: string; codigosPostales: string[] }[];
 };
 
 export type SolicitudTarifa = {
