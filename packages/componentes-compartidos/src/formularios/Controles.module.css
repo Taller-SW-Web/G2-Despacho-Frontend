@@ -1,0 +1,40 @@
+/* Doble clase: debe prevalecer aunque styles.css de Mantine se importe después. */
+.boton.boton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--mantine-spacing-sm);
+}
+
+.boton.boton[data-block] { display: flex; }
+
+/* Mantine oculta el contenido en carga; CR-01 conserva etiqueta y contexto. */
+.boton[data-loading] .interior { opacity: 1; transform: none; }
+.boton[data-loading] .etiqueta { opacity: 1; }
+.boton[data-loading] .cargador {
+  position: static;
+  display: inline-flex;
+  flex-shrink: 0;
+  /* El Transition de Mantine aplica la traslación como estilo inline. */
+  transform: none !important;
+}
+
+.boton[data-variant='filled']:not(:disabled, [data-disabled], [data-loading]):hover {
+  color: var(--ia-color-text-inverse);
+}
+
+.entrada.entrada:focus-within {
+  --input-bd: var(--ia-color-accent-signal);
+}
+
+.entrada.entrada:focus-visible {
+  outline: 2px solid var(--ia-color-accent-signal);
+  outline-offset: 2px;
+}
+
+.opcion.opcion { align-items: center; }
+.etiquetaOpcion.etiquetaOpcion { display: flex; align-items: center; min-height: 2.75rem; }
+
+@media (prefers-reduced-motion: reduce) {
+  .boton, .boton::before, .interior { transition: none; }
+}

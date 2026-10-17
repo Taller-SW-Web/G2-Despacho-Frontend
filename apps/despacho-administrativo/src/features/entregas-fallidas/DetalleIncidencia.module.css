@@ -1,0 +1,6 @@
+.pagina { min-width: 0; overflow-wrap: anywhere; }
+.pagina button { min-height: 44px; height: auto; white-space: normal; }
+.pagina button span { white-space: normal; }
+@media (min-width: 75em) {
+  .decision { position: sticky; top: 24px; }
+}

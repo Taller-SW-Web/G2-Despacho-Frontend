@@ -18,5 +18,6 @@ export function crearClienteApi(urlBase: string, obtenerToken: () => string | nu
 export function obtenerProblemaApi(error: unknown): ProblemaApi | null {
   if (!axios.isAxiosError(error)) return null;
   const respuesta = (error as AxiosError<ProblemaApi>).response;
-  return respuesta?.data?.status === respuesta?.status ? respuesta.data : null;
+  if (!respuesta) return null;
+  return respuesta.data?.status === respuesta.status ? respuesta.data : null;
 }

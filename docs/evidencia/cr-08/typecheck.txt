@@ -1,0 +1,15 @@
+
+> despacho-frontend@0.1.0 typecheck
+> npm run typecheck -w @despacho/componentes-compartidos && npm run typecheck -w @despacho/administrativo && npm run typecheck -w @despacho/repartidor
+
+
+> @despacho/componentes-compartidos@0.1.0 typecheck
+> tsc --noEmit
+
+
+> @despacho/administrativo@0.1.0 typecheck
+> tsc --noEmit
+
+
+> @despacho/repartidor@0.1.0 typecheck
+> tsc --noEmit

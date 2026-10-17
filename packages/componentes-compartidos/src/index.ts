@@ -1,5 +1,39 @@
-import { createTheme } from '@mantine/core';
+import { createTheme, defaultVariantColorsResolver } from '@mantine/core';
 import type { MantineColorsTuple } from '@mantine/core';
+import controles from './formularios/Controles.module.css';
+
+export { accionesUi, accionesIconoUi, camposFormulario } from './formularios/patrones';
+export { BarraAccionesFija } from './estructura/BarraAccionesFija';
+export type { PropiedadesBarraAccionesFija } from './estructura/BarraAccionesFija';
+
+export { EstadoVista } from './feedback/EstadoVista';
+export { ShellAdministrativo } from './estructura/ShellAdministrativo';
+export type { DestinoAdministrativo, PropiedadesShellAdministrativo } from './estructura/ShellAdministrativo';
+export { notificarOperacion } from './feedback/NotificacionOperacion';
+export type { EntradaNotificacionOperacion } from './feedback/NotificacionOperacion';
+export type { ContextoEstado } from './dominio/estados';
+export { estadosPorContexto } from './dominio/estados';
+export { EncabezadoPagina } from './estructura/EncabezadoPagina';
+export type { PropiedadesEncabezadoPagina } from './estructura/EncabezadoPagina';
+export { BarraFiltros } from './listados/BarraFiltros';
+export type { PropiedadesBarraFiltros } from './listados/BarraFiltros';
+export { TablaDatos } from './listados/TablaDatos';
+export type { ColumnaDatos, PropiedadesTablaDatos } from './listados/TablaDatos';
+export { TarjetaKpi } from './indicadores/TarjetaKpi';
+export type { PropiedadesEstadoVista } from './feedback/EstadoVista';
+export type { EstadoConsulta, AccionUi, DestinoUi, FiltroActivoUi, OrdenUi, PaginacionUi } from './tipos-ui';
+export { BadgeEstado } from './dominio/BadgeEstado';
+export type { PropiedadesBadgeEstado } from './dominio/BadgeEstado';
+export { HistorialEstados } from './dominio/HistorialEstados';
+export type { EntradaHistorialEstados, PropiedadesHistorialEstados } from './dominio/HistorialEstados';
+export { ModalConfirmacion } from './formularios/ModalConfirmacion';
+export type { PropiedadesModalConfirmacion } from './formularios/ModalConfirmacion';
+export { VisorEvidencia } from './dominio/VisorEvidencia';
+export type { EstadoVisorEvidencia, PropiedadesVisorEvidencia } from './dominio/VisorEvidencia';
+export { BarraOcupacion } from './dominio/BarraOcupacion';
+export type { PropiedadesBarraOcupacion } from './dominio/BarraOcupacion';
+export { TarjetaRepartidor } from './dominio/TarjetaRepartidor';
+export type { PropiedadesTarjetaRepartidor } from './dominio/TarjetaRepartidor';
 
 const orange: MantineColorsTuple = ['#FFF4E6', '#FCE3D0', '#FFD8A8', '#FFC078', '#FFA94D', '#FF922B', '#FD7E14', '#F76707', '#C2410C', '#9A3412'];
 const volt: MantineColorsTuple = ['#FBFEE0', '#F5FCC2', '#EEF7B0', '#E4F48A', '#D9EF5E', '#CFEA33', '#C8E81A', '#C3E504', '#9DB803', '#5C6B00'];
@@ -11,11 +45,63 @@ export const tema = createTheme({
   primaryColor: 'orange', primaryShade: 7, autoContrast: true, luminanceThreshold: 0.2,
   black: '#1B1812', white: '#FFFFFF', colors: { orange, volt, signal, ink, cloud },
   fontFamily: 'Inter, system-ui, sans-serif',
-  headings: { fontFamily: 'Oswald, sans-serif', fontWeight: '700' },
+  headings: {
+    fontFamily: 'Oswald, sans-serif', fontWeight: '700',
+    sizes: {
+      h1: { fontSize: '2rem', lineHeight: '1.25' },
+      h2: { fontSize: '1.75rem', lineHeight: '1.285714' },
+      h3: { fontSize: '1.5rem', lineHeight: '1.333333' },
+      h4: { fontSize: '1.25rem', lineHeight: '1.4' },
+    },
+  },
   defaultRadius: 'sm',
+  radius: { xs: '0.25rem', sm: '0.5rem', md: '0.75rem', lg: '1rem', xl: '62.4375rem' },
+  respectReducedMotion: true,
+  focusClassName: 'ia-focus',
+  // Mantine usa un tono claro para subtle incluso con color="orange.8".
+  // Mantener la jerarquía y el contraste de CR-01 también en los slots de acciones.
+  variantColorResolver: (entrada) => {
+    const colores = defaultVariantColorsResolver(entrada);
+    const color = entrada.color ?? entrada.theme.primaryColor;
+    if (color !== 'orange' && !color.startsWith('orange.')) return colores;
+    if (entrada.variant === 'outline' || entrada.variant === 'subtle') return {
+      ...colores,
+      color: entrada.theme.colors.orange[8],
+      hoverColor: entrada.theme.colors.orange[8],
+      ...(entrada.variant === 'outline' ? { border: `1px solid ${entrada.theme.colors.orange[8]}` } : {}),
+    };
+    if (entrada.variant === 'filled') return { ...colores, color: entrada.theme.black, hoverColor: entrada.theme.colors.cloud[1] };
+    return colores;
+  },
+  breakpoints: { xs: '36em', sm: '48em', md: '62em', lg: '75em', xl: '88em' },
+  spacing: { xs: '0.25rem', sm: '0.5rem', md: '1rem', lg: '1.5rem', xl: '2rem' },
   components: {
-    Button: { defaultProps: { size: 'md', radius: 'sm' } },
+    Button: {
+      defaultProps: { size: 'md', radius: 'sm' },
+      classNames: { root: controles.boton, inner: controles.interior, label: controles.etiqueta, loader: controles.cargador },
+    },
+    ActionIcon: { defaultProps: { variant: 'subtle', color: 'orange.8', size: 'lg' } },
     Card: { defaultProps: { radius: 'md', padding: 'md', withBorder: true } },
     TextInput: { defaultProps: { size: 'md' } },
+    PasswordInput: { defaultProps: { size: 'md' } },
+    NumberInput: { defaultProps: { size: 'md' } },
+    Textarea: { defaultProps: { size: 'md' } },
+    Checkbox: { defaultProps: { size: 'md' }, classNames: { body: controles.opcion, label: controles.etiquetaOpcion } },
+    Radio: { defaultProps: { size: 'md' }, classNames: { body: controles.opcion, label: controles.etiquetaOpcion } },
+    Select: { defaultProps: { size: 'md', nothingFoundMessage: 'Sin resultados' } },
+    MultiSelect: { defaultProps: { size: 'md', nothingFoundMessage: 'Sin resultados' } },
+    TagsInput: { defaultProps: { size: 'md' } },
+    Input: { classNames: { input: controles.entrada } },
   },
 });
+
+export { ShellRepartidor } from './layout/ShellRepartidor';
+export type { DestinoRepartidor } from './layout/ShellRepartidor';
+export { TarjetaDespacho } from './dominio/TarjetaDespacho';
+export type { TarjetaDespachoProps } from './dominio/TarjetaDespacho';
+export { CapturaEvidencia } from './formularios/CapturaEvidencia';
+export type {
+  CapturaEvidenciaProps,
+  FaseCapturaEvidencia,
+  PoliticaArchivoEvidencia,
+} from './formularios/CapturaEvidencia';

@@ -1,0 +1,13 @@
+.raiz, .textos { min-width: 0; overflow-wrap: anywhere; }
+.fila { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--mantine-spacing-md); }
+.textos { flex: 1; }
+.acciones { display: flex; flex-wrap: wrap; gap: var(--mantine-spacing-sm); }
+.acciones :global(.mantine-Button-root), .acciones :global(.mantine-ActionIcon-root) { min-height: 44px; }
+.migas { flex-wrap: wrap; }
+.miga { white-space: normal; }
+
+@media (max-width: 35.99em) {
+  .fila { flex-direction: column; }
+  .acciones { width: 100%; flex-direction: column; align-items: stretch; }
+  .acciones > :global(.mantine-Group-root) { flex-direction: column; align-items: stretch; }
+}

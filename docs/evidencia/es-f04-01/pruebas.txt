@@ -1,0 +1,23 @@
+
+> despacho-frontend@0.1.0 test:f04
+> npm run test -w @despacho/administrativo
+
+
+> @despacho/administrativo@0.1.0 test
+> vitest run
+
+
+ RUN  v3.2.7 C:/Users/Gerardo/unmsm/8tavo ciclo/Taller de software web/sistema-despacho/G2-Despacho-Frontend/apps/despacho-administrativo
+
+ ✓ src/features/entregas-fallidas/PaginaEntregasFallidas.test.tsx (7 tests) 15086ms
+   ✓ muestra los indicadores del servidor y alterna grupos sin inventar totales ni reiniciar intentos  3127ms
+   ✓ restaura la URL, corrige una página desaparecida y conserva el tamaño al limpiar  2528ms
+   ✓ descarta respuestas anteriores aunque el transporte ignore la cancelación  2353ms
+   ✓ retira filas, indicadores y filtros inmediatamente si el catálogo revoca el permiso  1559ms
+   ✓ conserva desconocidos, rechaza un falso vacío de atrasados y recupera todos los grupos  2888ms
+   ✓ distingue vacío, falta de coincidencias y error recuperable  2618ms
+
+ Test Files  1 passed (1)
+      Tests  7 passed (7)
+   Start at  18:09:05
+   Duration  39.54s (transform 1.62s, setup 2.54s, collect 17.38s, tests 15.09s, environment 3.64s, prepare 277ms)

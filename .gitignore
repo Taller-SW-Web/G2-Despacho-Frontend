@@ -1,4 +1,5 @@
 node_modules/
+.npm-cache/
 dist/
 .env
 .env.local
@@ -6,3 +7,13 @@ dist/
 coverage/
 .vercel/
 *.tsbuildinfo
+docs/*
+!docs/componentes/
+docs/componentes/*
+!docs/componentes/CR-01-02-13-ControlesValqui.md
+!docs/evidencia/
+docs/evidencia/*
+!docs/evidencia/cr-01-02-13/
+!docs/F-01-PruebasLocales.md
+test-results/
+playwright-report/

@@ -7,7 +7,17 @@
     "dev:administrativo": "npm run dev -w @despacho/administrativo",
     "dev:repartidor": "npm run dev -w @despacho/repartidor",
     "build": "npm run build -w @despacho/administrativo && npm run build -w @despacho/repartidor",
-    "typecheck": "npm run typecheck -w @despacho/administrativo && npm run typecheck -w @despacho/repartidor"
+    "typecheck": "npm run typecheck -w @despacho/componentes-compartidos && npm run typecheck -w @despacho/administrativo && npm run typecheck -w @despacho/repartidor",
+    "test": "npm run test -w @despacho/componentes-compartidos",
+    "test:administrativo": "npm run test -w @despacho/administrativo",
+    "test:f04": "npm run test -w @despacho/administrativo -- src/features/entregas-fallidas src/sesion",
+    "test:f05": "npm run test -w @despacho/administrativo -- src/features/flota",
+    "test:f01": "npm run test -w @despacho/administrativo -- src/features/zonas",
+    "test:f01:e2e": "playwright test --config playwright.f01.config.ts",
+    "test:watch": "npm run test:watch -w @despacho/componentes-compartidos"
   },
-  "engines": { "node": ">=20", "npm": ">=10" }
+  "engines": { "node": ">=20", "npm": ">=10" },
+  "devDependencies": {
+    "@playwright/test": "^1.64.1"
+  }
 }

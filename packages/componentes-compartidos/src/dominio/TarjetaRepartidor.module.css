@@ -1,0 +1,16 @@
+.tarjeta {
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  border: 2px solid var(--mantine-color-default-border);
+  background: var(--mantine-color-white);
+  color: var(--ia-color-text-primary, var(--mantine-color-ink-9));
+  text-align: start;
+}
+.tarjeta[data-checked] { border-color: var(--mantine-color-orange-7); background: var(--mantine-color-orange-1); }
+.tarjeta:disabled { cursor: not-allowed; border-color: var(--mantine-color-red-8); background: var(--mantine-color-cloud-2); }
+.identidad { min-width: 0; }
+.nombre { overflow-wrap: anywhere; }
+.tarjeta :global(.ia-num) { font-variant-numeric: tabular-nums; }
+.motivo { display: flex; align-items: flex-start; gap: var(--mantine-spacing-sm); padding: var(--mantine-spacing-sm); background: var(--mantine-color-red-0); border-radius: var(--mantine-radius-sm); }
+.motivo > svg { flex-shrink: 0; }
