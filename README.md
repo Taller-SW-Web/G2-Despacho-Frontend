@@ -32,7 +32,7 @@ apps/
   despacho-repartidor/       # Ruta y operaciones de campo
 packages/
   cliente-api/              # Cliente Axios y lectura de errores Problem Details
-  componentes-compartidos/ # Tema Mantine y tokens comunes
+  componentes-compartidos/ # Tema, tokens y componentes React compartidos
   tipos-compartidos/        # Tipos transversales
 ```
 
@@ -57,8 +57,19 @@ La [evidencia de CR-08](./docs/componentes/CR-08-EstadoVista.md) registra fuente
 
 Los componentes de Tarqui —CR-05 `EncabezadoPagina`, CR-06 `BarraFiltros`, CR-07 `TablaDatos` y CR-20 `TarjetaRepartidor`— están exportados desde el mismo paquete. Su [guía de consumo y evidencia](./docs/componentes/CR-05-06-07-20-Tarqui.md) incluye búsqueda con debounce, orden y paginación controlados, selección accesible y una fixture visual reproducible, además de las dependencias CR-09/11 necesarias para las tarjetas.
 
-## Integración pendiente
+Los contratos, pruebas y dependencias están documentados en [CR-03 ShellAdministrativo](./docs/componentes/CR-03-ShellAdministrativo.md), [CR-09 BadgeEstado](./docs/componentes/CR-09-BadgeEstado.md) y [CR-15 NotificacionOperacion](./docs/componentes/CR-15-NotificacionOperacion.md). El [ejemplo de desarrollo](http://localhost:5173/ejemplos/componentes-rhamses.html) permite recorrer navegación, catálogo de estados y notificaciones con datos simulados. No se incluye en producción.
+
+## Frontend de F-05
+
+Los catálogos administrativos de repartidores y furgonetas están disponibles en `/repartidores` y `/furgonetas`. Incluyen alta, edición, baja lógica, asociación de cuenta de Seguridad y cambios de estado, reutilizando los componentes compartidos. `/flota` redirige al catálogo de repartidores. El [registro técnico de F-05](./docs/F-05-GestionRepartidoresFurgonetas.md) detalla pruebas, diferencias entre especificaciones y las decisiones de transporte pendientes de ratificar antes de la integración real.
+
+```bash
+npm run test:f05
+npm run test:administrativo
+```
+
+## Integración pendiente de autenticación
 
 La autenticación corresponde al módulo Seguridad y Usuarios. El proveedor provisional existente suministra un JWT humano al cliente API; ES-F04-01 retira contenido protegido ante `401/403`. El flujo de inicio de sesión del equipo permanece pendiente. La demo utiliza únicamente el emisor temporal documentado. La variable `VITE_API_BASE_URL` es pública; no guardar secretos en variables `VITE_*`.
 
-La guía de stack `arquitectura/stack-frontend.md` aún describe React 18 y Tailwind. Esta inicialización sigue la especificación de interfaz más concreta de `disenio/SYSTEM-DESIGN.md` §15: React 19.2, TypeScript y Mantine 9.6.2. La organización de dos apps sigue `arquitectura/c4-contenedores.md` §7.
+La guía de stack `arquitectura/stack-frontend.md` del repositorio de documentación se concilió con la base existente: React 19.2, TypeScript y Mantine 9.6.2, siguiendo `disenio/SYSTEM-DESIGN.md` §15. La organización de dos apps sigue `arquitectura/c4-contenedores.md` §7.
