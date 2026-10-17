@@ -32,7 +32,7 @@ apps/
   despacho-repartidor/       # Ruta y operaciones de campo
 packages/
   cliente-api/              # Cliente Axios y lectura de errores Problem Details
-  componentes-compartidos/ # Tema Mantine y tokens comunes
+  componentes-compartidos/ # Tema, tokens y componentes React compartidos
   tipos-compartidos/        # Tipos transversales
 ```
 
@@ -55,8 +55,10 @@ Para revisar los estados de CR-08, ejecutar `npm run dev:administrativo` y abrir
 
 La [evidencia de CR-08](./docs/componentes/CR-08-EstadoVista.md) registra fuentes, comandos, capturas y límites de la verificación. La integración con la pantalla de F-04 se verifica en su propia tarea SDD.
 
+La [entrega de Rhamses](./docs/componentes/Entrega-Rhamses.md) reúne CR-03 ShellAdministrativo, CR-09 BadgeEstado y CR-15 NotificacionOperacion, sus contratos, pruebas y dependencias. El [ejemplo de desarrollo](http://localhost:5173/ejemplos/componentes-rhamses.html) permite recorrer navegación, catálogo de estados y notificaciones con datos simulados. No se incluye en producción.
+
 ## Integración pendiente
 
 La autenticación corresponde al módulo Seguridad y Usuarios. El proveedor provisional existente suministra un JWT humano al cliente API; ES-F04-01 retira contenido protegido ante `401/403`. El flujo de inicio de sesión del equipo permanece pendiente. La demo utiliza únicamente el emisor temporal documentado. La variable `VITE_API_BASE_URL` es pública; no guardar secretos en variables `VITE_*`.
 
-La guía de stack `arquitectura/stack-frontend.md` aún describe React 18 y Tailwind. Esta inicialización sigue la especificación de interfaz más concreta de `disenio/SYSTEM-DESIGN.md` §15: React 19.2, TypeScript y Mantine 9.6.2. La organización de dos apps sigue `arquitectura/c4-contenedores.md` §7.
+La guía de stack `arquitectura/stack-frontend.md` del repositorio de documentación se concilió con la base existente: React 19.2, TypeScript y Mantine 9.6.2, siguiendo `disenio/SYSTEM-DESIGN.md` §15. La organización de dos apps sigue `arquitectura/c4-contenedores.md` §7.

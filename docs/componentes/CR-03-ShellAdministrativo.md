@@ -33,4 +33,4 @@ Ejecutar `npm run dev:administrativo` y abrir `/ejemplos/componentes-rhamses.htm
 
 ## 5. Referencias
 
-- [cite: 1] Repositorio hermano `despacho-docs`, revisión `91db8f8`: catálogo CR-03, CCR-03-01/02 y sistema de diseño. El código parte del frontend `10d2e9e`; cambios locales sin commit en esta entrega.
+- [cite: 1] Repositorio hermano `despacho-docs`, revisión `91db8f8`: catálogo CR-03, CCR-03-01/02 y sistema de diseño. El código parte del frontend `10d2e9e`; implementación registrada en `b64778e`.

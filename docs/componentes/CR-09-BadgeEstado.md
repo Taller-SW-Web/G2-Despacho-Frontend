@@ -30,4 +30,4 @@ El ejemplo `/ejemplos/componentes-rhamses.html` muestra el catálogo en superfic
 
 ## 4. Referencias
 
-- [cite: 1] Specs `91db8f8`: CR-09, CCR-09-01/02 y tablas de estados de §16. Frontend base `10d2e9e`; implementación local sin commit.
+- [cite: 1] Specs `91db8f8`: CR-09, CCR-09-01/02 y tablas de estados de §16. Frontend base `10d2e9e`; implementación registrada en `0bed9c8`.

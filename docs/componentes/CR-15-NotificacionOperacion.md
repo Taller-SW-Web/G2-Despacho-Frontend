@@ -43,4 +43,4 @@ No invocar al comenzar una petición. El consumidor determina el resultado confi
 
 La demo usa resultados simulados y no llama a Ventas ni confirma transiciones. JSDOM verifica el proveedor real de Mantine y temporizadores, no la entrega de servicios externos. Revisión visual y con lector de pantalla pendientes.
 
-- [cite: 1] Specs `91db8f8`: CR-15 y CCR-15-01. Frontend base `10d2e9e`; cambios locales sin commit.
+- [cite: 1] Specs `91db8f8`: CR-15 y CCR-15-01. Frontend base `10d2e9e`; implementación registrada en `9d01d59`.
