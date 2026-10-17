@@ -28,6 +28,7 @@ export type PropiedadesTablaDatos<Fila> = {
   alCambiarPagina?: (pagina: number) => void;
   /** Compatibilidad con los listados existentes que permiten elegir tamaño de página. */
   alCambiarTamano?: (tamano: number) => void;
+  tamaniosPagina?: number[];
   renderizarAcciones?: (fila: Fila) => ReactNode;
   renderizarEstado?: (estado: EstadoConsulta) => ReactNode;
   estiloFila?: (fila: Fila) => CSSProperties;
@@ -37,7 +38,7 @@ export type PropiedadesTablaDatos<Fila> = {
 /** CR-07: solicita orden/página sin ordenar, recortar ni volver a paginar las filas recibidas. */
 export function TablaDatos<Fila>({ filas, obtenerId, columnas, tituloAccesible, estado, actualizando = false,
   orden = null, paginacion, alCambiarOrden, alCambiarPagina, alCambiarTamano, renderizarAcciones,
-  renderizarEstado, estiloFila, anchoMinimo = 1000 }: PropiedadesTablaDatos<Fila>) {
+  renderizarEstado, estiloFila, anchoMinimo = 1000, tamaniosPagina = [20, 50, 100] }: PropiedadesTablaDatos<Fila>) {
   const conservaDatos = estado === 'error' && filas.length > 0;
   const muestraDatos = estado === 'datos' || conservaDatos;
   const muestraTabla = muestraDatos || estado === 'carga';
@@ -92,7 +93,7 @@ export function TablaDatos<Fila>({ filas, obtenerId, columnas, tituloAccesible, 
       <Text size="sm" role="status">{desde === 0 ? `Mostrando 0 de ${paginacion.total}` : `Mostrando ${desde}–${hasta} de ${paginacion.total}`}</Text>
       {alCambiarTamano && <Select label="Filas por página" size="sm" w={140} value={String(paginacion.tamanioPagina)} allowDeselect={false}
         disabled={actualizando} styles={{ input: { minHeight: 44 } }}
-        data={Array.from(new Set([20, 50, 100, paginacion.tamanioPagina])).sort((a, b) => a - b).map(String)}
+        data={Array.from(new Set([...tamaniosPagina, paginacion.tamanioPagina])).sort((a, b) => a - b).map(String)}
         onChange={(valor) => { if (valor) alCambiarTamano(Number(valor)); }} />}
       {paginacion.total > 0 && <Group component="nav" gap="xs" aria-label="Paginación">
         <Button type="button" size="sm" mih={44} variant="outline" color="orange.8"

@@ -14,6 +14,8 @@
     "test:f05": "npm run test -w @despacho/administrativo -- src/features/flota",
     "test:f06": "npm run test -w @despacho/administrativo -- src/features/jornadas",
     "test:f01": "npm run test -w @despacho/administrativo -- src/features/zonas",
+    "test:f02": "npm run test -w @despacho/administrativo -- src/features/programacion",
+    "test:f02:e2e": "playwright test --config playwright.f02.config.ts",
     "test:f01:e2e": "playwright test --config playwright.f01.config.ts",
     "test:watch": "npm run test:watch -w @despacho/componentes-compartidos"
   },

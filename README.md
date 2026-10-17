@@ -59,6 +59,17 @@ Los componentes de Tarqui —CR-05 `EncabezadoPagina`, CR-06 `BarraFiltros`, CR-
 
 Los contratos, pruebas y dependencias están documentados en [CR-03 ShellAdministrativo](./docs/componentes/CR-03-ShellAdministrativo.md), [CR-09 BadgeEstado](./docs/componentes/CR-09-BadgeEstado.md) y [CR-15 NotificacionOperacion](./docs/componentes/CR-15-NotificacionOperacion.md). El [ejemplo de desarrollo](http://localhost:5173/ejemplos/componentes-rhamses.html) permite recorrer navegación, catálogo de estados y notificaciones con datos simulados. No se incluye en producción.
 
+## Frontend de F-02: programación y asignación
+
+`/programacion` integra la cola paginada, tres indicadores con filtros rápidos, filtros conservados en la URL, generación de despachos de prueba y modal de asignación. Reutiliza los componentes y colores del sistema de diseño, con adaptación a tableta y detalle de los campos ocultos. La asignación compara peso, volumen y paquetes con la capacidad remanente confirmada por Operación.
+
+```bash
+npm run test:f02
+npm run test:f02:e2e
+```
+
+La [guía F-02 y su evidencia](./docs/F-02-ProgramacionAsignacion.md) incluye ejecución, capturas y dependencias de integración. Las pruebas usan APIs simuladas. Las barras de ocupación absoluta necesitan límites que la consulta pública aún no suministra; rutas y reasignación corresponden a ES-F02-05/06 y mantienen su pestaña identificada como pendiente.
+
 ## Detalle de incidencias de F-04
 
 Desde `Ver detalle` en entregas fallidas se abre `/entregas-fallidas/:idDespacho`, conservando filtros, página y tamaño en la URL para regresar. La vista presenta la última incidencia, su recepción, historial completo, comunicaciones y decisiones permitidas por Gestión. Consulta de nuevo cada 30 segundos mientras está activa, bloquea las decisiones al actualizar o fallar y descarta respuestas de otro recurso.

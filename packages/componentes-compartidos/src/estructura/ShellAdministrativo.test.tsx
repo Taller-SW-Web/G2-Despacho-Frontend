@@ -1,5 +1,5 @@
 import { MantineProvider } from '@mantine/core';
-import { render, screen, within } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { ShellAdministrativo, tema, type PropiedadesShellAdministrativo } from '../index';
@@ -41,7 +41,7 @@ describe('CR-03 ShellAdministrativo', () => {
     expect(destino).toHaveFocus();
     await usuario.keyboard('{Escape}');
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-    expect(disparador).toHaveFocus();
+    await waitFor(() => expect(disparador).toHaveFocus());
   });
 
   it('cierra el Drawer tras navegar y emite el cierre de sesión desde el menú', async () => {

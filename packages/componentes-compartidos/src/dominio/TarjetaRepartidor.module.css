@@ -8,7 +8,8 @@
   text-align: start;
 }
 .tarjeta[data-checked] { border-color: var(--mantine-color-orange-7); background: var(--mantine-color-orange-1); }
-.tarjeta:disabled { cursor: not-allowed; border-color: var(--mantine-color-red-8); background: var(--mantine-color-cloud-2); }
+.tarjeta:disabled { cursor: not-allowed; background: var(--mantine-color-cloud-2); }
+.tarjeta:disabled[data-bloqueo-funcional] { border-color: var(--mantine-color-red-8); }
 .identidad { min-width: 0; }
 .nombre { overflow-wrap: anywhere; }
 .tarjeta :global(.ia-num) { font-variant-numeric: tabular-nums; }
