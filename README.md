@@ -110,6 +110,10 @@ de archivos (formatos, tamaño y procesamiento); los componentes visuales no
 realizan llamadas HTTP.
 
 
+## Jornadas y monitoreo F-06
+
+La ruta `/jornadas` permite abrir y cerrar jornadas, consultar detalles y supervisar ocupación y disponibilidad. La [guía F-06](./docs/F-06-JornadasMonitoreo.md) reúne componentes, pruebas y configuración. Ejecutar `npm run test:f06` para los 19 casos del módulo.
+
 ## Integración pendiente de autenticación
 
 Los patrones **CR-01 AccionesUi**, **CR-02 CamposFormulario** y **CR-13 BarraAccionesFija**, asignados a Valqui, se documentan en la [guía de uso y evidencia](./docs/componentes/CR-01-02-13-ControlesValqui.md). El paquete exporta `accionesUi`, `accionesIconoUi`, `camposFormulario` y `BarraAccionesFija`. Para revisar controles, carga, bloqueos y reserva dinámica del pie, abrir [su ejemplo de desarrollo](http://localhost:5173/ejemplos/controles-valqui.html).

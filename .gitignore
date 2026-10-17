@@ -19,3 +19,5 @@ docs/evidencia/*
 !docs/evidencia/f02/
 test-results/
 playwright-report/
+
+!docs/F-06-JornadasMonitoreo.md
