@@ -57,7 +57,16 @@ La [evidencia de CR-08](./docs/componentes/CR-08-EstadoVista.md) registra fuente
 
 Los contratos, pruebas y dependencias están documentados en [CR-03 ShellAdministrativo](./docs/componentes/CR-03-ShellAdministrativo.md), [CR-09 BadgeEstado](./docs/componentes/CR-09-BadgeEstado.md) y [CR-15 NotificacionOperacion](./docs/componentes/CR-15-NotificacionOperacion.md). El [ejemplo de desarrollo](http://localhost:5173/ejemplos/componentes-rhamses.html) permite recorrer navegación, catálogo de estados y notificaciones con datos simulados. No se incluye en producción.
 
-## Integración pendiente
+## Frontend de F-05
+
+Los catálogos administrativos de repartidores y furgonetas están disponibles en `/repartidores` y `/furgonetas`. Incluyen alta, edición, baja lógica, asociación de cuenta de Seguridad y cambios de estado, reutilizando los componentes compartidos. `/flota` redirige al catálogo de repartidores. El [registro técnico de F-05](./docs/F-05-GestionRepartidoresFurgonetas.md) detalla pruebas, diferencias entre especificaciones y las decisiones de transporte pendientes de ratificar antes de la integración real.
+
+```bash
+npm run test:f05
+npm run test:administrativo
+```
+
+## Integración pendiente de autenticación
 
 La autenticación corresponde al módulo Seguridad y Usuarios. El proveedor provisional existente suministra un JWT humano al cliente API; ES-F04-01 retira contenido protegido ante `401/403`. El flujo de inicio de sesión del equipo permanece pendiente. La demo utiliza únicamente el emisor temporal documentado. La variable `VITE_API_BASE_URL` es pública; no guardar secretos en variables `VITE_*`.
 
