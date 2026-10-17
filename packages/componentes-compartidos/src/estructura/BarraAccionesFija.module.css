@@ -1,0 +1,35 @@
+.reserva {
+  height: var(--barra-altura, auto);
+  flex-shrink: 0;
+}
+
+.barra {
+  box-sizing: border-box;
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-start;
+  gap: var(--mantine-spacing-sm);
+  padding: var(--mantine-spacing-md);
+  padding-bottom: calc(var(--mantine-spacing-md) + env(safe-area-inset-bottom, 0px));
+  background: var(--mantine-color-white);
+  border-top: 1px solid var(--ia-color-border-default);
+  z-index: var(--mantine-z-index-app);
+}
+
+.reserva[data-medida] .barra {
+  position: fixed;
+  bottom: 0;
+  left: var(--barra-izquierda);
+  width: var(--barra-ancho);
+}
+
+.accion { min-width: 0; max-width: 100%; }
+.motivo { color: var(--ia-color-text-secondary); overflow-wrap: anywhere; }
+.boton.boton { max-width: 100%; height: auto; min-height: var(--button-height); }
+.boton :global(.mantine-Button-label) { white-space: normal; padding-block: var(--mantine-spacing-sm); }
+
+@media (max-width: 47.99em) {
+  .barra { flex-direction: column; }
+  .accion, .boton.boton { width: 100%; }
+  .boton.boton { min-height: 3.125rem; font-size: var(--mantine-font-size-md); }
+}

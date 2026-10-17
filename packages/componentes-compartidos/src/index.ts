@@ -1,5 +1,10 @@
 import { createTheme, defaultVariantColorsResolver } from '@mantine/core';
 import type { MantineColorsTuple } from '@mantine/core';
+import controles from './formularios/Controles.module.css';
+
+export { accionesUi, accionesIconoUi, camposFormulario } from './formularios/patrones';
+export { BarraAccionesFija } from './estructura/BarraAccionesFija';
+export type { PropiedadesBarraAccionesFija } from './estructura/BarraAccionesFija';
 
 export { EstadoVista } from './feedback/EstadoVista';
 export { ShellAdministrativo } from './estructura/ShellAdministrativo';
@@ -71,8 +76,21 @@ export const tema = createTheme({
   breakpoints: { xs: '36em', sm: '48em', md: '62em', lg: '75em', xl: '88em' },
   spacing: { xs: '0.25rem', sm: '0.5rem', md: '1rem', lg: '1.5rem', xl: '2rem' },
   components: {
-    Button: { defaultProps: { size: 'md', radius: 'sm' } },
+    Button: {
+      defaultProps: { size: 'md', radius: 'sm' },
+      classNames: { root: controles.boton, inner: controles.interior, label: controles.etiqueta, loader: controles.cargador },
+    },
+    ActionIcon: { defaultProps: { variant: 'subtle', color: 'orange.8', size: 'lg' } },
     Card: { defaultProps: { radius: 'md', padding: 'md', withBorder: true } },
     TextInput: { defaultProps: { size: 'md' } },
+    PasswordInput: { defaultProps: { size: 'md' } },
+    NumberInput: { defaultProps: { size: 'md' } },
+    Textarea: { defaultProps: { size: 'md' } },
+    Checkbox: { defaultProps: { size: 'md' }, classNames: { body: controles.opcion, label: controles.etiquetaOpcion } },
+    Radio: { defaultProps: { size: 'md' }, classNames: { body: controles.opcion, label: controles.etiquetaOpcion } },
+    Select: { defaultProps: { size: 'md', nothingFoundMessage: 'Sin resultados' } },
+    MultiSelect: { defaultProps: { size: 'md', nothingFoundMessage: 'Sin resultados' } },
+    TagsInput: { defaultProps: { size: 'md' } },
+    Input: { classNames: { input: controles.entrada } },
   },
 });

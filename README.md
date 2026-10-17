@@ -70,6 +70,10 @@ npm run test:administrativo
 
 ## Integración pendiente de autenticación
 
+Los patrones **CR-01 AccionesUi**, **CR-02 CamposFormulario** y **CR-13 BarraAccionesFija**, asignados a Valqui, se documentan en la [guía de uso y evidencia](./docs/componentes/CR-01-02-13-ControlesValqui.md). El paquete exporta `accionesUi`, `accionesIconoUi`, `camposFormulario` y `BarraAccionesFija`. Para revisar controles, carga, bloqueos y reserva dinámica del pie, abrir [su ejemplo de desarrollo](http://localhost:5173/ejemplos/controles-valqui.html).
+
+## Integración pendiente
+
 La autenticación corresponde al módulo Seguridad y Usuarios. El proveedor provisional existente suministra un JWT humano al cliente API; ES-F04-01 retira contenido protegido ante `401/403`. El flujo de inicio de sesión del equipo permanece pendiente. La demo utiliza únicamente el emisor temporal documentado. La variable `VITE_API_BASE_URL` es pública; no guardar secretos en variables `VITE_*`.
 
 La guía de stack `arquitectura/stack-frontend.md` del repositorio de documentación se concilió con la base existente: React 19.2, TypeScript y Mantine 9.6.2, siguiendo `disenio/SYSTEM-DESIGN.md` §15. La organización de dos apps sigue `arquitectura/c4-contenedores.md` §7.

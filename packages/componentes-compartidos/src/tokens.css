@@ -5,7 +5,10 @@
   --ia-color-surface-ink: #1B1812;
   --ia-color-surface-cloud: #F7F5F0;
   --ia-color-text-primary: #1B1812;
+
+  --ia-color-text-inverse: #F7F5F0;
   --ia-color-text-secondary: #495057;
+  --ia-color-border-default: #DEE2E6;
 }
 
 body { margin: 0; background: var(--ia-color-surface-cloud); color: var(--ia-color-text-primary); }

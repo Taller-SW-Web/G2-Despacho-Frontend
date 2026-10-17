@@ -4,6 +4,13 @@ import { afterEach, vi } from 'vitest';
 
 afterEach(cleanup);
 
+// Mantine usa ResizeObserver en listas y calendarios. No simula medidas reales.
+globalThis.ResizeObserver = class {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+};
+
 // JSDOM no calcula media queries; las comprobaciones responsive se hacen en navegador.
 Object.defineProperty(window, 'matchMedia', {
   writable: true,

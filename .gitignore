@@ -7,4 +7,10 @@ dist/
 coverage/
 .vercel/
 *.tsbuildinfo
-docs/
+docs/*
+!docs/componentes/
+docs/componentes/*
+!docs/componentes/CR-01-02-13-ControlesValqui.md
+!docs/evidencia/
+docs/evidencia/*
+!docs/evidencia/cr-01-02-13/
