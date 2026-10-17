@@ -55,7 +55,7 @@ Para revisar los estados de CR-08, ejecutar `npm run dev:administrativo` y abrir
 
 La [evidencia de CR-08](./docs/componentes/CR-08-EstadoVista.md) registra fuentes, comandos, capturas y límites de la verificación. La integración con la pantalla de F-04 se verifica en su propia tarea SDD.
 
-La [entrega de Rhamses](./docs/componentes/Entrega-Rhamses.md) reúne CR-03 ShellAdministrativo, CR-09 BadgeEstado y CR-15 NotificacionOperacion, sus contratos, pruebas y dependencias. El [ejemplo de desarrollo](http://localhost:5173/ejemplos/componentes-rhamses.html) permite recorrer navegación, catálogo de estados y notificaciones con datos simulados. No se incluye en producción.
+Los contratos, pruebas y dependencias están documentados en [CR-03 ShellAdministrativo](./docs/componentes/CR-03-ShellAdministrativo.md), [CR-09 BadgeEstado](./docs/componentes/CR-09-BadgeEstado.md) y [CR-15 NotificacionOperacion](./docs/componentes/CR-15-NotificacionOperacion.md). El [ejemplo de desarrollo](http://localhost:5173/ejemplos/componentes-rhamses.html) permite recorrer navegación, catálogo de estados y notificaciones con datos simulados. No se incluye en producción.
 
 ## Integración pendiente
 

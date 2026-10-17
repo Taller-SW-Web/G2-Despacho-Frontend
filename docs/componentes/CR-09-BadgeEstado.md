@@ -18,7 +18,7 @@ Disponible usa volt suave; Nuevo usa signal y texto blanco; Vinculado se present
 | CCR-09-01 | TCR-02 | `src/dominio/BadgeEstado.test.tsx` | Correspondencias de los ocho contextos, semántica e iconos; Fallido conserva etiqueta con recepción confirmada. |
 | CCR-09-02 | TCR-02 | Mismo archivo | Valores desconocidos, objetos, null y claves heredadas sin filtrar información técnica. |
 
-Resultados y comandos en [la entrega](./Entrega-Rhamses.md). El catálogo completo tiene 54 pruebas, incluidas las 13 previas.
+`npm test` aprobó las 147 pruebas compartidas. El catálogo completo tiene 54 pruebas, incluidas las 13 previas. `npm run typecheck` y `npm run build` aprobaron para ambas aplicaciones.
 
 ## 3. Consumo y límites
 

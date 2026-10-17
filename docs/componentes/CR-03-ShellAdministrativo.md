@@ -19,7 +19,7 @@ El menú móvil usa Drawer con foco contenido, cierre por Escape y devolución a
 | CCR-03-02 | TCR-03 | Mismo archivo | Abrir con Enter, recorrer enlaces con Tab, Escape y retorno del foco. |
 | Composición | TCR-03 | Mismo archivo | Cierre tras navegar y evento de cierre de sesión. |
 
-Los comandos y resultados finales se registran en [la entrega de Rhamses](./Entrega-Rhamses.md). Las pruebas usan Mantine y JSDOM: no acreditan layout responsive en un navegador real.
+`npm test` aprobó las 147 pruebas compartidas, incluidas las 3 del shell. `npm run test:f04` aprobó 8 pruebas administrativas, incluida la regresión de cierre de sesión. `npm run typecheck` y `npm run build` aprobaron para ambas aplicaciones. Las pruebas usan Mantine y JSDOM: no acreditan layout responsive en un navegador real.
 
 ## 3. Consumo y dependencias
 

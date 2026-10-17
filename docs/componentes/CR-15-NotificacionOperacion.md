@@ -22,7 +22,7 @@ Se actualiza una notificación visible o en cola con el mismo id; si ya se cerr�
 | CCR-15-01 | TCR-02 | `src/feedback/NotificacionOperacion.test.tsx` | Cierre registrado con efecto a Ventas pendiente: mensaje persistente, sin tratar la operación como fallida. |
 | Contrato CR-15 | TCR-02 | Mismo archivo | Temporizador de éxito, actualización por id, información persistente, acción contextual, bloqueo y cierre accesible. |
 
-Comandos y resultados reales en [la entrega](./Entrega-Rhamses.md).
+`npm test` aprobó las 147 pruebas compartidas, incluidas las 4 del adaptador de notificaciones. `npm run typecheck` y `npm run build` aprobaron para ambas aplicaciones.
 
 ## 3. Consumo
 
