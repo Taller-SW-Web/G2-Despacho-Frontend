@@ -11,10 +11,12 @@ import { PanelTarifa } from './features/zonas/PanelTarifa';
 import { useSesion } from './sesion/SesionProveedor';
 import { PaginaRepartidores } from './features/flota/PaginaRepartidores';
 import { PaginaFurgonetas } from './features/flota/PaginaFurgonetas';
+import { PaginaJornadas } from './features/jornadas/PaginaJornadas';
 
 const ProbadorF01 = import.meta.env.DEV ? lazy(() => import('./features/zonas/desarrollo/ProbadorF01')) : null;
 
 const secciones = [
+  { ruta: '/jornadas', titulo: 'Jornadas y monitoreo', descripcion: 'Disponibilidad y capacidad diaria · F-06', endpoint: 'GET /api/v1/flota/monitoreo', Icono: IconCalendar },
   { ruta: '/programacion', titulo: 'Programación', descripcion: 'Cola de despachos y asignación · F-02', endpoint: 'GET /api/v1/despachos/pendientes', Icono: IconCalendar },
   { ruta: '/entregas-fallidas', titulo: 'Entregas fallidas', descripcion: 'Incidencias y reprogramación · F-04', endpoint: 'GET /api/v1/despachos/fallidos', Icono: IconAlertTriangle },
   { ruta: '/repartidores', titulo: 'Repartidores', descripcion: 'Catálogo de repartidores · F-05', endpoint: 'GET /api/v1/repartidores', Icono: IconUsers },
@@ -60,6 +62,8 @@ export function Aplicacion() {
         <Route path="/entregas-fallidas/:idDespacho" element={<PaginaDetalleIncidencia />} />
         <Route path="/repartidores" element={<PaginaRepartidores />} />
         <Route path="/furgonetas" element={<PaginaFurgonetas />} />
+        <Route path="/jornadas" element={<PaginaJornadas />} />
+        <Route path="/monitoreo" element={<Navigate to="/jornadas" replace />} />
         <Route path="/flota/*" element={<Navigate to="/repartidores" replace />} />
         {secciones.filter(({ ruta }) => ruta === '/programacion').map(({ ruta, titulo, descripcion, endpoint }) => <Route key={ruta} path={`${ruta}/*`} element={<PaginaPendiente titulo={titulo} descripcion={descripcion} endpoint={endpoint} />} />)}
         <Route path="*" element={<PaginaPendiente titulo="Página no encontrada" descripcion="La ruta solicitada no existe." endpoint="—" />} />
