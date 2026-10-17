@@ -61,3 +61,13 @@
 .raiz .insignia[data-texto-secundario] {
   color: var(--mantine-color-gray-7);
 }
+
+.raiz .insignia[data-semantica='availability'] {
+  background: var(--mantine-color-volt-2);
+  --estado-icono: var(--mantine-color-ink-9);
+}
+
+.raiz .insignia[data-semantica='signal'] {
+  background: var(--ia-color-accent-signal);
+  color: var(--mantine-color-white);
+}

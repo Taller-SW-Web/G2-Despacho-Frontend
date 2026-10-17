@@ -3,6 +3,8 @@ import type { MantineColorsTuple } from '@mantine/core';
 
 export { EstadoVista } from './feedback/EstadoVista';
 export { ShellAdministrativo } from './estructura/ShellAdministrativo';
+export type { ContextoEstado } from './dominio/estados';
+export { estadosPorContexto } from './dominio/estados';
 export { EncabezadoPagina } from './estructura/EncabezadoPagina';
 export { BarraFiltros } from './listados/BarraFiltros';
 export { TablaDatos } from './listados/TablaDatos';
