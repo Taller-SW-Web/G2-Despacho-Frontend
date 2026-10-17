@@ -1,6 +1,6 @@
 # CR-09 BadgeEstado
 
-**Responsable:** Rhamses. **Fecha:** 16/10/2026, America/Bogota.
+**Responsable:** Rhamses. **Revisión:** identificada por el historial de Git.
 **Fuente:** Specs local `91db8f8`, `disenio/componentes-react.md`, CR-09; `SYSTEM-DESIGN.md` §§11.7 y 16 [cite: 1].
 
 ## 1. Alcance y contrato

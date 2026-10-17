@@ -1,6 +1,6 @@
 # CR-15 NotificacionOperacion
 
-**Responsable:** Rhamses. **Fecha:** 16/10/2026, America/Bogota.
+**Responsable:** Rhamses. **Revisión:** identificada por el historial de Git.
 **Fuente:** Specs `91db8f8`, `disenio/componentes-react.md`, CR-15; `SYSTEM-DESIGN.md` §§12.7 y 17 [cite: 1].
 
 ## 1. Alcance y contrato
