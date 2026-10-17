@@ -3,6 +3,7 @@ import { createContext, useContext, useMemo, type ReactNode } from 'react';
 const CLAVE_TOKEN = 'despacho.token';
 
 type SesionContexto = {
+  modoDemo: boolean;
   obtenerToken: () => string | null;
   guardarToken: (token: string | null) => void;
 };
@@ -20,7 +21,9 @@ const ContextoSesion = createContext<SesionContexto | null>(null);
 export function SesionProveedor({ children }: { children: ReactNode }) {
   const valor = useMemo<SesionContexto>(
     () => ({
+      modoDemo: import.meta.env.VITE_DEMO_SIN_AUTENTICACION === 'true',
       obtenerToken: () => {
+        if (import.meta.env.VITE_DEMO_SIN_AUTENTICACION === 'true') return null;
         if (localStorage.getItem('despacho.sesionCerrada') === 'true') return null;
         const token = localStorage.getItem(CLAVE_TOKEN);
         if (token) return token;
@@ -30,6 +33,7 @@ export function SesionProveedor({ children }: { children: ReactNode }) {
           : null;
       },
       guardarToken: (token) => {
+        if (import.meta.env.VITE_DEMO_SIN_AUTENTICACION === 'true') return;
         if (token) {
           localStorage.removeItem('despacho.sesionCerrada');
           localStorage.setItem(CLAVE_TOKEN, token);
