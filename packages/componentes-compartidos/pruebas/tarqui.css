@@ -1,0 +1,5 @@
+/* Reserva el espacio del shell para verificar el ancho disponible sin implementar CR-03. */
+.prueba-contenido { min-width: 0; max-width: 1320px; padding: var(--mantine-spacing-md); }
+.prueba-contenido .mantine-Input-input { min-height: 44px; }
+@media (min-width: 48em) { .prueba-contenido { margin-left: 72px; padding: var(--mantine-spacing-lg); } }
+@media (min-width: 75em) { .prueba-contenido { margin-left: 256px; padding: var(--mantine-spacing-xl); } }

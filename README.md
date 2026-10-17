@@ -55,6 +55,8 @@ Para revisar los estados de CR-08, ejecutar `npm run dev:administrativo` y abrir
 
 La [evidencia de CR-08](./docs/componentes/CR-08-EstadoVista.md) registra fuentes, comandos, capturas y límites de la verificación. La integración con la pantalla de F-04 se verifica en su propia tarea SDD.
 
+Los componentes de Tarqui —CR-05 `EncabezadoPagina`, CR-06 `BarraFiltros`, CR-07 `TablaDatos` y CR-20 `TarjetaRepartidor`— están exportados desde el mismo paquete. Su [guía de consumo y evidencia](./docs/componentes/CR-05-06-07-20-Tarqui.md) incluye búsqueda con debounce, orden y paginación controlados, selección accesible y una fixture visual reproducible, además de las dependencias CR-09/11 necesarias para las tarjetas.
+
 ## Integración pendiente
 
 La autenticación corresponde al módulo Seguridad y Usuarios. El proveedor provisional existente suministra un JWT humano al cliente API; ES-F04-01 retira contenido protegido ante `401/403`. El flujo de inicio de sesión del equipo permanece pendiente. La demo utiliza únicamente el emisor temporal documentado. La variable `VITE_API_BASE_URL` es pública; no guardar secretos en variables `VITE_*`.

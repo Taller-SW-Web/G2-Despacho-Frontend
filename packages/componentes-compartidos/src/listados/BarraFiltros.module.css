@@ -1,0 +1,11 @@
+.controles { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--mantine-spacing-md); }
+.busqueda { flex: 2 1 16rem; min-width: 0; }
+.adicionales { flex: 1 1 auto; min-width: 0; }
+.activos { flex: 1; min-width: 0; }
+.entrada { min-height: 44px; }
+
+@media (max-width: 35.99em) {
+  .controles { flex-direction: column; align-items: stretch; }
+  .busqueda, .adicionales { flex: none; width: 100%; }
+  .adicionales > :global(.mantine-Group-root) { flex-direction: column; align-items: stretch; }
+}

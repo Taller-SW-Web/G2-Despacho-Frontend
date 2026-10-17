@@ -38,3 +38,18 @@ describe('CR-09: contexto despacho requerido por CR-19', () => {
     expect(screen.queryByText('Recibido')).not.toBeInTheDocument();
   });
 });
+
+describe('CR-09: contexto operativo requerido por CR-20', () => {
+  it.each([
+    ['DISPONIBLE', 'Disponible'], ['EN_RUTA', 'En ruta'], ['SATURADO', 'Saturado'], ['FUERA_DE_TURNO', 'Fuera de turno'],
+  ])('traduce %s como %s', (valor, etiqueta) => {
+    render(<BadgeEstado contexto="operacionRepartidor" valor={valor} />, { wrapper: ProveedorPruebas });
+    expect(screen.getByText(etiqueta)).toBeInTheDocument();
+    expect(screen.queryByText(valor)).not.toBeInTheDocument();
+  });
+
+  it('no confunde un estado de despacho con el contexto operativo', () => {
+    render(<BadgeEstado contexto="operacionRepartidor" valor="ASIGNADO" />, { wrapper: ProveedorPruebas });
+    expect(screen.getByText('Estado no disponible')).toBeInTheDocument();
+  });
+});
