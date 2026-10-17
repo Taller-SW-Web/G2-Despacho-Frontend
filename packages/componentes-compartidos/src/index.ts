@@ -4,6 +4,8 @@ import type { MantineColorsTuple } from '@mantine/core';
 export { EstadoVista } from './feedback/EstadoVista';
 export { ShellAdministrativo } from './estructura/ShellAdministrativo';
 export type { DestinoAdministrativo, PropiedadesShellAdministrativo } from './estructura/ShellAdministrativo';
+export { notificarOperacion } from './feedback/NotificacionOperacion';
+export type { EntradaNotificacionOperacion } from './feedback/NotificacionOperacion';
 export type { ContextoEstado } from './dominio/estados';
 export { estadosPorContexto } from './dominio/estados';
 export { EncabezadoPagina } from './estructura/EncabezadoPagina';
