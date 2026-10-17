@@ -6,7 +6,7 @@ import { autorizarEvidencia, errorDetalle } from './apiDetalle';
 type Visor = { clave: string; abierto: boolean; estado: EstadoVisorEvidencia; url: string | null; venceEn: string | null };
 export function useEvidenciaIncidencia(idDespacho: string, idIncidencia: string, idEvidencia: string | null, alRevocar: () => void) {
   const cliente = useClienteApi();
-  const clave = `${idDespacho}:${idIncidencia}:${idEvidencia ?? ''}`;
+  const clave = JSON.stringify([idDespacho, idIncidencia, idEvidencia]);
   const claveVigente = useRef(clave); claveVigente.current = clave;
   const generacion = useRef(0);
   const controlador = useRef<AbortController | null>(null);

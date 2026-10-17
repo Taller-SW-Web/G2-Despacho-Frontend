@@ -14,31 +14,35 @@ export function useDetalleIncidencia(idDespacho: string, incidenciaOrigen: strin
     let vigente = true;
     let ocupado = false;
     let bloqueado = false;
+    let generacion = 0;
     let controlador: AbortController | null = null;
     establecer({ id: idDespacho, detalle: null, cargando: true, error: null, cambioIncidencia: false });
     const retirar = () => {
+      generacion++;
       bloqueado = true;
       controlador?.abort();
+      ocupado = false;
       establecer({ id: idDespacho, detalle: null, cargando: false, error: errorDetalle({ isAxiosError: true, response: { status: 401 } }), cambioIncidencia: false });
     };
     const consultar = async () => {
       if (!vigente || ocupado || bloqueado) return;
       ocupado = true;
+      const solicitud = ++generacion;
       controlador = new AbortController();
       establecer((anterior) => ({ ...anterior, cargando: true, error: null }));
       try {
         const detalle = await consultarDetalle(cliente, idDespacho, controlador.signal);
-        if (!vigente || bloqueado) return;
+        if (!vigente || bloqueado || solicitud !== generacion) return;
         establecer((anterior) => ({ id: idDespacho, detalle, cargando: false, error: null,
           cambioIncidencia: anterior.cambioIncidencia || Boolean((anterior.detalle?.incidencia.idIncidencia ?? incidenciaOrigen)
             && (anterior.detalle?.incidencia.idIncidencia ?? incidenciaOrigen) !== detalle.incidencia.idIncidencia) }));
       } catch (fallo) {
-        if (!vigente || bloqueado) return;
+        if (!vigente || bloqueado || solicitud !== generacion) return;
         const error = errorDetalle(fallo);
         if (error.sinPermiso) bloqueado = true;
         establecer((anterior) => ({ ...anterior, cargando: false, error,
           detalle: error.sinPermiso || error.noEncontrado || error.inconsistente ? null : anterior.detalle }));
-      } finally { ocupado = false; }
+      } finally { if (solicitud === generacion) ocupado = false; }
     };
     recargar.current = () => { bloqueado = false; void consultar(); };
     revocar.current = retirar;
@@ -52,7 +56,7 @@ export function useDetalleIncidencia(idDespacho: string, incidenciaOrigen: strin
     window.addEventListener('storage', alCambiarSesion);
     window.addEventListener('despacho:sesion', alCambiarSesion);
     void consultar();
-    return () => { vigente = false; controlador?.abort(); window.clearInterval(temporizador);
+    return () => { vigente = false; generacion++; controlador?.abort(); window.clearInterval(temporizador);
       document.removeEventListener('visibilitychange', alActivar); window.removeEventListener('storage', alCambiarSesion); window.removeEventListener('despacho:sesion', alCambiarSesion); };
   }, [cliente, idDespacho, incidenciaOrigen]);
   return { ...estado, detalle: estado.id === idDespacho ? estado.detalle : null,
