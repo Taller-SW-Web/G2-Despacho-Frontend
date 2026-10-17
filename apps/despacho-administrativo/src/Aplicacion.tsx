@@ -3,6 +3,7 @@ import { IconMapPin, IconCalendar, IconAlertTriangle, IconTruck, IconUsers } fro
 import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { ShellAdministrativo } from '@despacho/componentes-compartidos';
 import { PaginaEntregasFallidas } from './features/entregas-fallidas/PaginaEntregasFallidas';
+import { PaginaDetalleIncidencia } from './features/entregas-fallidas/PaginaDetalleIncidencia';
 import { PaginaZonas } from './features/zonas/PaginaZonas';
 import { FormularioZona } from './features/zonas/FormularioZona';
 import { PanelTarifa } from './features/zonas/PanelTarifa';
@@ -45,7 +46,11 @@ export function Aplicacion() {
         <Route path="/zonas/nueva" element={<FormularioZona />} />
         <Route path="/zonas/:id/editar" element={<FormularioZona />} />
         <Route path="/zonas/:id/tarifas" element={<PanelTarifa />} />
-        <Route path="/entregas-fallidas" element={<PaginaEntregasFallidas />} />
+        <Route path="/entregas-fallidas" element={<PaginaEntregasFallidas alVerDetalle={(entrega, consulta) => {
+          const parametros = new URLSearchParams({ origen: consulta, incidencia: entrega.idIncidencia });
+          navegar(`/entregas-fallidas/${encodeURIComponent(entrega.idDespacho)}?${parametros}`);
+        }} />} />
+        <Route path="/entregas-fallidas/:idDespacho" element={<PaginaDetalleIncidencia />} />
         <Route path="/repartidores" element={<PaginaRepartidores />} />
         <Route path="/furgonetas" element={<PaginaFurgonetas />} />
         <Route path="/flota/*" element={<Navigate to="/repartidores" replace />} />
