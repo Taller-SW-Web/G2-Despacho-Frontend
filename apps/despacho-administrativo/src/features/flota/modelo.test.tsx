@@ -21,6 +21,18 @@ describe('F-05: entradas y límites', () => {
     expect(datosVinculacion.parse({ usuarioId: '2f31c1b1-7568-41b8-bf91-342db68431df', password: 'no-transmitir' })).toEqual({ usuarioId: '2f31c1b1-7568-41b8-bf91-342db68431df' });
     expect(datosVinculacion.safeParse({ usuarioId: 'usuario-no-valido' }).success).toBe(false);
   });
+  it.each([
+    { capacidadPesoKg: 100.1234 }, { capacidadPesoKg: 0.0001 }, { capacidadPesoKg: 1e-7 },
+    { capacidadPesoKg: 10000000 }, { capacidadVolumenM3: 2.12345 }, { capacidadVolumenM3: 1e-5 },
+    { capacidadVolumenM3: 1000000 }, { maximoPaquetes: 32768 },
+  ])('rechaza capacidades que PostgreSQL no puede persistir: %j', (cambio) => {
+    expect(datosFurgoneta.safeParse({ placa: 'ABC-123', capacidadPesoKg: 500, capacidadVolumenM3: 4, maximoPaquetes: 80, ...cambio }).success).toBe(false);
+  });
+  it('acepta los extremos persistibles sin redondear peso ni volumen', () => {
+    expect(datosFurgoneta.parse({ placa: 'ABC-123', capacidadPesoKg: 9999999.999, capacidadVolumenM3: 999999.9999, maximoPaquetes: 32767 }))
+      .toMatchObject({ capacidadPesoKg: 9999999.999, capacidadVolumenM3: 999999.9999, maximoPaquetes: 32767 });
+    expect(datosFurgoneta.safeParse({ placa: 'ABC-123', capacidadPesoKg: 0.001, capacidadVolumenM3: 0.0001, maximoPaquetes: 1 }).success).toBe(true);
+  });
   it('limita los cambios de estado a las transiciones especificadas', () => {
     expect(transicionesFurgoneta('FUERA_DE_SERVICIO')).toEqual(['DISPONIBLE']);
     expect(transicionesFurgoneta('EN_MANTENIMIENTO')).toEqual(['DISPONIBLE', 'FUERA_DE_SERVICIO']);
