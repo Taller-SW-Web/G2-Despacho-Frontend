@@ -17,3 +17,5 @@ docs/evidencia/*
 !docs/F-01-PruebasLocales.md
 test-results/
 playwright-report/
+
+!docs/F-06-JornadasMonitoreo.md

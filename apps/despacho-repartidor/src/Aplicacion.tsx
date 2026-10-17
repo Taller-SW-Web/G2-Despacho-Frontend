@@ -47,8 +47,6 @@ export function Aplicacion() {
       alNavegar={(destino) => navigate(destino.ruta)}
       alVolver={esDetalle ? () => navigate('/repartidor/ruta') : undefined}
     >
-      {import.meta.env.VITE_DEMO_SIN_AUTENTICACION === 'true'
-        && <Alert color="yellow" title="Modo demostración">Acceso temporal de demostración.</Alert>}
       <Routes>
         <Route path="/" element={<Navigate to="/repartidor/ruta" replace />} />
         <Route
