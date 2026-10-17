@@ -47,6 +47,7 @@ export const estadosPorContexto = {
     DISPONIBLE: { etiqueta: 'Disponible', semantica: 'availability', Icono: IconCircleCheck },
     EN_JORNADA: { etiqueta: 'En jornada', semantica: 'info', Icono: IconTruck },
     EN_MANTENIMIENTO: { etiqueta: 'En mantenimiento', semantica: 'warning', Icono: IconTool },
+    FUERA_DE_SERVICIO: { etiqueta: 'Fuera de servicio', semantica: 'neutral', Icono: IconCircleOff, textoSecundario: true },
     INACTIVO: estadosRegistro.INACTIVO,
   },
   vinculacion: {
