@@ -22,15 +22,24 @@ export const datosContacto = z.object({
 export const datosRepartidor = datosContacto.extend({
   nombres: texto(80), apellidos: texto(80), dni: z.string().regex(/^\d{8}$/, 'Ingresa un DNI de 8 dígitos.'),
 });
+function admiteDecimales(valor: number, maximo: number): boolean {
+  const [coeficiente, exponente = '0'] = valor.toString().toLowerCase().split('e');
+  return Math.max(0, (coeficiente.split('.')[1]?.length ?? 0) - Number(exponente)) <= maximo;
+}
 export const limitesFurgoneta = z.object({
-  capacidadPesoKg: z.number({ message: 'Ingresa el peso.' }).finite().positive('El peso debe ser mayor que cero.'),
-  capacidadVolumenM3: z.number({ message: 'Ingresa el volumen.' }).finite().positive('El volumen debe ser mayor que cero.'),
-  maximoPaquetes: z.number({ message: 'Ingresa el máximo de paquetes.' }).int('Ingresa una cantidad entera.').positive('La cantidad debe ser mayor que cero.'),
+  capacidadPesoKg: z.number({ message: 'Ingresa el peso.' }).finite().positive('El peso debe ser mayor que cero.')
+    .max(9999999.999, 'El peso no puede superar 9999999.999 kg.')
+    .refine((valor) => admiteDecimales(valor, 3), 'Usa como máximo 3 decimales para el peso.'),
+  capacidadVolumenM3: z.number({ message: 'Ingresa el volumen.' }).finite().positive('El volumen debe ser mayor que cero.')
+    .max(999999.9999, 'El volumen no puede superar 999999.9999 m³.')
+    .refine((valor) => admiteDecimales(valor, 4), 'Usa como máximo 4 decimales para el volumen.'),
+  maximoPaquetes: z.number({ message: 'Ingresa el máximo de paquetes.' }).int('Ingresa una cantidad entera.')
+    .positive('La cantidad debe ser mayor que cero.').max(32767, 'El máximo permitido es 32767 paquetes.'),
 });
 export const datosFurgoneta = limitesFurgoneta.extend({ placa: texto(10) });
 export const datosVinculacion = z.object({ usuarioId: z.string().trim().uuid('Ingresa el identificador UUID comunicado por Seguridad.') });
 
-// Modelos de presentación y adaptación de transporte pendientes de ratificar en DC-04.
+// Transporte definido por Operación §4.1; se conserva la presentación neutral de estados futuros.
 // Los estados desconocidos se conservan solo para resolver una etiqueta neutral en CR-09.
 export const repartidorRecibido = z.object({
   idRepartidor: identificador, nombres: z.string(), apellidos: z.string(), dni: z.string(),
