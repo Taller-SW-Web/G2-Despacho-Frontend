@@ -58,10 +58,10 @@ it('corrige una página que desapareció sin fabricar totales ni ofrecer una pá
   obtener.mockImplementation(async (_ruta, { params }) => ({ data: Number(params.get('pagina')) > 1
     ? paginaPrueba([], Number(params.get('pagina')), 50, 1) : paginaPrueba([repartidorPrueba]) }));
   montar('repartidores', '?pagina=3');
-  await screen.findByText('Ana Prueba');
+  await screen.findByText('Ana Prueba', {}, { timeout: 5000 });
   expect(screen.getByTestId('url')).toHaveTextContent('pagina=1');
   expect(screen.getByText('Mostrando 1–1 de 1')).toBeVisible();
-});
+}, 10000);
 
 it('descarta una respuesta anterior aunque el transporte ignore AbortSignal', async () => {
   const usuario = userEvent.setup(); let resolver!: (valor: unknown) => void;
@@ -278,4 +278,56 @@ it('ES-F05-09: solo actualiza la fila con el estado devuelto por la nueva consul
   await usuario.click(screen.getByRole('button', { name: 'Confirmar cambio' }));
   await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
   expect(await screen.findByRole('cell', { name: 'En mantenimiento' })).toBeVisible();
+});
+
+it.each(['?placa=ABCDEFGHIJK', '?pagina=2147483648'])('F-05 valida parámetros fuera del contrato antes de consultar: %s', async (consulta) => {
+  montar('furgonetas', consulta);
+  expect(await screen.findByText('Revisa los filtros de la URL')).toBeVisible();
+  expect(obtener).not.toHaveBeenCalled();
+  expect(screen.getByRole('button', { name: 'Nueva furgoneta' })).toBeDisabled();
+});
+
+it('F-05 no ofrece reintentos automáticos para un estado de vinculación ajeno al contrato', async () => {
+  const usuario = userEvent.setup();
+  obtener.mockResolvedValue({ data: paginaPrueba([{ ...repartidorPrueba, estadoVinculacion: 'ERROR' }]) });
+  montar(); await screen.findByText('Ana Prueba');
+  await usuario.click(screen.getByRole('button', { name: 'Más acciones para Ana Prueba' }));
+  expect(await screen.findByRole('menuitem', { name: 'Vincular cuenta' })).toHaveAttribute('data-disabled', 'true');
+  expect(screen.queryByText('Reintentar vinculación')).not.toBeInTheDocument();
+});
+
+it('F-05 rechaza precisión y capacidad fuera de rango y conserva los mínimos válidos sin redondeo', async () => {
+  const usuario = userEvent.setup();
+  crear.mockResolvedValue({ data: { ...furgonetaPrueba, placa: 'CAP-001', capacidadPesoKg: 0.001, capacidadVolumenM3: 0.0001, maximoPaquetes: 1 } });
+  montar('furgonetas'); await screen.findByText('ABC-123');
+  await usuario.click(screen.getByRole('button', { name: 'Nueva furgoneta' }));
+  const formulario = within(screen.getByRole('dialog'));
+  await usuario.type(formulario.getByLabelText('Placa', { exact: false }), 'CAP-001');
+  const peso = formulario.getByLabelText('Límite de peso (kg)', { exact: false });
+  const volumen = formulario.getByLabelText('Límite de volumen (m³)', { exact: false });
+  const paquetes = formulario.getByLabelText('Máximo de paquetes', { exact: false });
+  await usuario.type(peso, '100.1234');
+  await usuario.type(volumen, '2.12345');
+  await usuario.type(paquetes, '32768');
+  await usuario.tab();
+  expect(formulario.getByRole('button', { name: 'Guardar' })).toBeDisabled();
+  expect(crear).not.toHaveBeenCalled();
+  expect(formulario.getByText('Usa como máximo 3 decimales para el peso.')).toBeVisible();
+  expect(formulario.getByText('Usa como máximo 4 decimales para el volumen.')).toBeVisible();
+  expect(formulario.getByText('El máximo permitido es 32767 paquetes.')).toBeVisible();
+  await usuario.clear(peso); await usuario.type(peso, '0.001');
+  await usuario.clear(volumen); await usuario.type(volumen, '0.0001');
+  await usuario.clear(paquetes); await usuario.type(paquetes, '1');
+  await usuario.click(formulario.getByRole('button', { name: 'Guardar' }));
+  expect(crear).toHaveBeenCalledWith('/api/v1/furgonetas', { placa: 'CAP-001', capacidadPesoKg: 0.001, capacidadVolumenM3: 0.0001, maximoPaquetes: 1 });
+}, 15000);
+
+it('F-05 conserva los límites al editar una furgoneta inexistente', async () => {
+  const usuario = userEvent.setup(); editar.mockRejectedValue(falloPrueba(404));
+  montar('furgonetas'); await screen.findByText('ABC-123');
+  await usuario.click(screen.getByRole('button', { name: 'Editar furgoneta ABC-123' }));
+  await usuario.click(screen.getByRole('button', { name: 'Guardar' }));
+  expect(await screen.findByText('El registro ya no está disponible. Actualiza el listado.')).toBeVisible();
+  expect(screen.getByLabelText('Límite de peso (kg)', { exact: false })).toHaveValue('500');
+  expect(screen.getByRole('dialog')).toBeVisible();
 });

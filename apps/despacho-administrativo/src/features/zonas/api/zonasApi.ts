@@ -1,7 +1,9 @@
 import { obtenerProblemaApi } from '@despacho/cliente-api';
+import { isAxiosError } from 'axios';
 import type { ClienteApi } from '../../../cliente/useClienteApi';
 import type {
   EstadoZona,
+  DistritoCatalogo,
   FiltrosZonas,
   PaginaZonas,
   ProblemaZona,
@@ -17,14 +19,31 @@ const RECURSO = '/api/v1/zonas';
 
 export function problemaDe(error: unknown): ProblemaZona | null {
   const problema = obtenerProblemaApi(error);
-  return problema ? (problema as ProblemaZona) : null;
+  if (problema) return problema as ProblemaZona;
+  if (isAxiosError(error) && error.response) {
+    return { status: error.response.status, title: 'No se pudo completar la solicitud' };
+  }
+  return null;
+}
+
+export async function listarDistritos(cliente: ClienteApi, signal?: AbortSignal): Promise<DistritoCatalogo[]> {
+  const { data } = await cliente.get<DistritoCatalogo[]>('/api/v1/distritos', { signal });
+  return data;
+}
+
+export function detalleProblema(error: unknown, alternativa: string): string {
+  const problema = problemaDe(error);
+  return [problema?.detail, ...(problema?.errores?.map(({ motivo }) => motivo) ?? [])]
+    .filter(Boolean).join('. ') || alternativa;
 }
 
 export async function listarZonas(
   cliente: ClienteApi,
   parametros: ParametrosListado,
+  signal?: AbortSignal,
 ): Promise<PaginaZonas> {
   const { data } = await cliente.get<PaginaZonas>(RECURSO, {
+    signal,
     params: {
       nombre: parametros.nombre.trim() || undefined,
       distrito: parametros.distrito.trim() || undefined,
@@ -73,7 +92,7 @@ export async function obtenerTarifaVigente(
     const { data } = await cliente.get<Tarifa>(`${RECURSO}/${idZona}/tarifa`);
     return data;
   } catch (error) {
-    if (problemaDe(error)?.status === 404) return null;
+    if (problemaDe(error)?.code === 'DESP_ERROR_TARIFA_NO_ENCONTRADA') return null;
     throw error;
   }
 }

@@ -1,6 +1,6 @@
 # Frontend F-05: gestión de repartidores y furgonetas
 
-**Responsable:** Kevin Rhamses Bohorquez. **Fecha:** 16/10/2026, America/Bogota.
+**Responsable:** Kevin Rhamses Bohorquez. **Revisión:** identificada por el historial de Git.
 **Alcance:** ES-F05-01 a ES-F05-09. Implementación frontend; integración real y aceptación visual pendientes.
 
 ## 1. Fuentes y decisiones de alcance
@@ -11,17 +11,11 @@ Se aplican React/TypeScript, Mantine 9.6.2, Tabler, tema y tokens compartidos. S
 
 Las rutas de la aplicación son `/repartidores` y `/furgonetas`. `/flota/*` redirige a `/repartidores` por compatibilidad. La navegación mantiene Programación, Entregas fallidas, Repartidores, Vehículos y Zonas y tarifas; no crea pantallas de monitoreo ni jornadas de F-06.
 
-### 1.1. Diferencias encontradas entre documentos
+### 1.1. Alineación contractual
 
-| Diferencia | Decisión y límite |
-|---|---|
-| Las specs atómicas antiguas describen creación automática de cuentas y un rol global REPARTIDOR. Contrato externo §8.4 y modelo §3.2 establecen creación administrativa en Seguridad y asociación de `usuarioId`. | Se implementa el flujo vigente: registro local, explicación al Gestor y vinculación mediante `PUT /repartidores/{id}/vinculacion`. No se crean cuentas ni se piden contraseñas. El reintento vuelve a enviar ese vínculo cuando corresponda; no inventa un endpoint de creación/reintento de usuarios. |
-| La especificación de vehículos usa `FUERA_DE_SERVICIO`; el modelo de persistencia usa `INACTIVA`. El contrato §4.1 no detalla ese enum de transporte. | La UI y su adaptador provisional conservan el estado de ES-F05-09 `FUERA_DE_SERVICIO`. El proveedor debe ratificar la correspondencia antes de integrar. No se convierte silenciosamente otro valor en una transición. |
-| Specs antiguas muestran `PENDIENTE_ACTIVACION` y `ERROR`; el modelo actual solo conserva `PENDIENTE` y `VINCULADO`. | Los filtros usan los dos valores actuales. Los otros valores recibidos se presentan mediante el fallback de CR-09; si llega `ERROR`, se ofrece reintentar la asociación manual. El alta no afirma que Seguridad creó o activó una cuenta. |
-| Wireframes incluyen tipos Moto/Auto y capacidad diaria. | Se implementan solo furgonetas y catálogo maestro, conforme al alcance actual de F-05. No se cambian las capacidades de jornadas activas. |
-| DC-04 no concreta los DTO completos, filtros y metadatos de paginación. No existen controladores F-05 en el backend local revisado. | La adaptación de transporte está aislada y marcada provisional en `modelo.ts` y `api.ts`. Sus formas no constituyen un contrato HTTP aprobado ni acreditan integración real. Antes del cierre hay que concretarlas en el contrato canónico del proveedor y ejecutar las pruebas con ese servicio. |
+Operación §4.1 concreta los DTO, filtros, paginación, límites, estados y errores. Se contrastaron con el proveedor backend y las nueve carpetas SDD. El alta es local; la asociación manual recibe el UUID de una cuenta creada previamente por Seguridad, sin credenciales ni provisión automática.
 
-No se editan los contratos canónicos ni se dan por aprobadas estas diferencias desde este cambio de frontend.
+Los estados locales de vínculo son `PENDIENTE` y `VINCULADO`. Un estado heredado desconocido conserva una etiqueta neutral y no habilita el vínculo. La API usa `FUERA_DE_SERVICIO`; el backend lo traduce a `INACTIVA` en persistencia. Jornadas y monitoreo siguen fuera del alcance F-05.
 
 ## 2. Implementación
 
@@ -36,11 +30,11 @@ No se editan los contratos canónicos ni se dan por aprobadas estas diferencias 
 | Furgonetas | `PaginaFurgonetas.tsx`, `FormularioFurgoneta.tsx` |
 | Baja y transiciones confirmadas | `ConfirmacionEstadoFlota.tsx` |
 
-Los filtros se guardan en la URL y se restauran al volver con el historial. La búsqueda de placa espera 300 ms; limpiar o cambiar la entrada de URL cancela la búsqueda pendiente. La UI comienza en página 1 y tamaño 50; la conversión HTTP queda en el adaptador provisional. No se recortan ni se vuelven a paginar localmente las filas del servidor.
+Los filtros se guardan en la URL y se restauran al volver con el historial. La búsqueda de placa espera 300 ms; limpiar o cambiar la entrada de URL cancela la búsqueda pendiente. La UI comienza en página 1 y tamaño 50; la conversión HTTP queda en el adaptador del contrato. No se recortan ni se vuelven a paginar localmente las filas del servidor.
 
 Se descartan respuestas obsoletas incluso si el transporte ignora la cancelación. Un fallo de refresco conserva los datos previos con advertencia y bloquea acciones hasta confirmar una consulta válida. Un `401/403` elimina resultados, filtros, acciones y formularios protegidos. Una página que ya no existe se corrige según el total confirmado. Respuestas incompletas o incoherentes producen error, nunca un vacío fabricado.
 
-La edición de repartidor permite solo teléfono, correo, brevete y turno; nombres, apellidos y DNI quedan en solo lectura. La edición de furgoneta envía solo sus límites; placa y estado no se modifican por ese comando. Los valores vacíos no se convierten en cero. Peso y volumen deben ser positivos y el máximo de paquetes, entero positivo.
+La edición de repartidor permite solo teléfono, correo, brevete y turno; nombres, apellidos y DNI quedan en solo lectura. La edición de furgoneta envía solo sus límites; placa y estado no se modifican por ese comando. Los valores vacíos no se convierten en cero. El peso admite hasta tres decimales y 9999999.999 kg; el volumen hasta cuatro y 999999.9999 m³. Ambos son positivos y los paquetes admiten enteros de 1 a 32767. La UI rechaza exceso de precisión sin redondear los valores enviados.
 
 Las mutaciones tienen un bloqueo síncrono contra doble envío. Los errores corregibles permanecen en el modal y se asocian a campos conocidos sin imprimir `detail` ni trazas. Un resultado perdido, malformado o incierto no genera éxito ni se reenvía automáticamente: se conserva el formulario y se pide consultar el listado. Las notificaciones se emiten después de la respuesta confirmada; los datos de pantalla se renuevan mediante consulta, sin transiciones optimistas.
 
@@ -85,7 +79,7 @@ La [captura de furgonetas sin API disponible](./evidencias/f05/furgonetas-api-no
 
 Configurar `VITE_API_BASE_URL` con el origen del Gateway y ejecutar `npm run dev:administrativo`. Abrir `/repartidores` o `/furgonetas`. Las pantallas de producción no incorporan fixtures ni simulan un alta exitosa cuando el backend no responde.
 
-Pendientes para cerrar integración: ratificación de transporte y enum de baja de vehículo en Specs, disponibilidad del proveedor F-05, autorización real de Gestor, canal administrativo de Seguridad, recorridos con datos de integración y revisión visual con Max en móvil, tableta y escritorio. JSDOM no certifica layout, contraste ni una auditoría WCAG. No se declara cumplimiento de los 200 ms del servidor.
+Pendientes para cerrar integración: autorización real de Gestor, canal administrativo de Seguridad, recorridos con datos de integración y revisión visual con Max en móvil, tableta y escritorio. JSDOM no certifica layout, contraste ni una auditoría WCAG. No se declara cumplimiento de los 200 ms del servidor.
 
 Los estados SDD de Specs no se modifican ni se marcan completados por esta verificación aislada. La implementación utiliza la sesión provisional existente y no acredita el flujo definitivo de autenticación.
 
@@ -102,3 +96,7 @@ Los commits se preparan en `develop` con autor y committer `KevinBohorquez <kevi
 
 - [cite: 1] Specs `91db8f8`, `funcionalidades/F-05-GestionRepartidoresVehiculos.md`, ES-F05-01 a ES-F05-09, `disenio/componentes-react.md` (incluido DC-04), `disenio/SYSTEM-DESIGN.md`, `arquitectura/modelo-datos.md` §3.2, contrato de Operación §4.1 y contrato externo §8.4. La conciliación posterior del stack `f3849d9` conserva estas fuentes.
 - [cite: 2] [Componentes compartidos y ejecución](../README.md), [CR-03](./componentes/CR-03-ShellAdministrativo.md), [CR-09](./componentes/CR-09-BadgeEstado.md) y [CR-15](./componentes/CR-15-NotificacionOperacion.md).
+
+## 6. Verificación de la alineación
+
+La revisión añade casos de precisión y extremos numéricos, URL inválida, estado heredado y edición de furgoneta inexistente. Las ejecuciones y totales de §3 corresponden al incremento anterior; la ejecución actual de `npm run test:f05` aprobó 51 pruebas en tres archivos, sin fallos. `npm run typecheck` también aprobó los tres espacios de trabajo y `npm run build` generó ambas aplicaciones. El aviso del bundle administrativo superior a 500 kB se conserva; no impide la construcción. Las pruebas de interfaz usan transporte simulado; no acreditan el recorrido con Render y Seguridad real. El origen configurado para producción es `https://taller-api-gateway.onrender.com`, sin agregar `/api/v1` en `VITE_API_BASE_URL`.

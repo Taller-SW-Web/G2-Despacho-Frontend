@@ -36,8 +36,8 @@ export function PaginaRepartidores() {
         aria-label={`Más acciones para ${fila.nombres} ${fila.apellidos}`}>Más acciones</Button></Menu.Target>
         <Menu.Dropdown>
           <Menu.Item mih={44} disabled={fila.estadoRegistro !== 'ACTIVO'} onClick={() => establecerSeleccion({ tipo: 'baja', repartidor: fila })}>Dar de baja</Menu.Item>
-          <Menu.Item mih={44} disabled={fila.estadoRegistro !== 'ACTIVO' || !['PENDIENTE', 'ERROR'].includes(fila.estadoVinculacion)}
-            onClick={() => establecerSeleccion({ tipo: 'vincular', repartidor: fila })}>{fila.estadoVinculacion === 'ERROR' ? 'Reintentar vinculación' : 'Vincular cuenta'}</Menu.Item>
+          <Menu.Item mih={44} disabled={fila.estadoRegistro !== 'ACTIVO' || fila.estadoVinculacion !== 'PENDIENTE'}
+            onClick={() => establecerSeleccion({ tipo: 'vincular', repartidor: fila })}>Vincular cuenta</Menu.Item>
         </Menu.Dropdown>
       </Menu>}
     </Group> },

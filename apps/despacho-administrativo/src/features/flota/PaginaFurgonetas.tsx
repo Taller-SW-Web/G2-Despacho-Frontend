@@ -8,7 +8,7 @@ import { CatalogoFlota } from './CatalogoFlota';
 import { FormularioFurgoneta } from './FormularioFurgoneta';
 import { ConfirmacionEstadoFlota } from './ConfirmacionEstadoFlota';
 
-const definiciones: DefinicionFiltro[] = [{ clave: 'estado', etiqueta: 'Estado', opciones: estadosFurgoneta }, { clave: 'placa', etiqueta: 'Placa' }];
+const definiciones: DefinicionFiltro[] = [{ clave: 'estado', etiqueta: 'Estado', opciones: estadosFurgoneta }, { clave: 'placa', etiqueta: 'Placa', maximoCaracteres: 10 }];
 const numero = new Intl.NumberFormat('es-PE', { maximumFractionDigits: 4 });
 type Seleccion = { tipo: 'nuevo' } | { tipo: 'editar' | 'estado'; furgoneta: Furgoneta };
 export function PaginaFurgonetas() {

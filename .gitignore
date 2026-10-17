@@ -14,3 +14,6 @@ docs/componentes/*
 !docs/evidencia/
 docs/evidencia/*
 !docs/evidencia/cr-01-02-13/
+!docs/F-01-PruebasLocales.md
+test-results/
+playwright-report/

@@ -1,6 +1,7 @@
-import { Box, Stack, Text, Title } from '@mantine/core';
+import { lazy, Suspense } from 'react';
+import { Alert, Anchor, Box, Loader, Stack, Text, Title } from '@mantine/core';
 import { IconMapPin, IconCalendar, IconAlertTriangle, IconTruck, IconUsers } from '@tabler/icons-react';
-import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
+import { Link, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { ShellAdministrativo } from '@despacho/componentes-compartidos';
 import { PaginaEntregasFallidas } from './features/entregas-fallidas/PaginaEntregasFallidas';
 import { PaginaDetalleIncidencia } from './features/entregas-fallidas/PaginaDetalleIncidencia';
@@ -10,6 +11,8 @@ import { PanelTarifa } from './features/zonas/PanelTarifa';
 import { useSesion } from './sesion/SesionProveedor';
 import { PaginaRepartidores } from './features/flota/PaginaRepartidores';
 import { PaginaFurgonetas } from './features/flota/PaginaFurgonetas';
+
+const ProbadorF01 = import.meta.env.DEV ? lazy(() => import('./features/zonas/desarrollo/ProbadorF01')) : null;
 
 const secciones = [
   { ruta: '/programacion', titulo: 'Programación', descripcion: 'Cola de despachos y asignación · F-02', endpoint: 'GET /api/v1/despachos/pendientes', Icono: IconCalendar },
@@ -40,12 +43,16 @@ export function Aplicacion() {
     usuario={{ nombre: 'Sesión provisional', etiquetaPerfil: 'Identidad no disponible' }} logoUrl="" rutaInicio="/"
     alCerrarSesion={() => { sesion.guardarToken(null); window.location.assign('/'); }}
     destinoActivo={secciones.find(({ ruta }) => ubicacion.pathname.startsWith(ruta))?.ruta ?? null} alNavegar={(_, ruta) => navegar(ruta)}>
+      {import.meta.env.DEV && <Alert mb="lg" color="blue" title="Pruebas locales F-01">
+        <Anchor component={Link} to="/desarrollo/f01">Preparar sesión y probar cobertura / cotización</Anchor>
+      </Alert>}
       <Routes>
+        {ProbadorF01 && <Route path="/desarrollo/f01" element={<Suspense fallback={<Loader />}><ProbadorF01 /></Suspense>} />}
         <Route path="/" element={<Navigate to="/zonas" replace />} />
         <Route path="/zonas" element={<PaginaZonas />} />
         <Route path="/zonas/nueva" element={<FormularioZona />} />
         <Route path="/zonas/:id/editar" element={<FormularioZona />} />
-        <Route path="/zonas/:id/tarifas" element={<PanelTarifa />} />
+        <Route path="/zonas/:id/tarifas" element={<><PaginaZonas /><PanelTarifa /></>} />
         <Route path="/entregas-fallidas" element={<PaginaEntregasFallidas alVerDetalle={(entrega, consulta) => {
           const parametros = new URLSearchParams({ origen: consulta, incidencia: entrega.idIncidencia });
           navegar(`/entregas-fallidas/${encodeURIComponent(entrega.idDespacho)}?${parametros}`);
