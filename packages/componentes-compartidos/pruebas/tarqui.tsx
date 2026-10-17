@@ -8,7 +8,7 @@ import type { EstadoConsulta, OrdenUi, PropiedadesTarjetaRepartidor } from '../s
 import '../src/tokens.css';
 import './tarqui.css';
 
-const metricas: PropiedadesTarjetaRepartidor['metricas'] = [
+const metricas: NonNullable<PropiedadesTarjetaRepartidor['metricas']> = [
   { metrica: 'peso', usado: 320, limite: 500, proyeccion: 332 },
   { metrica: 'volumen', usado: 3.2, limite: 4, proyeccion: 3.4 },
   { metrica: 'paquetes', usado: 20, limite: 30, proyeccion: 21 },

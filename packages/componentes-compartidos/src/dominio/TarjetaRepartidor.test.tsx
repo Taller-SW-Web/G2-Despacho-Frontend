@@ -10,7 +10,7 @@ import type { PropiedadesTarjetaRepartidor } from '../index';
 function Proveedor({ children }: PropsWithChildren) {
   return <MantineProvider theme={tema} env="test">{children}</MantineProvider>;
 }
-const metricas: PropiedadesTarjetaRepartidor['metricas'] = [
+const metricas: NonNullable<PropiedadesTarjetaRepartidor['metricas']> = [
   { metrica: 'peso', usado: 320, limite: 500, proyeccion: 332 },
   { metrica: 'volumen', usado: 2, limite: 4, proyeccion: 2.2 },
   { metrica: 'paquetes', usado: 10, limite: 30, proyeccion: 11 },

@@ -11,6 +11,7 @@ import { PanelTarifa } from './features/zonas/PanelTarifa';
 import { useSesion } from './sesion/SesionProveedor';
 import { PaginaRepartidores } from './features/flota/PaginaRepartidores';
 import { PaginaFurgonetas } from './features/flota/PaginaFurgonetas';
+import { PaginaProgramacion } from './features/programacion/PaginaProgramacion';
 
 const ProbadorF01 = import.meta.env.DEV ? lazy(() => import('./features/zonas/desarrollo/ProbadorF01')) : null;
 
@@ -61,7 +62,7 @@ export function Aplicacion() {
         <Route path="/repartidores" element={<PaginaRepartidores />} />
         <Route path="/furgonetas" element={<PaginaFurgonetas />} />
         <Route path="/flota/*" element={<Navigate to="/repartidores" replace />} />
-        {secciones.filter(({ ruta }) => ruta === '/programacion').map(({ ruta, titulo, descripcion, endpoint }) => <Route key={ruta} path={`${ruta}/*`} element={<PaginaPendiente titulo={titulo} descripcion={descripcion} endpoint={endpoint} />} />)}
+        <Route path="/programacion" element={<PaginaProgramacion />} />
         <Route path="*" element={<PaginaPendiente titulo="Página no encontrada" descripcion="La ruta solicitada no existe." endpoint="—" />} />
       </Routes>
   </ShellAdministrativo>;
