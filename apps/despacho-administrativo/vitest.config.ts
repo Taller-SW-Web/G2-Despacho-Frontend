@@ -5,7 +5,7 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     setupFiles: ['../../packages/componentes-compartidos/pruebas/preparacion.ts'],
-    include: ['src/features/entregas-fallidas/**/*.test.tsx'],
+    include: ['src/features/entregas-fallidas/**/*.test.tsx', 'src/sesion/**/*.test.tsx'],
     clearMocks: true,
   },
 });

@@ -21,6 +21,7 @@ export function SesionProveedor({ children }: { children: ReactNode }) {
   const valor = useMemo<SesionContexto>(
     () => ({
       obtenerToken: () => {
+        if (localStorage.getItem('despacho.sesionCerrada') === 'true') return null;
         const token = localStorage.getItem(CLAVE_TOKEN);
         if (token) return token;
         const tokenDesarrollo = import.meta.env.DEV ? import.meta.env.VITE_DEV_TOKEN : undefined;
@@ -29,8 +30,13 @@ export function SesionProveedor({ children }: { children: ReactNode }) {
           : null;
       },
       guardarToken: (token) => {
-        if (token) localStorage.setItem(CLAVE_TOKEN, token);
-        else localStorage.removeItem(CLAVE_TOKEN);
+        if (token) {
+          localStorage.removeItem('despacho.sesionCerrada');
+          localStorage.setItem(CLAVE_TOKEN, token);
+        } else {
+          localStorage.removeItem(CLAVE_TOKEN);
+          localStorage.setItem('despacho.sesionCerrada', 'true');
+        }
       },
     }),
     [],

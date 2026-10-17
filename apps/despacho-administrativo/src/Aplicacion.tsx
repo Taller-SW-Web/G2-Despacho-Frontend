@@ -6,6 +6,7 @@ import { PaginaEntregasFallidas } from './features/entregas-fallidas/PaginaEntre
 import { PaginaZonas } from './features/zonas/PaginaZonas';
 import { FormularioZona } from './features/zonas/FormularioZona';
 import { PanelTarifa } from './features/zonas/PanelTarifa';
+import { useSesion } from './sesion/SesionProveedor';
 
 const secciones = [
   { ruta: '/zonas', titulo: 'Zonas y tarifas', descripcion: 'Gestión de cobertura y tarifas · F-01', endpoint: 'GET /api/v1/zonas', Icono: IconMapPin },
@@ -29,8 +30,11 @@ function PaginaPendiente({ titulo, descripcion, endpoint }: { titulo: string; de
 export function Aplicacion() {
   const ubicacion = useLocation();
   const navegar = useNavigate();
+  const sesion = useSesion();
 
   return <ShellAdministrativo destinos={secciones.map(({ ruta, titulo, Icono }) => ({ id: ruta, ruta, etiqueta: titulo, icono: <Icono size={20} aria-hidden="true" /> }))}
+    usuario={{ nombre: 'Sesión provisional', etiquetaPerfil: 'Identidad no disponible' }} logoUrl="" rutaInicio="/"
+    alCerrarSesion={() => { sesion.guardarToken(null); window.location.assign('/'); }}
     destinoActivo={secciones.find(({ ruta }) => ubicacion.pathname.startsWith(ruta))?.ruta ?? null} alNavegar={(_, ruta) => navegar(ruta)}>
       <Routes>
         <Route path="/" element={<Navigate to="/zonas" replace />} />

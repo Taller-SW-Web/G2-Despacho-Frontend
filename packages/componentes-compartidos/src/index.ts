@@ -3,6 +3,7 @@ import type { MantineColorsTuple } from '@mantine/core';
 
 export { EstadoVista } from './feedback/EstadoVista';
 export { ShellAdministrativo } from './estructura/ShellAdministrativo';
+export type { DestinoAdministrativo, PropiedadesShellAdministrativo } from './estructura/ShellAdministrativo';
 export type { ContextoEstado } from './dominio/estados';
 export { estadosPorContexto } from './dominio/estados';
 export { EncabezadoPagina } from './estructura/EncabezadoPagina';
@@ -43,6 +44,7 @@ export const tema = createTheme({
   defaultRadius: 'sm',
   radius: { xs: '0.25rem', sm: '0.5rem', md: '0.75rem', lg: '1rem', xl: '62.4375rem' },
   respectReducedMotion: true,
+  breakpoints: { xs: '36em', sm: '48em', md: '62em', lg: '75em', xl: '88em' },
   spacing: { xs: '0.25rem', sm: '0.5rem', md: '1rem', lg: '1.5rem', xl: '2rem' },
   components: {
     Button: { defaultProps: { size: 'md', radius: 'sm' } },

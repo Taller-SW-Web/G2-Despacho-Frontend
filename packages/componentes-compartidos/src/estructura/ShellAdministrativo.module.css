@@ -1,0 +1,14 @@
+.saltar {
+  position: fixed;
+  top: var(--mantine-spacing-sm);
+  left: var(--mantine-spacing-sm);
+  transform: translateY(-200%);
+  padding: var(--mantine-spacing-sm);
+  background: var(--mantine-color-white);
+  color: var(--mantine-color-ink-9);
+  z-index: 300;
+}
+.saltar:focus { transform: none; }
+.marca { min-width: 0; flex-shrink: 0; }
+.marca img { display: block; max-width: 100%; max-height: 44px; width: auto; }
+.usuario { margin-left: auto; min-width: 44px; min-height: 44px; max-width: 40%; }
