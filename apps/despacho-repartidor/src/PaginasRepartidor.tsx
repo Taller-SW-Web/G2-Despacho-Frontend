@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Alert, Badge, Button, Card, Group, Loader, Stack, Text, Title } from '@mantine/core';
-import { CapturaEvidencia, TarjetaDespacho } from '@despacho/componentes-compartidos';
+import { Alert, Card, Group, SimpleGrid, Skeleton, Stack, Text, Title } from '@mantine/core';
+import {
+  BadgeEstado, CapturaEvidencia, EstadoVista, FranjaEstado, TarjetaDespacho, TarjetaKpi,
+} from '@despacho/componentes-compartidos';
 import { useNavigate, useParams } from 'react-router-dom';
 import { consultarDetalle, consultarResumen, consultarRuta, mensajeErrorConsulta } from './api';
 import type { DetalleDespacho, ResumenJornada, RutaRepartidor } from './api';
@@ -18,7 +20,7 @@ const rutaDemo: RutaRepartidor = {
   despachos: [{
     idDespacho: despachoDemoId,
     codigoRastreoInterno: 'DEMO-CR17-001',
-    estado: 'PENDIENTE',
+    estado: 'ASIGNADO',
     secuenciaRuta: 1,
     fechaProgramada: null,
     numeroIntentos: 0,
@@ -32,7 +34,7 @@ const detalleDemo: DetalleDespacho = {
   idJornada: '00000000-0000-4000-8000-000000000016',
   idDespacho: despachoDemoId,
   codigoRastreoInterno: 'DEMO-CR17-001',
-  estado: 'PENDIENTE',
+  estado: 'ASIGNADO',
   secuenciaRuta: 1,
   fechaProgramada: null,
   numeroIntentos: 0,
@@ -76,15 +78,14 @@ function useConsulta<T>(cargar: (signal: AbortSignal) => Promise<T>, clave: stri
   return { consulta, reintentar: () => setRevision((actual) => actual + 1) };
 }
 
+/** CR-08: carga y error con la recuperación común de ambas aplicaciones. */
 function EstadoConsulta<T>({ consulta, reintentar }: { consulta: Consulta<T>; reintentar: () => void }) {
-  if (consulta.estado === 'cargando') return <Group justify="center" py="xl"><Loader aria-label="Cargando" /></Group>;
+  if (consulta.estado === 'cargando') {
+    return <EstadoVista estado="carga" esqueleto={<Stack gap="md">{[0, 1, 2].map((fila) => <Skeleton key={fila} height={112} radius="md" />)}</Stack>} />;
+  }
   if (consulta.estado === 'error') {
-    return (
-      <Stack gap="sm">
-        <Alert color="red" title="No se pudo cargar">{consulta.mensaje}</Alert>
-        <Button variant="default" onClick={reintentar}>Reintentar</Button>
-      </Stack>
-    );
+    return <EstadoVista estado="error" titulo="No se pudo cargar" descripcion={consulta.mensaje}
+      accion={{ id: 'reintentar', etiqueta: 'Reintentar' }} alAccionar={reintentar} />;
   }
   return null;
 }
@@ -108,15 +109,15 @@ export function PaginaRuta() {
   if (consulta.estado === 'cargando') return <EstadoConsulta consulta={consulta} reintentar={reintentar} />;
   const { datos } = consulta;
   if (!datos.idJornada) {
-    return <Alert color="blue" title="Fuera de turno">No tienes una jornada activa para hoy.</Alert>;
+    return <FranjaEstado tipo="fueraDeTurno" mensaje="No tienes una jornada activa para hoy." />;
   }
   if (datos.despachos.length === 0) {
-    return <Alert color="blue" title="Ruta vacía">Todavía no tienes despachos asignados a esta jornada.</Alert>;
+    return <EstadoVista estado="vacio" titulo="Ruta vacía" descripcion="Todavía no tienes despachos asignados a esta jornada." />;
   }
 
   return (
     <Stack gap="md">
-      <Text c="dimmed">Jornada del {datos.fecha} · {datos.estadoOperativo}</Text>
+      <Group gap="xs"><Text c="dimmed">Jornada del {datos.fecha}</Text><BadgeEstado contexto="operacionRepartidor" valor={datos.estadoOperativo} size="sm" /></Group>
       {datos.despachos.map((despacho, indice) => (
         <TarjetaDespacho
           key={despacho.idDespacho}
@@ -150,19 +151,15 @@ export function PaginaResumen() {
     <Stack gap="md">
       <Text c="dimmed">Resumen del {resumen.fecha}</Text>
       {!resumen.idJornada && <Alert color="blue">No hay actividad registrada para la jornada de hoy.</Alert>}
-      <Group grow align="stretch">
-        <Indicador titulo="Asignados" valor={resumen.asignados} />
-        <Indicador titulo="Entregados" valor={resumen.entregados} />
-        <Indicador titulo="Fallidos con intento" valor={resumen.fallidosConIntento} />
-        <Indicador titulo="No intentados" valor={resumen.noIntentados} />
-        <Indicador titulo="Pendientes" valor={resumen.pendientes} />
-      </Group>
+      <SimpleGrid cols={2} spacing="md">
+        <TarjetaKpi id="asignados" etiqueta="Asignados" valor={resumen.asignados} />
+        <TarjetaKpi id="entregados" etiqueta="Entregados" valor={resumen.entregados} tono="success" />
+        <TarjetaKpi id="fallidos" etiqueta="Fallidos con intento" valor={resumen.fallidosConIntento} tono="error" />
+        <TarjetaKpi id="no-intentados" etiqueta="No intentados" valor={resumen.noIntentados} />
+        <TarjetaKpi id="pendientes" etiqueta="Pendientes" valor={resumen.pendientes} tono="info" />
+      </SimpleGrid>
     </Stack>
   );
-}
-
-function Indicador({ titulo, valor }: { titulo: string; valor: number }) {
-  return <Card withBorder><Stack gap={4}><Text size="sm" c="dimmed">{titulo}</Text><Title order={3}>{valor}</Title></Stack></Card>;
 }
 
 export function PaginaDetalle() {
@@ -181,7 +178,7 @@ export function PaginaDetalle() {
     <Stack gap="md">
       <Group justify="space-between">
         <Title order={3}>{detalle.codigoRastreoInterno}</Title>
-        <Badge>{detalle.estado}</Badge>
+        <BadgeEstado contexto="despacho" valor={detalle.estado} />
       </Group>
       <Card withBorder>
         <Stack gap="xs">

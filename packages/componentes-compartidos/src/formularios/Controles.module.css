@@ -32,6 +32,8 @@
   outline-offset: 2px;
 }
 
+.tituloAlerta.tituloAlerta { color: var(--ia-color-text-primary); }
+
 .opcion.opcion { align-items: center; }
 .etiquetaOpcion.etiquetaOpcion { display: flex; align-items: center; min-height: 2.75rem; }
 

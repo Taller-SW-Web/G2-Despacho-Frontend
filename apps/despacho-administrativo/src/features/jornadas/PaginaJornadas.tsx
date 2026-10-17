@@ -74,7 +74,7 @@ export function PaginaJornadas() {
           <Select label="Estado operativo" clearable value={parametros.get('estadoOperativo')} data={estadosOperativos.map((id) => ({ value: id, label: etiquetas[id] }))} onChange={(v) => cambiar({ estadoOperativo: v ?? '' })} />
           <TextInput label="Identificador de zona" value={parametros.get('idZona') ?? ''} onChange={(e) => cambiar({ idZona: e.currentTarget.value })} />
         </SimpleGrid>} />
-        {errores.length > 0 && <Alert role="alert" title="Revisa los filtros" color="red" c="ink.9">{errores.join(' ')}</Alert>}
+        {errores.length > 0 && <Alert role="alert" title="Revisa los filtros" color="red">{errores.join(' ')}</Alert>}
         {sinConexion && <FranjaEstado tipo="sinConexion" />}
         {datos && !consulta.confirmada && <FranjaEstado tipo="datosDesactualizados" accion={{ id: 'actualizar', etiqueta: 'Actualizar datos', disabled: consulta.cargando }} alAccionar={consulta.actualizar} />}
         {consulta.error && !datos && <EstadoVista estado="error" descripcion={consulta.error} accion={{ id: 'reintentar', etiqueta: 'Reintentar consulta' }} alAccionar={consulta.actualizar} />}

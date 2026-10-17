@@ -6,7 +6,8 @@ export type PropiedadesTarjetaKpi = {
   tono?: 'neutral' | 'info' | 'success' | 'warning' | 'error' | 'availability';
   seleccionada?: boolean; cargando?: boolean; accionable?: boolean; disabled?: boolean; alSeleccionar?: (id: string) => void;
 };
-const tonos = { neutral: 'ink.9', info: 'blue.8', success: 'green.8', warning: 'yellow.9', error: 'red.8', availability: 'volt.6' };
+// §4.1/§4.3: tonos semánticos en su valor default; availability usa accent/volt como borde superior.
+const tonos = { neutral: 'ink.9', info: 'blue.8', success: 'green.8', warning: 'yellow.8', error: 'red.8', availability: 'volt.7' };
 /** CR-10: el consumidor entrega el agregado completo, nunca el total de una página. */
 export function TarjetaKpi({ id, etiqueta, valor, descripcion, icono, seleccionada = false, cargando = false,
   accionable = false, disabled = false, tono = 'neutral', alSeleccionar }: PropiedadesTarjetaKpi) {
@@ -18,7 +19,7 @@ export function TarjetaKpi({ id, etiqueta, valor, descripcion, icono, selecciona
   </Stack>;
   return accionable ? <UnstyledButton type="button" p="md" w="100%" h="100%" disabled={disabled || cargando}
     aria-pressed={seleccionada} aria-label={`${etiqueta}: ${cargando ? 'Cargando' : valor ?? 'No disponible'}`}
-    onClick={() => alSeleccionar?.(id)} style={{ border: `2px solid var(--mantine-color-${seleccionada ? 'orange-8' : 'cloud-3'})`, ...bordeEstado, borderRadius: 'var(--mantine-radius-md)', background: 'var(--mantine-color-white)', cursor: disabled ? 'not-allowed' : 'pointer' }}>
+    onClick={() => alSeleccionar?.(id)} style={{ border: `2px solid ${seleccionada ? 'var(--ia-color-action-primary-hover)' : 'var(--ia-color-border-default)'}`, ...bordeEstado, borderRadius: 'var(--mantine-radius-md)', background: 'var(--mantine-color-white)', cursor: disabled ? 'not-allowed' : 'pointer' }}>
     {contenido}
   </UnstyledButton> : <Paper p="md" radius="md" withBorder style={bordeEstado}>{contenido}</Paper>;
 }

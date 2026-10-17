@@ -1,8 +1,8 @@
 .raiz { min-width: 0; overflow: hidden; background: var(--mantine-color-white); }
 .desplazamiento { max-width: 100%; overflow-x: auto; }
 .tabla { min-width: var(--tabla-ancho-minimo); font-size: var(--mantine-font-size-sm); }
-.tabla thead { background: var(--mantine-color-cloud-2); color: var(--mantine-color-gray-7); }
-.tabla caption { color: var(--ia-color-text-secondary, var(--mantine-color-gray-7)); }
+.tabla thead { background: var(--ia-color-surface-cloud-subtle); color: var(--ia-color-text-secondary); }
+.tabla caption { color: var(--ia-color-text-secondary); }
 .tabla tr { height: 48px; }
 .numero { font-variant-numeric: tabular-nums; }
 .orden { display: inline-flex; align-items: center; gap: var(--mantine-spacing-sm); min-height: 44px; font-weight: 600; }

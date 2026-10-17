@@ -5,7 +5,7 @@
   transform: translateY(-200%);
   padding: var(--mantine-spacing-sm);
   background: var(--mantine-color-white);
-  color: var(--mantine-color-ink-9);
+  color: var(--ia-color-text-primary);
   z-index: 300;
 }
 .saltar:focus { transform: none; }

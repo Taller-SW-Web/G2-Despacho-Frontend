@@ -3,12 +3,11 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm } from 'react-hook-form';
 import { z } from 'zod';
-import { Alert, Badge, Button, Card, Fieldset, Group, Loader, MultiSelect, Select, Stack, TagsInput, Text, TextInput, Title } from '@mantine/core';
+import { Alert, Button, Card, Fieldset, Group, Loader, MultiSelect, Select, Stack, TagsInput, Text, TextInput, Title } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
-import { BarraAccionesFija, EncabezadoPagina } from '@despacho/componentes-compartidos';
+import { BadgeEstado, BarraAccionesFija, EncabezadoPagina, ModalConfirmacion } from '@despacho/componentes-compartidos';
 import { useClienteApi } from '../../cliente/useClienteApi';
 import { crearZona, detalleProblema, editarZona, obtenerZona, problemaDe } from './api/zonasApi';
-import { ModalConfirmacion } from './ModalConfirmacion';
 import { useDistritos } from './useDistritos';
 import type { SolicitudZona, Zona } from './tipos';
 
@@ -80,7 +79,7 @@ export function FormularioZona() {
     };
     try {
       const zona = id ? await editarZona(cliente, id, solicitud) : await crearZona(cliente, solicitud);
-      notifications.show({ title: esEdicion ? 'Zona actualizada' : 'Zona registrada', color: 'teal',
+      notifications.show({ title: esEdicion ? 'Zona actualizada' : 'Zona registrada', color: 'green',
         message: <Stack gap="xs"><Text size="sm">Zona «{zona.nombre}» {esEdicion ? 'actualizada' : 'registrada'} correctamente.</Text>
           {zona.estado === 'ACTIVO' && <Button size="xs" variant="light" onClick={() => navegar(`/zonas/${zona.id}/tarifas`)}>Configurar tarifas</Button>}</Stack>,
       });
@@ -128,7 +127,7 @@ export function FormularioZona() {
                 onChange={(codigosPostales) => field.onChange(field.value.map((actual, posicion) => posicion === indice ? { ...actual, codigosPostales } : actual))} />)}
             </Stack>} />
             {esEdicion ? <Stack gap={4}><Text size="sm" fw={500}>Estado</Text><Group>
-              <Badge color={zonaActual?.estado === 'ACTIVO' ? 'teal' : 'gray'}>{zonaActual?.estado === 'ACTIVO' ? 'Activo' : 'Inactivo'}</Badge>
+              <BadgeEstado contexto="zona" valor={zonaActual?.estado} />
               <Text size="sm" c="dimmed">El estado se cambia desde el catálogo.</Text></Group></Stack>
               : <Controller name="estado" control={control} render={({ field }) => <Select label="Estado inicial"
                 data={[{ value: 'ACTIVO', label: 'Activo' }, { value: 'INACTIVO', label: 'Inactivo' }]} allowDeselect={false} value={field.value} onChange={(valor) => field.onChange(valor ?? 'ACTIVO')} />} />}

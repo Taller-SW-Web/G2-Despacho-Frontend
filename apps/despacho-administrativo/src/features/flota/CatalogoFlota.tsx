@@ -24,13 +24,13 @@ export function CatalogoFlota<T>({ titulo, subtitulo, etiquetaNuevo, consulta, d
     <EstadoVista estado={consulta.denegado ? 'sinPermiso' : 'datos'}>
       <Stack gap="lg">
         <FiltrosFlota definiciones={definiciones} filtros={consulta.filtros} consultando={consulta.cargando} alCambiar={consulta.cambiar} alLimpiar={consulta.limpiar} />
-        {consulta.errores.length > 0 && <Alert color="red" variant="light" c="ink.9" title="Revisa los filtros de la URL" role="alert">
+        {consulta.errores.length > 0 && <Alert color="red" variant="light" title="Revisa los filtros de la URL" role="alert">
           {consulta.errores.map((error) => <Text key={error}>{error}</Text>)}<Button type="button" variant="subtle" mih={44} onClick={consulta.limpiar}>Restablecer consulta</Button>
         </Alert>}
-        {consulta.error && <Alert color="red" variant="light" c="ink.9" title="No se pudo actualizar el listado" role="alert">
+        {consulta.error && <Alert color="red" variant="light" title="No se pudo actualizar el listado" role="alert">
           {consulta.error}<Button type="button" variant="subtle" mih={44} onClick={consulta.actualizar}>Reintentar consulta</Button>
         </Alert>}
-        {desfasada && <Alert color="yellow" variant="light" c="ink.9" role="status">Se conservan los resultados anteriores. Las acciones están bloqueadas hasta confirmar la consulta actual.</Alert>}
+        {desfasada && <Alert color="yellow" variant="light" role="status">Se conservan los resultados anteriores. Las acciones están bloqueadas hasta confirmar la consulta actual.</Alert>}
         <TablaDatos filas={datos?.contenido ?? []} obtenerId={obtenerId} columnas={columnas} tituloAccesible={`Catálogo de ${titulo.toLowerCase()}`}
           estado={estado} actualizando={!consulta.confirmada} estiloFila={estiloFila}
           paginacion={{ pagina: datos?.pagina ?? 1, tamanioPagina: datos?.tamanoPagina ?? consulta.tamanoPagina, total: datos?.totalElementos ?? 0 }}

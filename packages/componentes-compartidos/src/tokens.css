@@ -1,17 +1,40 @@
+/* SYSTEM-DESIGN §4.1 y §15.3: mismos nombres que las variables de Figma, prefijo --ia-. */
 :root {
   --ia-color-action-primary: #F76707;
   --ia-color-action-primary-hover: #C2410C;
+  --ia-color-action-primary-soft: #FCE3D0;
+  --ia-color-accent-volt: #C3E504;
+  --ia-color-accent-volt-soft: #EEF7B0;
   --ia-color-accent-signal: #4361EE;
+  --ia-color-accent-signal-soft: #E1E6FB;
   --ia-color-surface-ink: #1B1812;
+  --ia-color-surface-ink-soft: #26221A;
   --ia-color-surface-cloud: #F7F5F0;
+  --ia-color-surface-cloud-subtle: #EDEAE2;
   --ia-color-text-primary: #1B1812;
-
   --ia-color-text-inverse: #F7F5F0;
   --ia-color-text-secondary: #495057;
+  --ia-color-text-disabled: #868E96;
   --ia-color-border-default: #DEE2E6;
+  --ia-color-border-inverse: #3A362C;
+  --ia-color-success-default: #2F9E44;
+  --ia-color-success-background: #EBFBEE;
+  --ia-color-warning-default: #F08C00;
+  --ia-color-warning-background: #FFF9DB;
+  --ia-color-error-default: #E03131;
+  --ia-color-error-background: #FFF5F5;
+  --ia-color-info-default: #1971C2;
+  --ia-color-info-background: #E7F5FF;
 }
 
 body { margin: 0; background: var(--ia-color-surface-cloud); color: var(--ia-color-text-primary); }
+
+/* Mayúsculas solo en H1–H3; H4–H6 vuelven a Inter. */
 .mantine-Title-root:is(h1, h2, h3) { text-transform: uppercase; }
+.mantine-Title-root:is(h4, h5, h6) { font-family: var(--mantine-font-family); }
+
+/* Anillo de foco global en signal (§11.2). */
 .ia-focus:focus-visible, :focus-visible { outline: 2px solid var(--ia-color-accent-signal); outline-offset: 2px; }
+
+/* Cifras alineadas en tablas, KPI y capacidades. */
 .ia-num { font-variant-numeric: tabular-nums; }

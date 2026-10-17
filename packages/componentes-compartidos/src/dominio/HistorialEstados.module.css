@@ -9,7 +9,7 @@
 
 .fecha {
   font-variant-numeric: tabular-nums;
-  color: var(--mantine-color-gray-7);
+  color: var(--ia-color-text-secondary);
 }
 
 .observacion {

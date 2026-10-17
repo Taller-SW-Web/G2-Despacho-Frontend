@@ -60,7 +60,7 @@ export function CapturaEvidencia({
         style={{
           aspectRatio: '4 / 3',
           borderStyle: archivo ? 'solid' : 'dashed',
-          borderColor: fase === 'error' ? 'var(--mantine-color-error)' : undefined,
+          borderColor: fase === 'error' ? 'var(--ia-color-error-default)' : undefined,
           overflow: 'hidden',
         }}
       >

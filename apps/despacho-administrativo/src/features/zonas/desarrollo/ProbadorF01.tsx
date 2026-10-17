@@ -72,12 +72,12 @@ export default function ProbadorF01() {
     <Alert color="blue" title="Entorno de desarrollo">Las zonas y tarifas se guardan en Supabase. Los tokens son del emisor temporal de G2; los datos físicos de productos proceden del catálogo de prueba del backend.</Alert>
     <Card><Stack gap="md"><Title order={2}>1. Preparar sesión</Title>
       <Text size="sm">Genera una sesión de gestor para administrar zonas. Si vence, vuelve aquí y genera otra.</Text>
-      {mensajeSesion && <Alert color="teal" role="status">{mensajeSesion}</Alert>}
+      {mensajeSesion && <Alert color="green" role="status">{mensajeSesion}</Alert>}
       {errorSesion && <Alert color="red">{errorSesion}</Alert>}
       <Group align="flex-end"><Select label="Perfil humano de prueba" value={perfil} allowDeselect={false} onChange={(valor) => setPerfil(valor ?? 'gestor')}
         data={[{ value: 'gestor', label: 'Gestor de Despacho' }, { value: 'sin-rol', label: 'Usuario sin rol (probar 403)' }]} w={280} />
         <Button loading={emitiendo} onClick={() => void generar('usuario')}>Generar sesión de prueba</Button>
-        <Badge color={sesionLista ? 'teal' : 'gray'}>{sesionLista ? 'Token humano cargado' : 'Sin sesión'}</Badge>
+        <Badge color={sesionLista ? 'green' : 'gray'}>{sesionLista ? 'Token humano cargado' : 'Sin sesión'}</Badge>
         <Button variant="default" disabled={emitiendo} onClick={() => { sesion.guardarToken(null); setSesionLista(false); setMensajeSesion('Sesión retirada. Las consultas administrativas responderán 401.'); }}>Retirar sesión</Button>
       </Group>
       <Group align="flex-end"><PasswordInput label="Token humano manual" placeholder="Pegar JWT humano" value={tokenHumano} onChange={(evento) => setTokenHumano(evento.currentTarget.value)} style={{ flex: 1 }} />
@@ -108,8 +108,8 @@ export default function ProbadorF01() {
       <Button loading={enviando} onClick={() => void enviar()}>Enviar consulta F-01</Button>
       {errorPrueba && <Alert color="red">{errorPrueba}</Alert>}
     </Stack></Card>
-    {respuesta && <Card><Stack gap="md"><Group justify="space-between"><Title order={2}>Resultado de la API</Title><Badge color={respuesta.status < 400 ? 'teal' : 'red'} size="lg">HTTP {respuesta.status}</Badge></Group>
-      {datos && <><Alert color={datos.coberturaDisponible ? 'teal' : 'orange'} title={datos.coberturaDisponible ? 'Destino con cobertura' : 'Destino sin cobertura'}>{datos.nombreZona ?? datos.mensaje}</Alert>
+    {respuesta && <Card><Stack gap="md"><Group justify="space-between"><Title order={2}>Resultado de la API</Title><Badge color={respuesta.status < 400 ? 'green' : 'red'} size="lg">HTTP {respuesta.status}</Badge></Group>
+      {datos && <><Alert color={datos.coberturaDisponible ? 'green' : 'yellow'} title={datos.coberturaDisponible ? 'Destino con cobertura' : 'Destino sin cobertura'}>{datos.nombreZona ?? datos.mensaje}</Alert>
         {datos.costoEnvio != null ? <SimpleGrid cols={{ base: 1, sm: 3 }}><Text>Costo: <strong>{formatearMoneda(datos.costoEnvio, datos.moneda)}</strong></Text>
           <Text>Peso total: {datos.pesoTotalKg} kg</Text><Text>Volumen: {datos.volumenTotalM3} m³</Text><Text>Plazo: {datos.plazoEstimadoDiasHabiles} días hábiles</Text><Text>Entrega estimada: {formatearFechaCivil(datos.fechaEstimadaEntrega)}</Text></SimpleGrid>
           : <Text>No se devolvió costo ni plazo para esta consulta.</Text>}</>}

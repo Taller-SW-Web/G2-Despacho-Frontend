@@ -2,12 +2,11 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ActionIcon, Alert, Button, Card, Group, Pagination, Select, Skeleton, Stack, Table, Text, TextInput, Title, Tooltip } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
-import { EncabezadoPagina } from '@despacho/componentes-compartidos';
+import { EncabezadoPagina, ModalConfirmacion } from '@despacho/componentes-compartidos';
 import { IconEdit, IconPlus, IconReceipt2, IconRefresh, IconSearch, IconToggleLeft, IconToggleRight } from '@tabler/icons-react';
 import { useClienteApi } from '../../cliente/useClienteApi';
 import { cambiarEstado, detalleProblema, listarZonas, problemaDe } from './api/zonasApi';
 import { BadgeEstadoZona } from './BadgeEstadoZona';
-import { ModalConfirmacion } from './ModalConfirmacion';
 import { useDistritos } from './useDistritos';
 import type { EstadoConsulta, EstadoZona, PaginaZonas as ResultadoZonas, Zona } from './tipos';
 import { formatearFecha, formatearMoneda } from './utilidades';
@@ -80,7 +79,7 @@ export function PaginaZonas() {
     try {
       await cambiarEstado(cliente, confirmacion.zona.id, confirmacion.nuevoEstado);
       notifications.show({ title: confirmacion.nuevoEstado === 'ACTIVO' ? 'Zona activada' : 'Zona desactivada',
-        message: `Estado de «${confirmacion.zona.nombre}» actualizado correctamente.`, color: 'teal' });
+        message: `Estado de «${confirmacion.zona.nombre}» actualizado correctamente.`, color: 'green' });
       setConfirmacion(null);
       setRefresco((valor) => valor + 1);
     } catch (fallo) {
@@ -110,7 +109,7 @@ export function PaginaZonas() {
         value={estado} allowDeselect={false} onChange={(valor) => actualizarFiltro('estado', valor)} w={160} />
       <Button variant="subtle" disabled={!filtrosActivos && !busqueda} onClick={limpiar}>Limpiar filtros</Button>
     </Group></Card>
-    {catalogo.error && <Alert color="orange" title="Filtro de distrito no disponible"><Group><Text size="sm">{catalogo.error}</Text><Button size="xs" onClick={catalogo.reintentar}>Reintentar catálogo</Button></Group></Alert>}
+    {catalogo.error && <Alert color="yellow" title="Filtro de distrito no disponible"><Group><Text size="sm">{catalogo.error}</Text><Button size="xs" onClick={catalogo.reintentar}>Reintentar catálogo</Button></Group></Alert>}
     {consulta === 'error' ? <Alert color="red" title="No se pudieron cargar las zonas"><Stack align="flex-start"><Text size="sm">Revisa tu conexión e inténtalo de nuevo.</Text><Button onClick={() => setRefresco((valor) => valor + 1)}>Reintentar</Button></Stack></Alert>
       : consulta === 'cargando' || !resultado ? <Card aria-label="Cargando zonas"><Stack>{[0, 1, 2, 3, 4].map((indice) => <Skeleton key={indice} height={44} />)}</Stack></Card>
       : filas.length === 0 ? <Card><Stack align="center" py="xl"><Text fw={600}>{filtrosActivos ? 'No hay zonas que coincidan con los filtros' : 'Aún no hay zonas de cobertura registradas'}</Text>
@@ -120,7 +119,7 @@ export function PaginaZonas() {
           {['Zona', 'Distritos', 'Códigos postales', 'Tarifa vigente', 'Estado', 'Última modificación', 'Acciones'].map((columna) => <Table.Th key={columna}>{columna}</Table.Th>)}
         </Table.Tr></Table.Thead><Table.Tbody>{filas.map((zona) => {
           const inactiva = zona.estado === 'INACTIVO';
-          return <Table.Tr key={zona.id} style={inactiva ? { background: 'var(--mantine-color-gray-0)' } : undefined}>
+          return <Table.Tr key={zona.id} style={inactiva ? { background: 'var(--ia-color-surface-cloud-subtle)', color: 'var(--ia-color-text-secondary)' } : undefined}>
             <Table.Td><Text fw={600}>{zona.nombre}</Text>{!inactiva && !zona.tarifaVigente && <Text size="xs" c="orange.8" fw={600}>Sin tarifa configurada</Text>}</Table.Td>
             <Table.Td><Tooltip label={zona.distritos.map(({ nombre: n }) => n).join(', ')}><Text size="sm">{zona.distritos.slice(0, 3).map(({ nombre: n }) => n).join(', ')}{zona.distritos.length > 3 ? ` +${zona.distritos.length - 3}` : ''}</Text></Tooltip></Table.Td>
             <Table.Td>{zona.distritos.some(({ codigosPostales }) => codigosPostales.length > 0) ? zona.distritos.filter(({ codigosPostales }) => codigosPostales.length > 0).map((entrada) => <Text size="sm" key={entrada.id}>{entrada.nombre}: {entrada.codigosPostales.join(', ')}</Text>) : '—'}</Table.Td>
@@ -129,7 +128,7 @@ export function PaginaZonas() {
             <Table.Td><Group gap="xs" wrap="nowrap">
               <Tooltip label="Editar zona"><ActionIcon variant="subtle" aria-label={`Editar ${zona.nombre}`} onClick={() => navegar(`/zonas/${zona.id}/editar`)}><IconEdit size={18} /></ActionIcon></Tooltip>
               <Tooltip label={inactiva ? 'Activa la zona para configurar su tarifa' : 'Configurar tarifas'}><span><ActionIcon variant="subtle" disabled={inactiva} aria-label={`Tarifas de ${zona.nombre}`} onClick={() => navegar(`/zonas/${zona.id}/tarifas${parametros.size ? `?${parametros}` : ''}`)}><IconReceipt2 size={18} /></ActionIcon></span></Tooltip>
-              <Tooltip label={inactiva ? 'Activar zona' : 'Desactivar zona'}><ActionIcon variant="subtle" color={inactiva ? 'teal' : 'red'} aria-label={`${inactiva ? 'Activar' : 'Desactivar'} ${zona.nombre}`}
+              <Tooltip label={inactiva ? 'Activar zona' : 'Desactivar zona'}><ActionIcon variant="subtle" color={inactiva ? undefined : 'red'} aria-label={`${inactiva ? 'Activar' : 'Desactivar'} ${zona.nombre}`}
                 onClick={() => solicitarEstado(zona, inactiva ? 'ACTIVO' : 'INACTIVO')}>{inactiva ? <IconToggleRight size={18} /> : <IconToggleLeft size={18} />}</ActionIcon></Tooltip>
             </Group>{inactiva && <Text size="xs" c="dimmed">Activa la zona para configurar su tarifa</Text>}</Table.Td>
           </Table.Tr>;
@@ -140,6 +139,6 @@ export function PaginaZonas() {
     <ModalConfirmacion abierto={Boolean(confirmacion)} titulo={`¿${confirmacion?.nuevoEstado === 'ACTIVO' ? 'Activar' : 'Desactivar'} la zona ${confirmacion?.zona.nombre ?? ''}?`}
       descripcion={confirmacion?.nuevoEstado === 'ACTIVO' ? 'La zona volverá a aceptar cotizaciones y solicitudes nuevas.' : 'La zona dejará de aceptar nuevas cotizaciones y nuevas solicitudes de despacho. Los despachos ya registrados conservarán su zona y continuarán su ciclo sin cambios, incluidas sus reprogramaciones.'}
       etiquetaConfirmar={confirmacion?.nuevoEstado === 'ACTIVO' ? 'Activar zona' : 'Desactivar zona'} intencion={confirmacion?.nuevoEstado === 'ACTIVO' ? 'principal' : 'destructiva'}
-      procesando={procesando} error={errorConfirmacion} alConfirmar={() => void confirmarEstado()} alCancelar={() => { if (!procesando) setConfirmacion(null); }} />
+      procesando={procesando} error={errorConfirmacion ?? undefined} alConfirmar={() => void confirmarEstado()} alCancelar={() => { if (!procesando) setConfirmacion(null); }} />
   </Stack>;
 }

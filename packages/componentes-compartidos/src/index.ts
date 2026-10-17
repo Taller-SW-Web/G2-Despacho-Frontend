@@ -1,4 +1,4 @@
-import { createTheme, defaultVariantColorsResolver } from '@mantine/core';
+import { Notification, createTheme, defaultVariantColorsResolver, getThemeColor } from '@mantine/core';
 import type { MantineColorsTuple } from '@mantine/core';
 import controles from './formularios/Controles.module.css';
 
@@ -44,12 +44,22 @@ const signal: MantineColorsTuple = ['#EEF0FE', '#E1E6FB', '#C3CDF8', '#A2B1F4', 
 const ink: MantineColorsTuple = ['#F5F4F2', '#E4E2DD', '#C9C5BC', '#A39E92', '#7D776A', '#5A5447', '#46402F', '#3A362C', '#26221A', '#1B1812'];
 const cloud: MantineColorsTuple = ['#FFFFFF', '#F7F5F0', '#EDEAE2', '#E2DED3', '#D6D2C4', '#BDB8A8', '#A39E8D', '#888372', '#6D6858', '#524E40'];
 
+// SYSTEM-DESIGN §4.1: los semánticos usan el tono 8 (success/warning/error/info default) y el 0 como fondo.
+// Con primaryShade 7, `color="red"` resolvería a red.7; aquí se normaliza para todas las pantallas.
+const semanticos = ['red', 'green', 'yellow', 'blue'] as const;
+type Semantico = (typeof semanticos)[number];
+const nombreColor = (color: string) => color.split('.')[0];
+const esSemantico = (color: string): color is Semantico => (semanticos as readonly string[]).includes(nombreColor(color));
+const normalizarColor = (color: string) => (semanticos as readonly string[]).includes(color) ? `${color}.8` : color;
+
 export const tema = createTheme({
   primaryColor: 'orange', primaryShade: 7, autoContrast: true, luminanceThreshold: 0.2,
   black: '#1B1812', white: '#FFFFFF', colors: { orange, volt, signal, ink, cloud },
-  fontFamily: 'Inter, system-ui, sans-serif',
+  fontFamily: 'Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+  fontSizes: { xs: '0.75rem', sm: '0.875rem', md: '1rem', lg: '1.125rem', xl: '1.25rem' },
+  lineHeights: { xs: '1rem', sm: '1.25rem', md: '1.5rem', lg: '1.625rem', xl: '1.75rem' },
   headings: {
-    fontFamily: 'Oswald, sans-serif', fontWeight: '700',
+    fontFamily: 'Oswald, "Segoe UI", sans-serif', fontWeight: '700',
     sizes: {
       h1: { fontSize: '2rem', lineHeight: '1.25' },
       h2: { fontSize: '1.75rem', lineHeight: '1.285714' },
@@ -64,8 +74,18 @@ export const tema = createTheme({
   // Mantine usa un tono claro para subtle incluso con color="orange.8".
   // Mantener la jerarquía y el contraste de CR-01 también en los slots de acciones.
   variantColorResolver: (entrada) => {
-    const colores = defaultVariantColorsResolver(entrada);
-    const color = entrada.color ?? entrada.theme.primaryColor;
+    const color = normalizarColor(entrada.color ?? entrada.theme.primaryColor);
+    const colores = defaultVariantColorsResolver({ ...entrada, color });
+    const { colors, black } = entrada.theme;
+    // §16.0: fondos semánticos claros; warning y neutral con texto ink (§4.4, §4.5).
+    if (entrada.variant === 'light' && esSemantico(color)) {
+      const nombre = nombreColor(color);
+      return { ...colores, background: colors[nombre][0], hover: colors[nombre][1],
+        color: nombre === 'yellow' ? black : colors[nombre][8], hoverColor: nombre === 'yellow' ? black : colors[nombre][8] };
+    }
+    if (entrada.variant === 'light' && nombreColor(color) === 'gray') {
+      return { ...colores, background: colors.cloud[2], hover: colors.cloud[3], color: colors.gray[7], hoverColor: colors.gray[7] };
+    }
     if (color !== 'orange' && !color.startsWith('orange.')) return colores;
     if (entrada.variant === 'outline' || entrada.variant === 'subtle') return {
       ...colores,
@@ -84,7 +104,17 @@ export const tema = createTheme({
       classNames: { root: controles.boton, inner: controles.interior, label: controles.etiqueta, loader: controles.cargador },
     },
     ActionIcon: { defaultProps: { variant: 'subtle', color: 'orange.8', size: 'lg' } },
+    Badge: { defaultProps: { size: 'sm', radius: 'xl', variant: 'light' } },
     Card: { defaultProps: { radius: 'md', padding: 'md', withBorder: true } },
+    Modal: { defaultProps: { radius: 'lg', overlayProps: { backgroundOpacity: 0.55 } } },
+    Drawer: { defaultProps: { position: 'right', size: 560 } },
+    Table: { defaultProps: { verticalSpacing: 'sm', horizontalSpacing: 'md', highlightOnHover: true } },
+    // §4.4: sobre fondos semánticos el contenido va en text/primary; el icono conserva el color semántico.
+    Alert: { classNames: { title: controles.tituloAlerta } },
+    Notification: Notification.extend({
+      defaultProps: { radius: 'md', withBorder: true },
+      vars: (theme, { color }) => ({ root: { '--notification-color': color ? getThemeColor(normalizarColor(color), theme) : undefined } }),
+    }),
     TextInput: { defaultProps: { size: 'md' } },
     PasswordInput: { defaultProps: { size: 'md' } },
     NumberInput: { defaultProps: { size: 'md' } },

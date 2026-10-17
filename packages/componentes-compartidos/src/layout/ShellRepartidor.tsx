@@ -1,5 +1,7 @@
 import type { ReactNode } from 'react';
-import { Badge, Box, Group, Stack, Text, Title, UnstyledButton } from '@mantine/core';
+import { Box, Group, Stack, Text, Title, UnstyledButton } from '@mantine/core';
+import { IconArrowLeft } from '@tabler/icons-react';
+import { BadgeEstado } from '../dominio/BadgeEstado';
 
 export type DestinoRepartidor = {
   id: string;
@@ -11,6 +13,7 @@ export type DestinoRepartidor = {
 type ShellRepartidorProps = {
   titulo: string;
   children: ReactNode;
+  /** Valor del estado operativo (DISPONIBLE, EN_RUTA, SATURADO, FUERA_DE_TURNO); `null` si aún se desconoce. */
   estadoOperativo: string | null;
   destinos: DestinoRepartidor[];
   destinoActivo: string | null;
@@ -50,7 +53,7 @@ export function ShellRepartidor({
                 c="white"
                 style={{ minWidth: 44, minHeight: 44, display: 'grid', placeItems: 'center' }}
               >
-                <Text aria-hidden="true" size="xl">←</Text>
+                <IconArrowLeft size={24} aria-hidden="true" />
               </UnstyledButton>
             )}
             <Title order={1} size={20} m={0} lineClamp={1}>
@@ -58,7 +61,8 @@ export function ShellRepartidor({
             </Title>
           </Group>
           <Group gap="xs" wrap="nowrap">
-            {estadoOperativo && <Badge color="white" variant="light" c="ink.9">{estadoOperativo}</Badge>}
+            {/* §16.3: mismo BadgeEstado que en administración; sus fondos claros mantienen text/primary sobre ink. */}
+            {estadoOperativo && <BadgeEstado contexto="operacionRepartidor" valor={estadoOperativo} size="sm" />}
             {accionEncabezado}
           </Group>
         </Group>
@@ -81,7 +85,7 @@ export function ShellRepartidor({
             transform: 'translateX(-50%)',
             width: 'min(100%, 480px)',
             zIndex: 100,
-            borderTop: '1px solid var(--mantine-color-gray-3)',
+            borderTop: '1px solid var(--ia-color-border-default)',
             padding: '4px 8px calc(4px + env(safe-area-inset-bottom, 0px))',
           }}
           bg="white"
@@ -95,7 +99,7 @@ export function ShellRepartidor({
                   type="button"
                   aria-current={activo ? 'page' : undefined}
                   onClick={() => alNavegar(destino)}
-                  c={activo ? 'orange.8' : 'ink.7'}
+                  c={activo ? 'orange.8' : 'var(--ia-color-text-secondary)'}
                   style={{
                     flex: 1,
                     minWidth: 0,
@@ -127,7 +131,7 @@ export function ShellRepartidor({
             transform: 'translateX(-50%)',
             width: 'min(100%, 480px)',
             zIndex: 100,
-            borderTop: '1px solid var(--mantine-color-gray-3)',
+            borderTop: '1px solid var(--ia-color-border-default)',
             padding: '12px 16px calc(12px + env(safe-area-inset-bottom, 0px))',
           }}
           bg="white"

@@ -10,15 +10,15 @@
 }
 
 .icono {
-  color: var(--mantine-color-gray-7);
+  color: var(--ia-color-text-secondary);
 }
 
 .raiz .aviso {
-  background-color: var(--mantine-color-red-0);
+  background-color: var(--ia-color-error-background);
 }
 
 .carga :global(.mantine-Skeleton-root)::after {
-  background-color: var(--mantine-color-cloud-2);
+  background-color: var(--ia-color-surface-cloud-subtle);
 }
 
 .accion {
@@ -37,7 +37,7 @@
 }
 
 .raiz .boton:focus-visible {
-  outline: 2px solid var(--ia-color-accent-signal, var(--mantine-color-signal-7));
+  outline: 2px solid var(--ia-color-accent-signal);
   outline-offset: 2px;
 }
 

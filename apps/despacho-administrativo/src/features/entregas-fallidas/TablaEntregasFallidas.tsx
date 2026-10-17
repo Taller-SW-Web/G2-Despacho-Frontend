@@ -1,5 +1,5 @@
-import { Badge, Button, Group, Stack, Text } from '@mantine/core';
-import { IconAlertTriangle, IconCamera } from '@tabler/icons-react';
+import { Button, Stack, Text } from '@mantine/core';
+import { IconCamera } from '@tabler/icons-react';
 import { BadgeEstado, TablaDatos, type ColumnaDatos, type EstadoConsulta } from '@despacho/componentes-compartidos';
 import type { ReactNode } from 'react';
 import { formatoFechaLima, type EntregaFallida, type PaginaFallidos } from './modelo';
@@ -30,9 +30,9 @@ export function TablaEntregasFallidas({ pagina, consulta, estado, actualizando, 
     </Stack> },
     { id: 'evidencia', encabezado: 'Evidencia', celda: (fila) => fila.tieneEvidencia ? <IconCamera role="img" aria-label="Tiene evidencia" size={22} /> : <span aria-label="Sin evidencia">—</span> },
     { id: 'etiquetas', encabezado: 'Etiquetas', celda: (fila) => <Stack gap="xs" align="flex-start" miw={150}>
-      {fila.motivo.codigo === 'NO_INTENTADO' && <Text size="sm" fw={600}>No intentado en esta salida</Text>}
-      {fila.pedidoAnulado && <Badge variant="light" color="gray.8" style={{ whiteSpace: 'normal', height: 'auto' }}>Pedido anulado</Badge>}
-      {fila.retornoAtrasado === true && <Group gap="xs" wrap="nowrap"><IconAlertTriangle size={18} aria-hidden="true" /><Text size="sm" fw={600}>Retorno atrasado</Text></Group>}
+      {fila.motivo.codigo === 'NO_INTENTADO' && <BadgeEstado contexto="etiqueta" valor="NO_INTENTADO" size="sm" />}
+      {fila.pedidoAnulado && <BadgeEstado contexto="etiqueta" valor="PEDIDO_ANULADO" size="sm" />}
+      {fila.retornoAtrasado === true && <BadgeEstado contexto="etiqueta" valor="RETORNO_ATRASADO" size="sm" />}
     </Stack> },
     { id: 'acciones', encabezado: 'Acciones', celda: (fila) => <Stack gap="xs" miw={165}>
       <Button type="button" size="sm" mih={44} variant="subtle" disabled={!alVerDetalle || actualizando} aria-describedby={!alVerDetalle ? 'dependencias-f04' : undefined}
@@ -46,5 +46,5 @@ export function TablaEntregasFallidas({ pagina, consulta, estado, actualizando, 
     estado={estado} actualizando={actualizando} anchoMinimo={1550} renderizarEstado={renderizarEstado}
     paginacion={{ pagina: pagina?.pagina ?? 1, tamanioPagina: pagina?.tamanoPagina ?? 20, total: pagina?.totalElementos ?? 0 }}
     alCambiarPagina={alCambiarPagina} alCambiarTamano={alCambiarTamano}
-    estiloFila={(fila) => fila.retornoAtrasado === true ? { background: 'var(--mantine-color-red-0)', borderInlineStart: '4px solid var(--mantine-color-red-7)' } : {}} />;
+    estiloFila={(fila) => fila.retornoAtrasado === true ? { background: 'var(--ia-color-error-background)', borderInlineStart: '4px solid var(--ia-color-error-default)' } : {}} />;
 }

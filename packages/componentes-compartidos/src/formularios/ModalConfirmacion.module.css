@@ -1,6 +1,6 @@
 .raiz .contenido {
   min-width: 0;
-  color: var(--ia-color-text-primary, var(--mantine-color-ink-9));
+  color: var(--ia-color-text-primary);
   overflow-wrap: anywhere;
 }
 
@@ -30,15 +30,15 @@
 }
 
 .advertencia {
-  color: var(--mantine-color-yellow-8);
+  color: var(--ia-color-warning-default);
 }
 
 .informacion {
-  color: var(--mantine-color-blue-8);
+  color: var(--ia-color-info-default);
 }
 
 .raiz .error {
-  background-color: var(--mantine-color-red-0);
+  background-color: var(--ia-color-error-background);
 }
 
 .acciones {
@@ -66,7 +66,7 @@
 
 .raiz .boton:focus-visible,
 .raiz .cerrar:focus-visible {
-  outline: 2px solid var(--ia-color-accent-signal, var(--mantine-color-signal-7));
+  outline: 2px solid var(--ia-color-accent-signal);
   outline-offset: 2px;
 }
 

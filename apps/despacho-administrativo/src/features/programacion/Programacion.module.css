@@ -5,11 +5,11 @@
 .intentos { flex-basis: 100%; }
 .direccion { max-width: 200px; }
 .codigo { font-weight: 500; font-variant-numeric: tabular-nums; }
-.simulado :global(.mantine-Badge-root) { border: 1px dashed var(--mantine-color-gray-6); }
+.simulado :global(.mantine-Badge-root) { border: 1px dashed var(--ia-color-text-disabled); }
 .pagina :global(td), .pagina :global(th) { padding-inline: 8px; }
 .pagina :global(td) { overflow-wrap: anywhere; }
 .pagina :global(th:nth-child(7)) { white-space: nowrap; }
-.resumen { padding: var(--mantine-spacing-md); border-radius: var(--mantine-radius-sm); background: var(--mantine-color-cloud-2); }
+.resumen { padding: var(--mantine-spacing-md); border-radius: var(--mantine-radius-sm); background: var(--ia-color-surface-cloud-subtle); }
 .resumen p { overflow-wrap: anywhere; }
 .modal { border-radius: var(--mantine-radius-lg); padding: 0; }
 .cabeceraModal { padding: var(--mantine-spacing-lg); }

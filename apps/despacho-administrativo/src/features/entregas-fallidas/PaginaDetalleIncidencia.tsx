@@ -1,4 +1,4 @@
-import { Anchor, Alert, Badge, Breadcrumbs, Button, Card, Grid, Group, Skeleton, Stack, Text, Title } from '@mantine/core';
+import { Anchor, Alert, Breadcrumbs, Button, Card, Grid, Group, Skeleton, Stack, Text, Title } from '@mantine/core';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { BadgeEstado, EncabezadoPagina, EstadoVista, HistorialEstados, VisorEvidencia } from '@despacho/componentes-compartidos';
 import { IconCamera, IconRefresh } from '@tabler/icons-react';
@@ -99,7 +99,7 @@ export function PaginaDetalleIncidencia({ destinos = {} }: { destinos?: Destinos
       esqueleto={<Stack><Skeleton height={100} /><Skeleton height={300} /></Stack>}
       accion={estado === 'error' || estado === 'sinPermiso' ? { id: 'reintentar', etiqueta: 'Reintentar detalle' } : undefined} alAccionar={consulta.actualizar}>
       {detalle && <Stack gap="lg" aria-busy={consulta.cargando}>
-        <Group><BadgeEstado contexto="despacho" valor={detalle.estado} />{detalle.pedidoAnulado && <Badge color="gray">Pedido anulado</Badge>}</Group>
+        <Group><BadgeEstado contexto="despacho" valor={detalle.estado} />{detalle.pedidoAnulado && <BadgeEstado contexto="etiqueta" valor="PEDIDO_ANULADO" />}</Group>
         <Group align="flex-start" gap="xl"><Dato etiqueta="Última actualización" valor={<Fecha valor={detalle.actualizadoEn} />} />
           <Dato etiqueta="Último cambio de estado" valor={<Fecha valor={detalle.ultimoCambioEstadoEn} />} /></Group>
         {detalle.estado !== 'FALLIDO' && <Alert color="blue">Consulta histórica. El despacho ya no está fallido.</Alert>}

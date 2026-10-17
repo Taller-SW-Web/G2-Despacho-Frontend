@@ -1,11 +1,13 @@
 import { createContext, useContext, useMemo, useState, type FormEvent, type ReactNode } from 'react';
 import {
-  Alert, Badge, Button, Card, Group, Image, Modal, PasswordInput,
-  Select, Stack, Text, TextInput, Textarea, Title,
+  Alert, Button, Card, Group, Image, PasswordInput,
+  Select, SimpleGrid, Stack, Text, TextInput, Textarea, Title,
 } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { IconClipboardList, IconDoorExit, IconRoute } from '@tabler/icons-react';
-import { CapturaEvidencia, ShellRepartidor, TarjetaDespacho } from '@despacho/componentes-compartidos';
+import {
+  BadgeEstado, CapturaEvidencia, ModalConfirmacion, ShellRepartidor, TarjetaDespacho, TarjetaKpi,
+} from '@despacho/componentes-compartidos';
 import type { DestinoRepartidor, FaseCapturaEvidencia } from '@despacho/componentes-compartidos';
 import { Navigate, Route, Routes, useLocation, useNavigate, useParams } from 'react-router-dom';
 import logoRepartidor from './assets/logo-athletics.png';
@@ -16,7 +18,7 @@ const idJornada = '00000000-0000-4000-8000-000000000016';
 const fecha = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Bogota' });
 const idDemo = (numero: number) => `00000000-0000-4000-8000-${String(numero).padStart(12, '0')}`;
 const imagenPrueba = `data:image/svg+xml,${encodeURIComponent(
-  '<svg xmlns="http://www.w3.org/2000/svg" width="640" height="480"><rect width="640" height="480" fill="#e9e4d9"/><path d="M0 350L170 190l115 105 105-135 250 190v130H0" fill="#b7c3ac"/><circle cx="500" cy="105" r="48" fill="#f3b25e"/><text x="32" y="440" font-family="sans-serif" font-size="24" fill="#333">Evidencia de prueba</text></svg>',
+  '<svg xmlns="http://www.w3.org/2000/svg" width="640" height="480"><rect width="640" height="480" fill="#EDEAE2"/><path d="M0 350L170 190l115 105 105-135 250 190v130H0" fill="#EEF7B0"/><circle cx="500" cy="105" r="48" fill="#FFC078"/><text x="32" y="440" font-family="sans-serif" font-size="24" fill="#1B1812">Evidencia de prueba</text></svg>',
 )}`;
 
 type MotivoFallo =
@@ -259,7 +261,8 @@ function PaginaRuta() {
   return (
     <Stack gap="md">
       <Group justify="space-between">
-        <Text c="dimmed">Jornada del {fecha} · {datos.jornadaCerrada ? 'FUERA_DE_TURNO' : 'EN_RUTA'}</Text>
+        <Group gap="xs"><Text c="dimmed">Jornada del {fecha}</Text>
+          <BadgeEstado contexto="operacionRepartidor" valor={datos.jornadaCerrada ? 'FUERA_DE_TURNO' : 'EN_RUTA'} size="sm" /></Group>
         <Text size="sm" fw={600}>{datos.operador}</Text>
       </Group>
       {datos.jornadaCerrada && <Alert color="yellow" title="Jornada cerrada">Tu jornada finalizó. Puedes consultar la ruta y el resumen.</Alert>}
@@ -275,7 +278,8 @@ function PaginaRuta() {
               ? `${despacho.direccion}, ${despacho.distrito}` : 'Dirección protegida'}
             destinatario={despacho.estado === 'ASIGNADO' || despacho.estado === 'EN_CAMINO'
               ? despacho.destinatario : etiquetaEstado(despacho)}
-            estado={despacho.estado === 'FALLIDO' ? 'NO ENTREGADO' : despacho.estado}
+            estado={despacho.estado}
+            complementoEstado={despacho.estado === 'FALLIDO' ? 'No entregado, regresa al centro de despacho' : undefined}
             etiquetaIntento={`${despacho.intentos} de ${despacho.maximoIntentos} intentos`}
             variante={despacho.estado === 'ENTREGADO' || despacho.motivo === 'NO_INTENTADO' ? 'resuelto' : undefined}
             alAbrir={(id) => navegar(`/repartidor/despachos/${id}`)}
@@ -304,7 +308,8 @@ function PaginaDetalle() {
     <Stack gap="md">
       <Group justify="space-between">
         <Title order={3}>{actual.codigo}</Title>
-        <Badge>{actual.estado === 'FALLIDO' ? 'NO ENTREGADO' : actual.estado}</Badge>
+        <BadgeEstado contexto="despacho" valor={actual.estado}
+          complemento={actual.estado === 'FALLIDO' ? 'No entregado, regresa al centro de despacho' : undefined} />
       </Group>
       <Card withBorder>
         <Stack gap="xs">
@@ -497,19 +502,15 @@ function PaginaResumen() {
   return (
     <Stack gap="md">
       <Text c="dimmed">Resumen del {fecha}</Text>
-      <Group grow align="stretch">
-        <Indicador titulo="Asignados" valor={contadores.asignados} />
-        <Indicador titulo="Entregados" valor={contadores.entregados} />
-        <Indicador titulo="Fallidos con intento" valor={contadores.fallidosConIntento} />
-        <Indicador titulo="No intentados" valor={contadores.noIntentados} />
-        <Indicador titulo="Pendientes" valor={contadores.pendientes} />
-      </Group>
+      <SimpleGrid cols={2} spacing="md">
+        <TarjetaKpi id="asignados" etiqueta="Asignados" valor={contadores.asignados} />
+        <TarjetaKpi id="entregados" etiqueta="Entregados" valor={contadores.entregados} tono="success" />
+        <TarjetaKpi id="fallidos" etiqueta="Fallidos con intento" valor={contadores.fallidosConIntento} tono="error" />
+        <TarjetaKpi id="no-intentados" etiqueta="No intentados" valor={contadores.noIntentados} />
+        <TarjetaKpi id="pendientes" etiqueta="Pendientes" valor={contadores.pendientes} tono="info" />
+      </SimpleGrid>
     </Stack>
   );
-}
-
-function Indicador({ titulo, valor }: { titulo: string; valor: number }) {
-  return <Card withBorder><Stack gap={4}><Text size="sm" c="dimmed">{titulo}</Text><Title order={3}>{valor}</Title></Stack></Card>;
 }
 
 function PaginaCierre() {
@@ -542,18 +543,12 @@ function PaginaCierre() {
     <Stack gap="md">
       <Text>Revisa los despachos pendientes antes de cerrar tu jornada.</Text>
       <Text>{pendientes.length} despachos pendientes.</Text>
-      <Button color="orange" onClick={open}>Cerrar jornada</Button>
-      <Modal opened={abierto} onClose={close} title="Confirmar cierre de jornada" centered>
-        <Stack>
-          <Text>{pendientes.length > 0
-            ? `${pendientes.length} despachos quedarán como no intentados.`
-            : 'No tienes despachos pendientes.'}</Text>
-          <Group justify="flex-end">
-            <Button variant="default" onClick={close}>Cancelar</Button>
-            <Button color="orange" onClick={confirmar}>Confirmar cierre</Button>
-          </Group>
-        </Stack>
-      </Modal>
+      <Button size="lg" fullWidth onClick={open}>Cerrar jornada</Button>
+      <ModalConfirmacion abierto={abierto} titulo="Confirmar cierre de jornada"
+        descripcion={pendientes.length > 0
+          ? `${pendientes.length} despachos quedarán como no intentados.`
+          : 'No tienes despachos pendientes.'}
+        etiquetaConfirmar="Confirmar cierre" alConfirmar={confirmar} alCancelar={close} />
     </Stack>
   );
 }

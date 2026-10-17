@@ -1,6 +1,6 @@
 .raiz .contenido {
   min-width: 0;
-  color: var(--ia-color-text-primary, var(--mantine-color-ink-9));
+  color: var(--ia-color-text-primary);
   overflow-wrap: anywhere;
 }
 
@@ -24,7 +24,7 @@
   width: 100%;
   overflow: hidden;
   border-radius: var(--mantine-radius-lg);
-  background-color: var(--mantine-color-cloud-2);
+  background-color: var(--ia-color-surface-cloud-subtle);
 }
 
 .marco .imagen,
@@ -36,7 +36,7 @@
 }
 
 .marco .esqueleto::after {
-  background-color: var(--mantine-color-cloud-2);
+  background-color: var(--ia-color-surface-cloud-subtle);
 }
 
 .raiz .cerrar {
@@ -52,7 +52,7 @@
 
 .raiz .cerrar:focus-visible,
 .raiz .volver:focus-visible {
-  outline: 2px solid var(--ia-color-accent-signal, var(--mantine-color-signal-7));
+  outline: 2px solid var(--ia-color-accent-signal);
   outline-offset: 2px;
 }
 

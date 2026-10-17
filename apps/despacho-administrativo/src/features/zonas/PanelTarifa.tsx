@@ -147,7 +147,7 @@ export function PanelTarifa() {
       await guardarTarifa(cliente, zona.id, solicitud);
       notifications.show({
         message: `Tarifa vigente de «${zona.nombre}» actualizada.`,
-        color: 'teal',
+        color: 'green',
         title: 'Tarifa guardada',
       });
       navegar(`/zonas${parametros.size ? `?${parametros}` : ''}`);
@@ -202,7 +202,7 @@ export function PanelTarifa() {
         <Stack gap="md">
           {zona && <BadgeEstadoZona estado={zona.estado} />}
           {inactiva ? (
-            <Alert color="orange" variant="light" icon={<IconAlertTriangle size={18} />}>
+            <Alert color="yellow" variant="light" icon={<IconAlertTriangle size={18} />}>
               Activa la zona para configurar su tarifa.
             </Alert>
           ) : null}
@@ -212,7 +212,7 @@ export function PanelTarifa() {
               Esta zona aún no tiene tarifa.
             </Text>
           ) : (
-            <Alert color="orange" variant="light" title="Sustitución de tarifa">
+            <Alert color="yellow" variant="light" title="Sustitución de tarifa">
               Al guardar, esta tarifa sustituye a la vigente y la anterior se conserva como histórico.
             </Alert>
           )}

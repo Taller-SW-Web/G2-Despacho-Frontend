@@ -33,7 +33,7 @@ export function TablaCola({ pagina, estado, nuevo, bloqueada, alAsignar, alVerDe
     estado={estado} actualizando={bloqueada && estado === 'datos'} anchoMinimo={1120} tamaniosPagina={[10, 20, 50, 100]}
     paginacion={pagina ? { pagina: pagina.paginaActual, tamanioPagina: pagina.tamanoPagina, total: pagina.totalElementos } : undefined}
     alCambiarPagina={alCambiarPagina} alCambiarTamano={alCambiarTamano}
-    estiloFila={(d) => d.idDespacho === nuevo ? { backgroundColor: 'var(--mantine-color-blue-0)' } : {}}
+    estiloFila={(d) => d.idDespacho === nuevo ? { backgroundColor: 'var(--ia-color-info-background)' } : {}}
     renderizarAcciones={(d) => <Stack gap="xs" w={116}>
       <Button type="button" variant="outline" size="sm" px="xs" mih={44} disabled={bloqueada || !d.asignable} onClick={() => alAsignar(d)}>Asignar</Button>
       {!d.asignable && <Text size="xs">Disponible desde {formatearFecha(d.disponibleDesde ?? d.fechaProgramada)}</Text>}

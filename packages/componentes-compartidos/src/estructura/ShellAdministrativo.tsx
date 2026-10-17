@@ -47,7 +47,7 @@ export function ShellAdministrativo({ destinos, destinoActivo, alNavegar, childr
       </Group>
     </AppShell.Header>
     <AppShell.Navbar p="xs" visibleFrom="sm">{navegacion(true)}</AppShell.Navbar>
-    <Drawer id="menu-administrativo" opened={abierto} onClose={close} title="Navegación" size="xs" trapFocus returnFocus
+    <Drawer id="menu-administrativo" opened={abierto} onClose={close} title="Navegación" position="left" size="xs" trapFocus returnFocus
       onExitTransitionEnd={() => disparador.current?.focus()} closeButtonProps={{ 'aria-label': 'Cerrar menú' }}>{navegacion(false)}</Drawer>
     <AppShell.Main id="contenido-principal" tabIndex={-1} style={{ minWidth: 0 }}>
       <Box maw={1320} mx="auto" style={{ minWidth: 0 }}>{children}</Box>
