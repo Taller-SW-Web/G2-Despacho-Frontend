@@ -1,4 +1,4 @@
-import { createTheme } from '@mantine/core';
+import { createTheme, defaultVariantColorsResolver } from '@mantine/core';
 import type { MantineColorsTuple } from '@mantine/core';
 
 export { EstadoVista } from './feedback/EstadoVista';
@@ -9,12 +9,14 @@ export type { EntradaNotificacionOperacion } from './feedback/NotificacionOperac
 export type { ContextoEstado } from './dominio/estados';
 export { estadosPorContexto } from './dominio/estados';
 export { EncabezadoPagina } from './estructura/EncabezadoPagina';
+export type { PropiedadesEncabezadoPagina } from './estructura/EncabezadoPagina';
 export { BarraFiltros } from './listados/BarraFiltros';
+export type { PropiedadesBarraFiltros } from './listados/BarraFiltros';
 export { TablaDatos } from './listados/TablaDatos';
-export type { ColumnaDatos } from './listados/TablaDatos';
+export type { ColumnaDatos, PropiedadesTablaDatos } from './listados/TablaDatos';
 export { TarjetaKpi } from './indicadores/TarjetaKpi';
 export type { PropiedadesEstadoVista } from './feedback/EstadoVista';
-export type { EstadoConsulta, AccionUi } from './tipos-ui';
+export type { EstadoConsulta, AccionUi, DestinoUi, FiltroActivoUi, OrdenUi, PaginacionUi } from './tipos-ui';
 export { BadgeEstado } from './dominio/BadgeEstado';
 export type { PropiedadesBadgeEstado } from './dominio/BadgeEstado';
 export { HistorialEstados } from './dominio/HistorialEstados';
@@ -23,6 +25,10 @@ export { ModalConfirmacion } from './formularios/ModalConfirmacion';
 export type { PropiedadesModalConfirmacion } from './formularios/ModalConfirmacion';
 export { VisorEvidencia } from './dominio/VisorEvidencia';
 export type { EstadoVisorEvidencia, PropiedadesVisorEvidencia } from './dominio/VisorEvidencia';
+export { BarraOcupacion } from './dominio/BarraOcupacion';
+export type { PropiedadesBarraOcupacion } from './dominio/BarraOcupacion';
+export { TarjetaRepartidor } from './dominio/TarjetaRepartidor';
+export type { PropiedadesTarjetaRepartidor } from './dominio/TarjetaRepartidor';
 
 const orange: MantineColorsTuple = ['#FFF4E6', '#FCE3D0', '#FFD8A8', '#FFC078', '#FFA94D', '#FF922B', '#FD7E14', '#F76707', '#C2410C', '#9A3412'];
 const volt: MantineColorsTuple = ['#FBFEE0', '#F5FCC2', '#EEF7B0', '#E4F48A', '#D9EF5E', '#CFEA33', '#C8E81A', '#C3E504', '#9DB803', '#5C6B00'];
@@ -46,6 +52,22 @@ export const tema = createTheme({
   defaultRadius: 'sm',
   radius: { xs: '0.25rem', sm: '0.5rem', md: '0.75rem', lg: '1rem', xl: '62.4375rem' },
   respectReducedMotion: true,
+  focusClassName: 'ia-focus',
+  // Mantine usa un tono claro para subtle incluso con color="orange.8".
+  // Mantener la jerarquía y el contraste de CR-01 también en los slots de acciones.
+  variantColorResolver: (entrada) => {
+    const colores = defaultVariantColorsResolver(entrada);
+    const color = entrada.color ?? entrada.theme.primaryColor;
+    if (color !== 'orange' && !color.startsWith('orange.')) return colores;
+    if (entrada.variant === 'outline' || entrada.variant === 'subtle') return {
+      ...colores,
+      color: entrada.theme.colors.orange[8],
+      hoverColor: entrada.theme.colors.orange[8],
+      ...(entrada.variant === 'outline' ? { border: `1px solid ${entrada.theme.colors.orange[8]}` } : {}),
+    };
+    if (entrada.variant === 'filled') return { ...colores, color: entrada.theme.black, hoverColor: entrada.theme.colors.cloud[1] };
+    return colores;
+  },
   breakpoints: { xs: '36em', sm: '48em', md: '62em', lg: '75em', xl: '88em' },
   spacing: { xs: '0.25rem', sm: '0.5rem', md: '1rem', lg: '1.5rem', xl: '2rem' },
   components: {

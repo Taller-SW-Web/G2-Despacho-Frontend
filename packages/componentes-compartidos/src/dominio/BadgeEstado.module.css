@@ -58,6 +58,11 @@
   --estado-icono: var(--mantine-color-red-8);
 }
 
+.raiz .insignia[data-semantica='availability'] {
+  background: var(--mantine-color-volt-2);
+  --estado-icono: currentColor;
+}
+
 .raiz .insignia[data-texto-secundario] {
   color: var(--mantine-color-gray-7);
 }

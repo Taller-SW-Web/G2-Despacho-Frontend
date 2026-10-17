@@ -15,3 +15,8 @@ export type AccionUi = {
   loading?: boolean;
   motivoDeshabilitado?: string;
 };
+
+export type DestinoUi = { id: string; etiqueta: string; ruta: string };
+export type FiltroActivoUi = { id: string; etiqueta: string };
+export type OrdenUi = { columna: string; direccion: 'asc' | 'desc' } | null;
+export type PaginacionUi = { pagina: number; tamanioPagina: number; total: number };

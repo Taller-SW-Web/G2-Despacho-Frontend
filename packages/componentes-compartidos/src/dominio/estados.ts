@@ -8,7 +8,7 @@ type ConfiguracionEstado = {
   presentacion?: 'texto' | 'icono';
   textoSecundario?: boolean;
 };
-
+/** CR-09: configuración visual; no representa transiciones ni permisos. */
 /** CR-09: configuración visual; no representa transiciones ni permisos. */
 export const estadosDespacho = {
   PENDIENTE_ASIGNACION: { etiqueta: 'Pendiente de asignación', semantica: 'neutral', Icono: IconClockHour4 },
