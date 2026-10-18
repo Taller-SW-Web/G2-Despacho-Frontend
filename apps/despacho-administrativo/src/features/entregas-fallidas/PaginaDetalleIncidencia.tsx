@@ -1,6 +1,6 @@
 import { Anchor, Alert, Breadcrumbs, Button, Card, Grid, Group, Skeleton, Stack, Text, Title } from '@mantine/core';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { BadgeEstado, EncabezadoPagina, EstadoVista, HistorialEstados, VisorEvidencia } from '@despacho/componentes-compartidos';
+import { BadgeEstado, EncabezadoPagina, EstadoVista, FranjaEstado, HistorialEstados, VisorEvidencia } from '@despacho/componentes-compartidos';
 import { IconCamera, IconRefresh } from '@tabler/icons-react';
 import { formatoFechaLima, leerFiltros } from './modelo';
 import { adaptarHistorial, type DestinosDetalleIncidencia, type DetalleIncidencia } from './modeloDetalle';
@@ -107,8 +107,10 @@ export function PaginaDetalleIncidencia({ destinos = {} }: { destinos?: Destinos
           {consulta.cambioIncidencia && <Alert color="blue">La incidencia cambió. Se muestra la información de la nueva salida; revisa sus datos antes de decidir.</Alert>}
           {consulta.cargando && <Text>Actualizando. Las decisiones están bloqueadas mientras se confirma la información.</Text>}
         </div>
-        {consulta.error && <Alert color="red" title="Datos desactualizados" role="alert">{consulta.error.mensaje} Las decisiones permanecerán bloqueadas hasta actualizar.
-          <Button type="button" variant="subtle" onClick={consulta.actualizar}>Reintentar detalle</Button></Alert>}
+        {consulta.error && <FranjaEstado tipo="datosDesactualizados"
+          mensaje={`${consulta.error.mensaje} Las decisiones permanecerán bloqueadas hasta actualizar.`}
+          accion={{ id: 'actualizar', etiqueta: 'Reintentar detalle', disabled: consulta.cargando, loading: consulta.cargando }}
+          alAccionar={consulta.actualizar} />}
         <Grid gap="lg"><Grid.Col span={{ base: 12, lg: 7 }}><Stack gap="lg"><InformacionIncidencia detalle={detalle} /></Stack></Grid.Col>
           <Grid.Col span={{ base: 12, lg: 5 }}><Stack gap="lg"><EvidenciaIncidencia key={detalle.incidencia.idIncidencia} detalle={detalle} alRevocar={consulta.retirarAutorizacion} />
             <PanelDecisionIncidencia detalle={detalle} bloqueada={consulta.cargando || Boolean(consulta.error)} destinos={destinos}

@@ -1,7 +1,7 @@
 import type { CSSProperties, ReactNode } from 'react';
 import { Alert, Button, Group, Stack, Text } from '@mantine/core';
 import { IconPlus, IconRefresh } from '@tabler/icons-react';
-import { EncabezadoPagina, EstadoVista, TablaDatos, type ColumnaDatos, type EstadoConsulta } from '@despacho/componentes-compartidos';
+import { EncabezadoPagina, EstadoVista, FranjaEstado, TablaDatos, type ColumnaDatos, type EstadoConsulta } from '@despacho/componentes-compartidos';
 import { FiltrosFlota } from './FiltrosFlota';
 import type { DefinicionFiltro, useCatalogoFlota } from './useCatalogoFlota';
 
@@ -30,7 +30,8 @@ export function CatalogoFlota<T>({ titulo, subtitulo, etiquetaNuevo, consulta, d
         {consulta.error && <Alert color="red" variant="light" title="No se pudo actualizar el listado" role="alert">
           {consulta.error}<Button type="button" variant="subtle" mih={44} onClick={consulta.actualizar}>Reintentar consulta</Button>
         </Alert>}
-        {desfasada && <Alert color="yellow" variant="light" role="status">Se conservan los resultados anteriores. Las acciones están bloqueadas hasta confirmar la consulta actual.</Alert>}
+        {desfasada && <FranjaEstado tipo="datosDesactualizados"
+          mensaje="Se conservan los resultados anteriores. Las acciones están bloqueadas hasta confirmar la consulta actual." />}
         <TablaDatos filas={datos?.contenido ?? []} obtenerId={obtenerId} columnas={columnas} tituloAccesible={`Catálogo de ${titulo.toLowerCase()}`}
           estado={estado} actualizando={!consulta.confirmada} estiloFila={estiloFila}
           paginacion={{ pagina: datos?.pagina ?? 1, tamanioPagina: datos?.tamanoPagina ?? consulta.tamanoPagina, total: datos?.totalElementos ?? 0 }}

@@ -6,7 +6,8 @@ import {
 import { useDisclosure } from '@mantine/hooks';
 import { IconClipboardList, IconDoorExit, IconRoute } from '@tabler/icons-react';
 import {
-  BadgeEstado, CapturaEvidencia, ModalConfirmacion, ShellRepartidor, TarjetaDespacho, TarjetaKpi, logoInkaAthletics,
+  BadgeEstado, BarraAccionesFija, CapturaEvidencia, EstadoVista, FranjaEstado, ModalConfirmacion,
+  ShellRepartidor, TarjetaDespacho, TarjetaKpi, logoInkaAthletics,
 } from '@despacho/componentes-compartidos';
 import type { DestinoRepartidor, FaseCapturaEvidencia } from '@despacho/componentes-compartidos';
 import { Navigate, Route, Routes, useLocation, useNavigate, useParams } from 'react-router-dom';
@@ -264,9 +265,9 @@ function PaginaRuta() {
           <BadgeEstado contexto="operacionRepartidor" valor={datos.jornadaCerrada ? 'FUERA_DE_TURNO' : 'EN_RUTA'} size="sm" /></Group>
         <Text size="sm" fw={600}>{datos.operador}</Text>
       </Group>
-      {datos.jornadaCerrada && <Alert color="yellow" title="Jornada cerrada">Tu jornada finalizó. Puedes consultar la ruta y el resumen.</Alert>}
+      {datos.jornadaCerrada && <FranjaEstado tipo="fueraDeTurno" mensaje="Tu jornada finalizó. Puedes consultar la ruta y el resumen." />}
       {despachos.length === 0
-        ? <Alert color="blue" title="Ruta vacía">No tienes despachos asignados para hoy.</Alert>
+        ? <EstadoVista estado="vacio" titulo="Ruta vacía" descripcion="No tienes despachos asignados para hoy." />
         : despachos.map((despacho) => (
           <TarjetaDespacho
             key={despacho.id}
@@ -299,7 +300,8 @@ function PaginaDetalle() {
   const { datos, despacho, iniciarTraslado } = usePrueba();
   const navegar = useNavigate();
   const actual = despacho(id);
-  if (!actual) return <Alert color="red" title="Despacho no encontrado">No existe el despacho solicitado.</Alert>;
+  if (!actual) return <EstadoVista estado="noEncontrado" titulo="Despacho no encontrado" descripcion="No existe el despacho solicitado."
+    accion={{ id: 'ruta', etiqueta: 'Volver a mi ruta' }} alAccionar={() => navegar('/repartidor/ruta')} />;
   const datosPersonalesVisibles = actual.estado === 'ASIGNADO' || actual.estado === 'EN_CAMINO';
   const motivo = actual.motivo && actual.motivo !== 'NO_INTENTADO' ? etiquetaMotivo[actual.motivo] : null;
 
@@ -334,10 +336,9 @@ function PaginaDetalle() {
         <Button size="md" onClick={() => iniciarTraslado(actual.id)}>En camino</Button>
       )}
       {!datos.jornadaCerrada && actual.estado === 'EN_CAMINO' && (
-        <Stack>
-          <Button size="md" onClick={() => navegar(`/repartidor/despachos/${actual.id}/entrega`)}>Confirmar entrega</Button>
-          <Button size="md" variant="light" color="red" onClick={() => navegar(`/repartidor/despachos/${actual.id}/fallo`)}>Marcar como fallido</Button>
-        </Stack>
+        <BarraAccionesFija principal={{ id: 'entrega', etiqueta: 'Confirmar entrega' }}
+          secundaria={{ id: 'fallo', etiqueta: 'Marcar como fallido' }}
+          alAccionar={(accion) => navegar(`/repartidor/despachos/${actual.id}/${accion}`)} />
       )}
       {(actual.estado === 'ENTREGADO' || actual.estado === 'FALLIDO') && actual.evidenciaUrl && (
         <Button variant="light" onClick={() => navegar(`/repartidor/despachos/${actual.id}/evidencia`)}>Ver evidencia fotográfica</Button>
@@ -381,7 +382,8 @@ function FormularioResultado({ tipo }: { tipo: 'entrega' | 'fallo' }) {
   const [errorEnvio, setErrorEnvio] = useState('');
   const [confirmado, setConfirmado] = useState(false);
 
-  if (!actual) return <Alert color="red" title="Despacho no encontrado">No existe el despacho solicitado.</Alert>;
+  if (!actual) return <EstadoVista estado="noEncontrado" titulo="Despacho no encontrado" descripcion="No existe el despacho solicitado."
+    accion={{ id: 'ruta', etiqueta: 'Volver a mi ruta' }} alAccionar={() => navegar('/repartidor/ruta')} />;
   if (actual.estado !== 'EN_CAMINO' && !confirmado) {
     return <Alert color="yellow" title="Estado actualizado">Este despacho ya no está disponible para registrar el resultado.</Alert>;
   }
@@ -417,6 +419,10 @@ function FormularioResultado({ tipo }: { tipo: 'entrega' | 'fallo' }) {
     setFase('cargada');
     setConfirmado(true);
   };
+
+  const motivoBloqueo = !archivo ? 'Selecciona una fotografía de evidencia.'
+    : fase === 'error' ? errorFoto || 'Corrige la fotografía de evidencia.'
+    : tipo === 'fallo' && !motivo ? 'Selecciona el motivo de la incidencia.' : undefined;
 
   return (
     <Stack gap="md">
@@ -470,13 +476,10 @@ function FormularioResultado({ tipo }: { tipo: 'entrega' | 'fallo' }) {
       )}
       {errorEnvio && <Alert color="red" role="alert">{errorEnvio}</Alert>}
       {!confirmado ? (
-        <Button
-          size="md"
-          disabled={!archivo || fase === 'error' || (tipo === 'fallo' && !motivo)}
-          onClick={enviar}
-        >
-          {tipo === 'entrega' ? 'Confirmar entrega' : 'Confirmar incidencia'}
-        </Button>
+        <BarraAccionesFija principal={{ id: 'confirmar', etiqueta: tipo === 'entrega' ? 'Confirmar entrega' : 'Confirmar incidencia',
+          disabled: Boolean(motivoBloqueo), motivoDeshabilitado: motivoBloqueo, loading: fase === 'subiendo' }}
+          secundaria={{ id: 'cancelar', etiqueta: 'Cancelar', disabled: fase === 'subiendo' }}
+          alAccionar={(accion) => { if (accion === 'confirmar') enviar(); else navegar(`/repartidor/despachos/${actual.id}`); }} />
       ) : (
         <Stack>
           <Alert color={tipo === 'entrega' ? 'green' : 'yellow'} title={tipo === 'entrega' ? 'Entrega registrada.' : 'Incidencia registrada.'}>
@@ -525,7 +528,7 @@ function PaginaCierre() {
   if (datos.jornadaCerrada) {
     return (
       <Stack gap="md">
-        <Alert color="green" title="Jornada cerrada">Jornada cerrada. Devuelve estos paquetes al centro de despacho.</Alert>
+        <FranjaEstado tipo="fueraDeTurno" mensaje="Jornada cerrada. Devuelve estos paquetes al centro de despacho." />
         {paquetes && paquetes.length > 0 && (
           <Card withBorder>
             <Stack gap="xs">

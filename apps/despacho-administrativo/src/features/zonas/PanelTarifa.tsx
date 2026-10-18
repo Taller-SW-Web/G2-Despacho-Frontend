@@ -6,13 +6,13 @@ import {
   Drawer,
   Fieldset,
   Group,
-  Loader,
+  Skeleton,
   NumberInput,
   Stack,
   Text,
 } from '@mantine/core';
-import { notifications } from '@mantine/notifications';
-import { IconAlertTriangle, IconDeviceFloppy, IconLock } from '@tabler/icons-react';
+import { EstadoVista, notificarOperacion } from '@despacho/componentes-compartidos';
+import { IconAlertTriangle, IconDeviceFloppy } from '@tabler/icons-react';
 import { useClienteApi } from '../../cliente/useClienteApi';
 import { detalleProblema, guardarTarifa, obtenerTarifaVigente, obtenerZona, problemaDe } from './api/zonasApi';
 import { BadgeEstadoZona } from './BadgeEstadoZona';
@@ -145,10 +145,10 @@ export function PanelTarifa() {
     setGuardando(true);
     try {
       await guardarTarifa(cliente, zona.id, solicitud);
-      notifications.show({
-        message: `Tarifa vigente de «${zona.nombre}» actualizada.`,
-        color: 'green',
-        title: 'Tarifa guardada',
+      notificarOperacion({
+        id: `tarifa-guardada-${zona.id}`,
+        tipo: 'exito',
+        mensaje: `Tarifa vigente de «${zona.nombre}» actualizada.`,
       });
       navegar(`/zonas${parametros.size ? `?${parametros}` : ''}`);
     } catch (error) {
@@ -185,20 +185,11 @@ export function PanelTarifa() {
       title={`Tarifas de ${zona?.nombre ?? ''}`}
       closeButtonProps={{ 'aria-label': 'Cerrar tarifas' }}
     >
-      {cargando ? (
-        <Group justify="center" py="xl">
-          <Loader />
-        </Group>
-      ) : denegado ? (
-        <Alert color="red" variant="light" icon={<IconLock size={18} />} title="Sin permisos">
-          No tienes permisos para configurar tarifas.
-        </Alert>
-      ) : errorCarga ? (
-        <Alert color="red" variant="light" icon={<IconAlertTriangle size={18} />}>
-          {errorCarga}
-          <Button mt="sm" onClick={() => setRevision((valor) => valor + 1)}>Reintentar tarifa</Button>
-        </Alert>
-      ) : (
+      <EstadoVista estado={denegado ? 'sinPermiso' : cargando ? 'carga' : errorCarga ? 'error' : 'datos'}
+        esqueleto={<Stack aria-label="Cargando tarifa">{[0, 1, 2].map((indice) => <Skeleton key={indice} height={64} />)}</Stack>}
+        descripcion={denegado ? undefined : errorCarga ?? undefined}
+        accion={errorCarga && !denegado ? { id: 'reintentar', etiqueta: 'Reintentar tarifa' } : undefined}
+        alAccionar={() => setRevision((valor) => valor + 1)}>
         <Stack gap="md">
           {zona && <BadgeEstadoZona estado={zona.estado} />}
           {inactiva ? (
@@ -303,7 +294,7 @@ export function PanelTarifa() {
           </Group>
           {(aNumero(campos.tarifaBase) === null || aNumero(campos.pesoIncluidoKg) === null) && <Text size="sm" c="dimmed">Completa la tarifa base y el peso incluido para guardar.</Text>}
         </Stack>
-      )}
+      </EstadoVista>
     </Drawer>
   );
 }

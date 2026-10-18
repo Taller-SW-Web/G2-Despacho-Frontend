@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useSearchParams } from 'react-router-dom';
 import { Alert, Button, Group, SimpleGrid, Stack, Text } from '@mantine/core';
 import { IconAlertTriangle, IconClockHour4, IconPackageImport, IconRefresh } from '@tabler/icons-react';
-import { EncabezadoPagina, EstadoVista, TarjetaKpi, type EstadoConsulta } from '@despacho/componentes-compartidos';
+import { EncabezadoPagina, EstadoVista, FranjaEstado, TarjetaKpi, type EstadoConsulta } from '@despacho/componentes-compartidos';
 import { filtrosIniciales, formatoFechaLima, leerFiltros, parametrosFiltros, type FiltrosFallidos } from './modelo';
 import { FiltrosEntregasFallidas } from './FiltrosEntregasFallidas';
 import { TablaEntregasFallidas, type DestinosEntregasFallidas } from './TablaEntregasFallidas';
@@ -85,10 +85,9 @@ export function PaginaEntregasFallidas(destinos: DestinosEntregasFallidas) {
             {error.jornadas ? <Button type="button" variant="subtle" mih={44} onClick={todos}>Ver todos los grupos</Button>
               : <Button type="button" variant="subtle" mih={44} onClick={limpiar}>Restablecer consulta</Button>}</Group>
         </Alert>}
-        {pagina && (desfasada || consulta.cargando || error || !valida) && <Alert color="blue.8" role="status">
-          {desfasada || !valida ? 'Se conservan los resultados anteriores; no corresponden a los filtros actuales.'
-            : error ? 'Se conservan los resultados anteriores. No se pudieron actualizar.' : 'Actualizando. Se muestran los últimos resultados confirmados.'}
-        </Alert>}
+        {pagina && (desfasada || consulta.cargando || error || !valida) && <FranjaEstado tipo="datosDesactualizados"
+          mensaje={desfasada || !valida ? 'Se conservan los resultados anteriores; no corresponden a los filtros actuales.'
+            : error ? 'Se conservan los resultados anteriores. No se pudieron actualizar.' : 'Actualizando. Se muestran los últimos resultados confirmados.'} />}
         {pagina && <Text size="sm" c="dimmed">Última consulta confirmada: {formatoFechaLima.format(new Date(pagina.consultadoEn))} · America/Lima</Text>}
         <TablaEntregasFallidas {...destinos} pagina={pagina} consulta={consulta.resultado?.clave ?? clave} estado={estadoTabla}
           actualizando={!confirmada} alCambiarPagina={(numero) => cambiar({ pagina: numero })} alCambiarTamano={(tamano) => cambiar({ tamanoPagina: tamano })}

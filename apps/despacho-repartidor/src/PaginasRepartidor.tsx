@@ -150,7 +150,8 @@ export function PaginaResumen() {
   return (
     <Stack gap="md">
       <Text c="dimmed">Resumen del {resumen.fecha}</Text>
-      {!resumen.idJornada && <Alert color="blue">No hay actividad registrada para la jornada de hoy.</Alert>}
+      {!resumen.idJornada && <EstadoVista estado="vacio" compacto titulo="Sin actividad en la jornada"
+        descripcion="No hay actividad registrada para la jornada de hoy." />}
       <SimpleGrid cols={2} spacing="md">
         <TarjetaKpi id="asignados" etiqueta="Asignados" valor={resumen.asignados} />
         <TarjetaKpi id="entregados" etiqueta="Entregados" valor={resumen.entregados} tono="success" />
