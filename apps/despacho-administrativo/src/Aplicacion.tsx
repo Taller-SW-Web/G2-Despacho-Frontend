@@ -60,7 +60,7 @@ export function Aplicacion() {
         <Route path="/zonas" element={<PaginaZonas />} />
         <Route path="/zonas/nueva" element={<FormularioZona />} />
         <Route path="/zonas/:id/editar" element={<FormularioZona />} />
-        <Route path="/zonas/:id/tarifas" element={<><PaginaZonas /><PanelTarifa /></>} />
+        <Route path="/zonas/:id/tarifas" element={<PanelTarifa />} />
         <Route path="/entregas-fallidas" element={<PaginaEntregasFallidas alVerDetalle={(entrega, consulta) => {
           const parametros = new URLSearchParams({ origen: consulta, incidencia: entrega.idIncidencia });
           navegar(`/entregas-fallidas/${encodeURIComponent(entrega.idDespacho)}?${parametros}`);

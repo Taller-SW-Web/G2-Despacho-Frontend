@@ -11,17 +11,18 @@ export function CatalogoFlota<T>({ titulo, subtitulo, etiquetaNuevo, consulta, d
   alNuevo: () => void; children?: ReactNode;
   estiloFila?: (fila: T) => CSSProperties;
 }) {
+  if (consulta.denegado) return <EstadoVista estado="sinPermiso" alAccionar={consulta.actualizar} />;
   const datos = consulta.resultado?.pagina;
   const desfasada = Boolean(consulta.resultado && !consulta.confirmada);
   const estado: EstadoConsulta = !datos && consulta.cargando ? 'carga'
     : consulta.errores.length || !datos && consulta.error ? 'error'
     : datos?.contenido.length ? 'datos' : consulta.tieneFiltros ? 'sinResultados' : 'vacio';
   return <Stack gap="lg" style={{ minWidth: 0 }}>
-    <EncabezadoPagina titulo={titulo} subtitulo={subtitulo} acciones={!consulta.denegado && <Group>
+    <EncabezadoPagina titulo={titulo} subtitulo={subtitulo} acciones={<Group>
       <Button variant="default" type="button" mih={44} disabled={consulta.cargando} onClick={consulta.actualizar} leftSection={<IconRefresh size={20} aria-hidden="true" />}>Actualizar</Button>
       <Button type="button" mih={44} disabled={!consulta.confirmada} onClick={alNuevo} leftSection={<IconPlus size={20} aria-hidden="true" />}>{etiquetaNuevo}</Button>
     </Group>} />
-    <EstadoVista estado={consulta.denegado ? 'sinPermiso' : 'datos'}>
+    <EstadoVista estado="datos">
       <Stack gap="lg">
         <FiltrosFlota definiciones={definiciones} filtros={consulta.filtros} consultando={consulta.cargando} alCambiar={consulta.cambiar} alLimpiar={consulta.limpiar} />
         {consulta.errores.length > 0 && <Alert color="red" variant="light" title="Revisa los filtros de la URL" role="alert">

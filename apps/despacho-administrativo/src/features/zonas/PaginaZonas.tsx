@@ -78,10 +78,8 @@ export function PaginaZonas() {
     } finally { setProcesando(false); }
   };
 
-  if (consulta === 'sinPermiso' || catalogo.denegado) return <Stack gap="lg">
-    <EncabezadoPagina titulo="Zonas de cobertura" subtitulo="Zonas desde el centro de despacho" />
-    <EstadoVista estado="sinPermiso" />
-  </Stack>;
+  if (consulta === 'sinPermiso' || catalogo.denegado) return <EstadoVista estado="sinPermiso"
+    alAccionar={() => { setRefresco((valor) => valor + 1); catalogo.reintentar(); }} />;
 
   const filas = resultado?.contenido ?? [];
   const filtrosActivos = Boolean(nombre || distrito || estado !== 'TODOS');

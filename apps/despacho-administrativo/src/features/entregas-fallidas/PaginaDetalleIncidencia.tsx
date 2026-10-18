@@ -88,6 +88,7 @@ export function PaginaDetalleIncidencia({ destinos = {} }: { destinos?: Destinos
   const consulta = useDetalleIncidencia(idDespacho, parametros.get('incidencia'));
   const detalle = consulta.detalle;
   const estado = detalle ? 'datos' : consulta.cargando ? 'carga' : consulta.error?.sinPermiso ? 'sinPermiso' : consulta.error?.noEncontrado ? 'noEncontrado' : 'error';
+  if (estado === 'sinPermiso') return <EstadoVista estado="sinPermiso" alAccionar={consulta.actualizar} />;
   return <Stack gap="lg" className={clases.pagina}>
     <Breadcrumbs><Anchor component={Link} to={rutaListado}>Entregas fallidas</Anchor><Text>Detalle de incidencia</Text></Breadcrumbs>
     <EncabezadoPagina titulo={detalle ? `Incidencia · ${detalle.codigoRastreoInterno}` : 'Detalle de incidencia'}
@@ -97,7 +98,7 @@ export function PaginaDetalleIncidencia({ destinos = {} }: { destinos?: Destinos
       </Group>} />
     <EstadoVista estado={estado} titulo={consulta.error?.noEncontrado ? 'Detalle no encontrado' : undefined} descripcion={!detalle ? consulta.error?.mensaje : undefined}
       esqueleto={<Stack><Skeleton height={100} /><Skeleton height={300} /></Stack>}
-      accion={estado === 'error' || estado === 'sinPermiso' ? { id: 'reintentar', etiqueta: 'Reintentar detalle' } : undefined} alAccionar={consulta.actualizar}>
+      accion={estado === 'error' ? { id: 'reintentar', etiqueta: 'Reintentar detalle' } : undefined} alAccionar={consulta.actualizar}>
       {detalle && <Stack gap="lg" aria-busy={consulta.cargando}>
         <Group><BadgeEstado contexto="despacho" valor={detalle.estado} />{detalle.pedidoAnulado && <BadgeEstado contexto="etiqueta" valor="PEDIDO_ANULADO" />}</Group>
         <Group align="flex-start" gap="xl"><Dato etiqueta="Última actualización" valor={<Fecha valor={detalle.actualizadoEn} />} />

@@ -59,13 +59,14 @@ export function PaginaJornadas() {
         onClick={() => seleccionar({ tipo: 'cerrar', jornada: fila.jornada! })} aria-label={`Cerrar jornada de ${fila.nombre}`}>Cerrar jornada</Button>
     </Group> },
   ];
+  if (consulta.denegado) return <EstadoVista estado="sinPermiso" alAccionar={consulta.reintentarAcceso} />;
   return <Stack gap="lg" style={{ minWidth: 0 }}>
     <EncabezadoPagina titulo="Jornadas y monitoreo" subtitulo="Asigna recursos y supervisa la ocupación confirmada de la flota."
-      acciones={!consulta.denegado && <Group>
+      acciones={<Group>
         <Button variant="outline" leftSection={<IconRefresh size={20} aria-hidden="true" />} disabled={consulta.cargando} onClick={consulta.actualizar}>Actualizar</Button>
         <Button leftSection={<IconPlus size={20} aria-hidden="true" />} disabled={!habilitada} onClick={() => seleccionar({ tipo: 'abrir' })}>Abrir jornada</Button>
       </Group>} />
-    <EstadoVista estado={consulta.denegado ? 'sinPermiso' : 'datos'}>
+    <EstadoVista estado="datos">
       <Stack gap="lg">
         <BarraFiltros consultando={consulta.cargando} alLimpiar={() => establecerParametros({})} alQuitarFiltro={(id) => cambiar({ [id]: '' })}
           activos={['fecha', 'estadoOperativo', 'idZona'].filter((id) => parametros.has(id)).map((id) => ({ id, etiqueta: `${id === 'fecha' ? 'Fecha' : id === 'idZona' ? 'Zona' : 'Estado'}: ${id === 'estadoOperativo' ? etiquetas[parametros.get(id) as keyof typeof etiquetas] ?? 'Estado no disponible' : parametros.get(id)}` }))}

@@ -49,12 +49,12 @@ export function PaginaEntregasFallidas(destinos: DestinosEntregasFallidas) {
   if (consulta.error?.jornadas) estadoTabla = 'error';
   const indicadores = pagina?.indicadores;
   const error = consulta.error;
+  if (consulta.sinPermiso) return <EstadoVista estado="sinPermiso" alAccionar={reintentar} />;
   return <Stack gap="lg" style={{ minWidth: 0 }}>
     <EncabezadoPagina titulo="Entregas fallidas" subtitulo="Consulta las incidencias vigentes y el retorno de paquetes al centro."
       acciones={<Button type="button" variant="default" size="sm" mih={44} leftSection={<IconRefresh size={18} aria-hidden="true" />}
         disabled={consulta.cargando || !valida} onClick={reintentar}>Actualizar</Button>} />
-    <EstadoVista estado={consulta.sinPermiso ? 'sinPermiso' : 'datos'} descripcion={consulta.sinPermiso ? error?.mensaje : undefined}
-      accion={consulta.sinPermiso ? { id: 'reintentar', etiqueta: 'Reintentar' } : undefined} alAccionar={reintentar}>
+    <EstadoVista estado="datos">
       <Stack gap="lg" style={{ minWidth: 0 }}>
         <SimpleGrid cols={{ base: 1, xs: 2, md: 3 }}>
           <TarjetaKpi id="pendientes" etiqueta="Pendientes de retorno" valor={indicadores?.pendientesRetorno ?? null} icono={<IconClockHour4 aria-hidden="true" />}

@@ -115,8 +115,7 @@ function PanelProgramacion() {
     else if (hoy) cambiar({ fechaHasta: '', fechaDesde: filtros.fechaDesde === diaSiguiente(hoy) && !filtros.fechaHasta ? '' : diaSiguiente(hoy) });
   };
   return <Stack gap="lg" className={clases.pagina}>
-    <EstadoVista estado={sinPermiso ? 'sinPermiso' : 'datos'} descripcion={sinPermiso ? 'Inicia sesión con una cuenta autorizada para acceder a Programación.' : undefined}
-      accion={sinPermiso ? { id: 'reintentar', etiqueta: 'Reintentar acceso' } : undefined}
+    <EstadoVista estado={sinPermiso ? 'sinPermiso' : 'datos'}
       alAccionar={() => { establecerDenegada(false); refrescar(); }}>
       <Stack gap="lg">
         <EncabezadoPagina titulo="Programación y asignación" subtitulo="Organiza los despachos de hoy y prepara las próximas entregas."

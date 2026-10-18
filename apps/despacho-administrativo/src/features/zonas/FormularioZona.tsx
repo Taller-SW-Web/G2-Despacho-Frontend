@@ -95,14 +95,16 @@ export function FormularioZona() {
     }
   });
 
-  if (denegado || catalogo.denegado || cargando || errorCarga) return <Stack gap="lg" maw={880}>
+  if (denegado || catalogo.denegado) return <EstadoVista estado="sinPermiso"
+    alAccionar={() => { setRevision((valor) => valor + 1); catalogo.reintentar(); }} />;
+  if (cargando || errorCarga) return <Stack gap="lg" maw={880}>
     <EncabezadoPagina titulo={esEdicion ? 'Editar zona' : 'Nueva zona'} />
-    <EstadoVista estado={denegado || catalogo.denegado ? 'sinPermiso' : cargando ? 'carga' : 'error'}
+    <EstadoVista estado={cargando ? 'carga' : 'error'}
       esqueleto={<Stack aria-label="Cargando zona">{[0, 1, 2].map((indice) => <Skeleton key={indice} height={64} />)}</Stack>}
-      descripcion={denegado || catalogo.denegado ? undefined : errorCarga ?? undefined}
-      accion={errorCarga && !denegado && !catalogo.denegado ? { id: 'reintentar', etiqueta: 'Reintentar' } : undefined}
+      descripcion={errorCarga ?? undefined}
+      accion={errorCarga ? { id: 'reintentar', etiqueta: 'Reintentar' } : undefined}
       alAccionar={() => setRevision((valor) => valor + 1)} />
-    {errorCarga && !denegado && !catalogo.denegado && <Button variant="default" onClick={salir} style={{ alignSelf: 'flex-start' }}>Volver a zonas</Button>}
+    {errorCarga && <Button variant="default" onClick={salir} style={{ alignSelf: 'flex-start' }}>Volver a zonas</Button>}
   </Stack>;
 
   return <Stack gap="lg" maw={880}>

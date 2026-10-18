@@ -16,6 +16,7 @@ import { IconAlertTriangle, IconDeviceFloppy } from '@tabler/icons-react';
 import { useClienteApi } from '../../cliente/useClienteApi';
 import { detalleProblema, guardarTarifa, obtenerTarifaVigente, obtenerZona, problemaDe } from './api/zonasApi';
 import { BadgeEstadoZona } from './BadgeEstadoZona';
+import { PaginaZonas } from './PaginaZonas';
 import type { SolicitudTarifa, Zona } from './tipos';
 
 type ValorCampo = number | string;
@@ -173,7 +174,10 @@ export function PanelTarifa() {
     }
   };
 
-  return (
+  if (denegado) return <EstadoVista estado="sinPermiso" alAccionar={() => setRevision((valor) => valor + 1)} />;
+
+  return <>
+    <PaginaZonas />
     <Drawer
       opened
       onClose={cerrar}
@@ -185,10 +189,10 @@ export function PanelTarifa() {
       title={`Tarifas de ${zona?.nombre ?? ''}`}
       closeButtonProps={{ 'aria-label': 'Cerrar tarifas' }}
     >
-      <EstadoVista estado={denegado ? 'sinPermiso' : cargando ? 'carga' : errorCarga ? 'error' : 'datos'}
+      <EstadoVista estado={cargando ? 'carga' : errorCarga ? 'error' : 'datos'}
         esqueleto={<Stack aria-label="Cargando tarifa">{[0, 1, 2].map((indice) => <Skeleton key={indice} height={64} />)}</Stack>}
-        descripcion={denegado ? undefined : errorCarga ?? undefined}
-        accion={errorCarga && !denegado ? { id: 'reintentar', etiqueta: 'Reintentar tarifa' } : undefined}
+        descripcion={errorCarga ?? undefined}
+        accion={errorCarga ? { id: 'reintentar', etiqueta: 'Reintentar tarifa' } : undefined}
         alAccionar={() => setRevision((valor) => valor + 1)}>
         <Stack gap="md">
           {zona && <BadgeEstadoZona estado={zona.estado} />}
@@ -296,5 +300,5 @@ export function PanelTarifa() {
         </Stack>
       </EstadoVista>
     </Drawer>
-  );
+  </>;
 }
