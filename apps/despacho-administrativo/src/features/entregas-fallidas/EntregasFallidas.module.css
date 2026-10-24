@@ -1,0 +1,34 @@
+.listado {
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--ia-color-border-default);
+  border-radius: var(--mantine-radius-md);
+  background: var(--mantine-color-white);
+}
+.resumen { padding: var(--mantine-spacing-md); }
+.listado > :global(.mantine-Paper-root) { border: 0; border-radius: 0; }
+.listado table { table-layout: fixed; width: 100%; }
+.listado th, .listado td { padding-inline: var(--mantine-spacing-sm); }
+.listado th { overflow-wrap: normal; }
+.listado td { overflow-wrap: anywhere; }
+/* La composición de nueve columnas corresponde solo al listado de F-04. */
+.listado th:nth-child(1) { width: 12%; }
+.listado th:nth-child(2) { width: 10%; }
+.listado th:nth-child(3) { width: 12%; }
+.listado th:nth-child(4) { width: 8%; }
+.listado th:nth-child(5) { width: 12%; }
+.listado th:nth-child(6) { width: 13%; }
+.listado th:nth-child(7) { width: 8%; }
+.listado th:nth-child(8) { width: 12%; }
+.listado th:nth-child(9) { width: 13%; }
+.codigo, .identificador { overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+.evidencia { display: inline-flex; padding: var(--mantine-spacing-xs); color: var(--ia-color-info-default); background: var(--ia-color-info-background); border-radius: var(--mantine-radius-sm); }
+.sinEvidencia { color: var(--ia-color-text-secondary); }
+.acciones button { width: 100%; height: auto; min-height: 44px; }
+.acciones button :global(.mantine-Button-label) { white-space: normal; text-align: left; }
+.verDetalle { justify-content: flex-start; }
+.verDetalle :global(.mantine-Button-inner) { justify-content: space-between; }
+
+@media (max-width: 47.99em) {
+  .resumen { align-items: flex-start; flex-direction: column; }
+}

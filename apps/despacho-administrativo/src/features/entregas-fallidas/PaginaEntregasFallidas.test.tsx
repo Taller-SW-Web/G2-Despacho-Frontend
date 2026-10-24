@@ -50,6 +50,9 @@ it('muestra los indicadores del servidor y alterna grupos sin inventar totales n
   const usuario = userEvent.setup();
   montar();
   await screen.findByText('COD-0');
+  expect(screen.getByText('Repartidor sintético 0')).toBeVisible();
+  expect(screen.queryByText('REP-0', { exact: false })).not.toBeInTheDocument();
+  expect(screen.getByText('ID: REP-2')).toBeVisible();
   expect(screen.getByRole('button', { name: 'Pendientes de retorno: 7' })).toBeEnabled();
   expect(screen.getByText('0 de 2')).toBeVisible();
   expect(screen.getAllByText('1 de 2')).toHaveLength(2);
@@ -70,7 +73,8 @@ it('restaura la URL, corrige una página desaparecida y conserva el tamaño al l
   const usuario = userEvent.setup();
   responder = async (parametros) => ({ data: { ...structuredClone(paginaBase), pagina: Number(parametros.get('pagina') ?? 1), tamanoPagina: 50 } });
   montar('/entregas-fallidas?pagina=3&tamanoPagina=50&motivo=NO_INTENTADO');
-  await screen.findByText('COD-0');
+  // Restaurar una página que desapareció requiere una segunda consulta.
+  await screen.findByText('COD-0', undefined, { timeout: 5000 });
   await waitFor(() => expect(screen.getByTestId('url')).not.toHaveTextContent('pagina=3'));
   expect(screen.getByTestId('url')).toHaveTextContent('motivo=NO_INTENTADO');
   await usuario.click(screen.getByRole('button', { name: 'Quitar No intentado por fin de jornada' }));
