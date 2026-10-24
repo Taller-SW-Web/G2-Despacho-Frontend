@@ -13,6 +13,7 @@ const tonos = { neutral: 'ink.9', info: 'blue.8', success: 'green.8', warning: '
 export function TarjetaKpi({ id, etiqueta, valor, descripcion, icono, seleccionada = false, cargando = false,
   accionable = false, disabled = false, tono = 'neutral', alSeleccionar }: PropiedadesTarjetaKpi) {
   const bordeEstado = tono === 'neutral' ? {} : { borderTop: `4px solid var(--mantine-color-${tonos[tono].replace('.', '-')})` };
+  const bordeSeleccion = `2px solid ${seleccionada ? 'var(--ia-color-action-primary-hover)' : 'var(--ia-color-border-default)'}`;
   const contenido = <Stack gap="xs">
     <Group justify="space-between" wrap="nowrap"><Text size="sm" fw={600} c="dimmed">{etiqueta}</Text><Box c={tonos[tono]} aria-hidden="true" className={clases.icono}>{icono}</Box></Group>
     {cargando ? <Skeleton height={38} w={90} /> : <Text c="ink.9" fz={28} lh="36px" ff="var(--mantine-font-family-headings)" fw={700} style={{ fontVariantNumeric: 'tabular-nums' }}>{valor ?? 'No disponible'}</Text>}
@@ -20,7 +21,8 @@ export function TarjetaKpi({ id, etiqueta, valor, descripcion, icono, selecciona
   </Stack>;
   return accionable ? <UnstyledButton type="button" p="md" w="100%" h="100%" className={clases.tarjeta} data-accionable disabled={disabled || cargando}
     aria-pressed={seleccionada} aria-label={`${etiqueta}: ${cargando ? 'Cargando' : valor ?? 'No disponible'}`}
-    onClick={() => alSeleccionar?.(id)} style={{ border: `2px solid ${seleccionada ? 'var(--ia-color-action-primary-hover)' : 'var(--ia-color-border-default)'}`, ...bordeEstado, borderRadius: 'var(--mantine-radius-md)', cursor: disabled ? 'not-allowed' : 'pointer' }}>
+    onClick={() => alSeleccionar?.(id)} style={{ borderTop: bordeSeleccion, borderRight: bordeSeleccion, borderBottom: bordeSeleccion, borderLeft: bordeSeleccion,
+      ...bordeEstado, borderRadius: 'var(--mantine-radius-md)', cursor: disabled ? 'not-allowed' : 'pointer' }}>
     {contenido}
   </UnstyledButton> : <Paper p="md" radius="md" withBorder className={clases.tarjeta} style={bordeEstado}>{contenido}</Paper>;
 }
