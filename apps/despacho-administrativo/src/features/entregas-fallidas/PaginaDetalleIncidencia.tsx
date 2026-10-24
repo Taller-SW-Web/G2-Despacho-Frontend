@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Anchor, Alert, Breadcrumbs, Button, Card, Grid, Group, Skeleton, Stack, Text, Title } from '@mantine/core';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { BadgeEstado, EncabezadoPagina, EstadoVista, FranjaEstado, HistorialEstados, VisorEvidencia } from '@despacho/componentes-compartidos';
@@ -9,6 +9,7 @@ import { PanelDecisionIncidencia } from './PanelDecisionIncidencia';
 import { useDetalleIncidencia } from './useDetalleIncidencia';
 import { useEvidenciaIncidencia } from './useEvidenciaIncidencia';
 import clases from './DetalleIncidencia.module.css';
+import { ModalRecepcionPaquete, type ContextoRecepcion } from './ModalRecepcionPaquete';
 
 function Fecha({ valor }: { valor: string }) {
   return <Text component="time" dateTime={valor}>{formatoFechaLima.format(new Date(valor))}</Text>;
@@ -113,6 +114,7 @@ function nombreComunicacion(tipo: string) {
 }
 
 export function PaginaDetalleIncidencia({ destinos = {} }: { destinos?: DestinosDetalleIncidencia }) {
+  const paginaRef = useRef<HTMLDivElement>(null);
   const { idDespacho = '' } = useParams();
   const [parametros] = useSearchParams();
   const navegar = useNavigate();
@@ -121,10 +123,20 @@ export function PaginaDetalleIncidencia({ destinos = {} }: { destinos?: Destinos
   const rutaListado = `/entregas-fallidas${consultaOrigen ? `?${consultaOrigen}` : ''}`;
   const consulta = useDetalleIncidencia(idDespacho, parametros.get('incidencia'));
   const detalle = consulta.detalle;
+  const [recepcion, establecerRecepcion] = useState<ContextoRecepcion | null>(null);
+  const [modalAbierto, establecerModalAbierto] = useState(false);
+  const [avisoRecepcion, establecerAvisoRecepcion] = useState('');
+  useEffect(() => { establecerModalAbierto(false); establecerRecepcion(null); establecerAvisoRecepcion(''); }, [idDespacho]);
   const estado = detalle ? 'datos' : consulta.cargando ? 'carga' : consulta.error?.sinPermiso ? 'sinPermiso' : consulta.error?.noEncontrado ? 'noEncontrado' : 'error';
   if (estado === 'sinPermiso') return <EstadoVista estado="sinPermiso" descripcion={consulta.error?.mensaje}
     accion={{ id: 'reintentar', etiqueta: 'Reintentar detalle' }} alAccionar={consulta.actualizar} />;
-  return <Stack gap="md" className={clases.pagina}>
+  return <Stack ref={paginaRef} gap="md" className={clases.pagina}>
+    {avisoRecepcion && <Alert color="green" role="status">{avisoRecepcion}</Alert>}
+    <ModalRecepcionPaquete contexto={recepcion} abierto={modalAbierto && recepcion?.idDespacho === idDespacho} alCerrar={() => establecerModalAbierto(false)}
+      alRecuperarFoco={() => {
+        const titulo = paginaRef.current?.querySelector<HTMLElement>('h1');
+        if (titulo) { titulo.tabIndex = -1; titulo.focus(); }
+      }} alActualizar={consulta.actualizar} alAvisar={establecerAvisoRecepcion} alRevocar={consulta.retirarAutorizacion} />
     <Breadcrumbs><Anchor component={Link} to={rutaListado}>Entregas fallidas</Anchor><Text>Detalle de incidencia</Text></Breadcrumbs>
     <EncabezadoPagina titulo={detalle ? `Incidencia · ${detalle.codigoRastreoInterno}` : 'Detalle de incidencia'}
       subtitulo="Última incidencia y trazabilidad del despacho · Hora de Lima" acciones={<Group>
@@ -157,7 +169,8 @@ export function PaginaDetalleIncidencia({ destinos = {} }: { destinos?: Destinos
           <Grid.Col span={{ base: 12, lg: 5 }} className={clases.columnaResolucion}>
             <Stack component="aside" aria-label="Evidencia y decisiones de la incidencia" tabIndex={0} gap="lg" className={clases.panelResolucion}>
             <EvidenciaIncidencia key={detalle.incidencia.idIncidencia} detalle={detalle} alRevocar={consulta.retirarAutorizacion} />
-            <PanelDecisionIncidencia detalle={detalle} bloqueada={consulta.cargando || Boolean(consulta.error)} destinos={destinos}
+            <PanelDecisionIncidencia detalle={detalle} bloqueada={consulta.cargando || Boolean(consulta.error)} destinos={{ ...destinos,
+              confirmarRecepcion: destinos.confirmarRecepcion ?? ((contexto) => { establecerRecepcion(contexto); establecerModalAbierto(true); }) }}
               alCompletar={(resultado) => { if (resultado === 'resolucion') navegar(rutaListado); else consulta.actualizar(); }} />
           </Stack></Grid.Col></Grid>
         <Text size="sm" c="dimmed">Última consulta confirmada: {formatoFechaLima.format(new Date(detalle.consultadoEn))} · America/Lima</Text>
