@@ -9,6 +9,25 @@ import { PanelDecisionIncidencia } from './PanelDecisionIncidencia';
 import { detallePrueba } from './fixtures.detalle.prueba';
 import { useEvidenciaIncidencia } from './useEvidenciaIncidencia';
 import type { DestinosDetalleIncidencia } from './modeloDetalle';
+it('abre la recepción integrada desde el detalle y mantiene el éxito aunque falle el refresco posterior', async () => {
+  Object.defineProperty(document, 'fonts', { configurable: true, value: new EventTarget() });
+  montar();
+  await userEvent.click(await screen.findByRole('button', { name: 'Confirmar recepción' }));
+  const dialogo = await screen.findByRole('dialog', { name: 'Confirmar recepción del paquete' });
+  await userEvent.click(await within(dialogo).findByRole('radio', { name: 'No' }));
+  publicar.mockResolvedValueOnce({ status: 202, data: {
+    idDespacho: 'despacho-1', idIncidencia: 'incidencia-2', estado: 'FALLIDO', versionDespacho: 5,
+    recepcion: { estado: 'RECIBIDO_EN_CENTRO', confirmadaEn: '2026-10-24T12:00:00Z', idUsuario: 'gestor',
+      selloIntacto: false, observacion: null, liberacionCapacidad: { idSolicitud: 'lib-1', estado: 'PENDIENTE',
+        requiereRevision: false, actualizadaEn: '2026-10-24T12:00:00Z', confirmadaEn: null } },
+  } });
+  obtener.mockRejectedValueOnce(fallo(503));
+  await userEvent.click(within(dialogo).getByRole('button', { name: 'Confirmar recepción' }));
+  await screen.findByText('Paquete recibido. Liberación de capacidad pendiente.');
+  await screen.findByText(/Las decisiones permanecerán bloqueadas hasta actualizar/);
+  expect(screen.getByText('Paquete recibido. Liberación de capacidad pendiente.')).toBeVisible();
+  await waitFor(() => expect(screen.getByRole('heading', { level: 1 })).toHaveFocus());
+});
 
 const { obtener, publicar } = vi.hoisted(() => ({ obtener: vi.fn(), publicar: vi.fn() }));
 vi.mock('../../cliente/useClienteApi', () => {
@@ -77,7 +96,7 @@ it('carga la vista previa de la incidencia y retira la fotografía al cerrar su 
   expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   const ampliar = screen.getByRole('button', { name: 'Ampliar fotografía' });
   await userEvent.click(ampliar);
-  expect(screen.getByRole('dialog', { name: 'Evidencia del despacho' })).toBeVisible();
+  await waitFor(() => expect(screen.getByRole('dialog', { name: 'Evidencia del despacho' })).toBeVisible());
   expect(publicar).toHaveBeenCalledTimes(1);
   await userEvent.keyboard('{Escape}');
   await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());

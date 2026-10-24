@@ -21,3 +21,5 @@ test-results/
 playwright-report/
 
 !docs/F-06-JornadasMonitoreo.md
+!docs/ES-F04-03-ConfirmarRecepcionPaquete.md
+!docs/evidencia/f04-modal-recepcion.png
