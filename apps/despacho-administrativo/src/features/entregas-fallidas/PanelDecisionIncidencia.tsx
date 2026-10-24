@@ -1,4 +1,5 @@
 import { Button, Card, Stack, Text, Title } from '@mantine/core';
+import { IconArrowBackUp, IconCalendarRepeat, IconPackageImport } from '@tabler/icons-react';
 import type { AccionIncidencia, ContextoDecisionIncidencia, DestinosDetalleIncidencia, DetalleIncidencia } from './modeloDetalle';
 import clases from './DetalleIncidencia.module.css';
 
@@ -19,7 +20,9 @@ export function PanelDecisionIncidencia({ detalle, bloqueada, destinos, alComple
   const principal = detalle.incidencia.recepcion.estado === 'PENDIENTE_RETORNO' ? 'confirmarRecepcion'
     : detalle.acciones.reprogramar.habilitada ? 'reprogramar' : 'cerrarComoDevueltoAOrigen';
   return <Card component="section" aria-labelledby="titulo-decision" className={clases.decision}>
-    <Stack gap="md"><Title order={2} id="titulo-decision" size="h3">Resolver incidencia</Title>
+    <Stack gap="md"><Title order={2} id="titulo-decision" size="h4" className={clases.tituloSeccion}>Decisión</Title>
+      <Text size="sm" c="dimmed">{detalle.incidencia.recepcion.estado === 'PENDIENTE_RETORNO'
+        ? 'Confirma el retorno físico antes de resolver esta incidencia.' : 'Revisa la evidencia y el historial antes de decidir.'}</Text>
       {bloqueada && <Text size="sm" role="status">Actualiza el detalle antes de tomar una decisión.</Text>}
       {acciones.filter(({ id }) => id !== 'confirmarRecepcion' || detalle.incidencia.recepcion.estado === 'PENDIENTE_RETORNO').map(({ id, titulo }) => {
         const accion = detalle.acciones[id];
@@ -29,6 +32,8 @@ export function PanelDecisionIncidencia({ detalle, bloqueada, destinos, alComple
         const idAyuda = `ayuda-${id}`;
         return <Stack gap="xs" key={id}>
           <Button type="button" fullWidth variant={principal === id ? 'filled' : 'outline'} color={id === 'cerrarComoDevueltoAOrigen' ? 'red' : 'orange'}
+            leftSection={id === 'confirmarRecepcion' ? <IconPackageImport size={20} aria-hidden="true" /> : id === 'reprogramar'
+              ? <IconCalendarRepeat size={20} aria-hidden="true" /> : <IconArrowBackUp size={20} aria-hidden="true" />}
             disabled={bloqueada || !accion.habilitada || !destinos[id]} aria-describedby={razones.length ? idAyuda : undefined}
             onClick={() => destinos[id]?.({ idDespacho: detalle.idDespacho, idIncidencia: detalle.incidencia.idIncidencia,
               versionDespacho: detalle.versionDespacho, alCompletar })}>{titulo}</Button>

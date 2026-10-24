@@ -7,6 +7,8 @@ export type EstadoVisorEvidencia = 'carga' | 'lista' | 'sinEvidencia' | 'expirad
 
 type PropiedadesComunes = {
   abierto: boolean;
+  /** Muestra la misma fotografía autorizada en la página mientras el modal está cerrado. */
+  vistaPrevia?: boolean;
   descripcion: string;
   mensajeSinEvidencia?: string;
   alCerrar: () => void;
@@ -74,7 +76,7 @@ function ImagenAutorizada({ url, descripcion, alFallarImagen, alSolicitarAcceso 
 
 /** CR-18: la autorización y la correspondencia URL/despacho pertenecen al contenedor. */
 export function VisorEvidencia({
-  abierto, estado, urlAutorizada = null, descripcion,
+  abierto, vistaPrevia = false, estado, urlAutorizada = null, descripcion,
   mensajeSinEvidencia = 'Este despacho no tiene evidencia fotográfica disponible.',
   alCerrar, alSolicitarAcceso, alFallarImagen,
 }: PropiedadesVisorEvidencia) {
@@ -88,7 +90,15 @@ export function VisorEvidencia({
     }
   }, [abierto, estado, urlAutorizada]);
 
-  return <Modal.Root
+  const fotografia = estado === 'carga' ? <EsqueletoEvidencia /> :
+    estado === 'lista' && urlAutorizada?.trim() ? <ImagenAutorizada key={urlAutorizada} url={urlAutorizada} descripcion={descripcion} alFallarImagen={alFallarImagen} alSolicitarAcceso={alSolicitarAcceso} /> :
+    estado === 'sinEvidencia' ? <EstadoVista compacto estado="vacio" titulo="Sin evidencia fotográfica" descripcion={mensajeSinEvidencia} /> :
+    estado === 'sinPermiso' ? <EstadoVista estado="sinPermiso" titulo="No tienes permisos para ver esta evidencia" descripcion="Solicita acceso a la persona responsable." /> :
+    <ErrorEvidencia expirada={estado === 'expirada'} alSolicitarAcceso={alSolicitarAcceso} />;
+
+  return <>
+    {vistaPrevia && !abierto && fotografia}
+    <Modal.Root
     opened={abierto}
     onClose={() => alCerrar()}
     size="xl"
@@ -112,16 +122,11 @@ export function VisorEvidencia({
       <Modal.Body>
         <Stack gap="lg">
           {/* Se retira la imagen incluso durante la animación de cierre. */}
-          {abierto && (
-            estado === 'carga' ? <EsqueletoEvidencia /> :
-            estado === 'lista' && urlAutorizada?.trim() ? <ImagenAutorizada key={urlAutorizada} url={urlAutorizada} descripcion={descripcion} alFallarImagen={alFallarImagen} alSolicitarAcceso={alSolicitarAcceso} /> :
-            estado === 'sinEvidencia' ? <EstadoVista compacto estado="vacio" titulo="Sin evidencia fotográfica" descripcion={mensajeSinEvidencia} /> :
-            estado === 'sinPermiso' ? <EstadoVista estado="sinPermiso" titulo="No tienes permisos para ver esta evidencia" descripcion="Solicita acceso a la persona responsable." /> :
-            <ErrorEvidencia expirada={estado === 'expirada'} alSolicitarAcceso={alSolicitarAcceso} />
-          )}
+          {abierto && fotografia}
           <Button type="button" variant="outline" color="orange.8" onClick={() => alCerrar()} className={clases.volver}>Volver</Button>
         </Stack>
       </Modal.Body>
     </Modal.Content>
-  </Modal.Root>;
+  </Modal.Root>
+  </>;
 }

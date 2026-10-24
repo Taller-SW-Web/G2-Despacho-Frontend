@@ -57,13 +57,13 @@ export function PaginaEntregasFallidas(destinos: DestinosEntregasFallidas) {
     <EstadoVista estado="datos">
       <Stack gap="lg" style={{ minWidth: 0 }}>
         <SimpleGrid cols={{ base: 1, xs: 2, md: 3 }}>
-          <TarjetaKpi id="pendientes" etiqueta="Pendientes de retorno" valor={indicadores?.pendientesRetorno ?? null} icono={<IconClockHour4 aria-hidden="true" />}
+          <TarjetaKpi id="pendientes" etiqueta="Pendientes de retorno" tono="warning" valor={indicadores?.pendientesRetorno ?? null} icono={<IconClockHour4 aria-hidden="true" />}
             accionable seleccionada={filtros.recepcion === 'PENDIENTE_RETORNO' && !filtros.soloRetornosAtrasados} cargando={!pagina && consulta.cargando}
             disabled={!confirmada || !pagina} alSeleccionar={seleccionar} descripcion="Paquetes que aún deben volver al centro" />
-          <TarjetaKpi id="recibidos" etiqueta="Recibidos en centro" valor={indicadores?.recibidosCentro ?? null} icono={<IconPackageImport aria-hidden="true" />}
+          <TarjetaKpi id="recibidos" etiqueta="Recibidos en centro" tono="success" valor={indicadores?.recibidosCentro ?? null} icono={<IconPackageImport aria-hidden="true" />}
             accionable seleccionada={filtros.recepcion === 'RECIBIDO_EN_CENTRO'} cargando={!pagina && consulta.cargando}
             disabled={!confirmada || !pagina} alSeleccionar={seleccionar} descripcion="Listos para revisar la incidencia" />
-          <TarjetaKpi id="atrasados" etiqueta="Retornos atrasados" valor={indicadores?.retornosAtrasados ?? null} icono={<IconAlertTriangle aria-hidden="true" />}
+          <TarjetaKpi id="atrasados" etiqueta="Retornos atrasados" tono="error" valor={indicadores?.retornosAtrasados ?? null} icono={<IconAlertTriangle aria-hidden="true" />}
             accionable seleccionada={filtros.soloRetornosAtrasados} cargando={!pagina && consulta.cargando}
             disabled={!confirmada || indicadores?.retornosAtrasados == null} alSeleccionar={seleccionar} descripcion="Incluidos en pendientes de retorno" />
         </SimpleGrid>

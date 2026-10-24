@@ -1,4 +1,4 @@
-import { act, render, renderHook, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, renderHook, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MantineProvider } from '@mantine/core';
 import { Link, MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
@@ -62,6 +62,30 @@ it('muestra todos los bloqueos y entrega identidad y versión solo a un destino 
   expect(screen.getByRole('button', { name: 'Confirmar recepción' })).toBeDisabled();
 });
 
+it('carga la vista previa de la incidencia y retira la fotografía al cerrar su ampliación', async () => {
+  const detalle = detallePrueba();
+  detalle.incidencia.evidencia = { idEvidencia: 'foto-1', estadoReferencia: 'REFERENCIADA' };
+  obtener.mockResolvedValue({ data: detalle });
+  publicar.mockResolvedValue({ ...acceso(), data: { ...acceso().data, venceEn: new Date(Date.now() + 60_000).toISOString() } });
+  montar();
+  await screen.findByRole('button', { name: 'Ver fotografía' });
+  expect(publicar).not.toHaveBeenCalled();
+  await userEvent.click(screen.getByRole('button', { name: 'Ver fotografía' }));
+  const imagen = await screen.findByAltText('Evidencia de la incidencia del despacho DSP-SINTETICO');
+  fireEvent.load(imagen);
+  expect(imagen).toBeVisible();
+  expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  const ampliar = screen.getByRole('button', { name: 'Ampliar fotografía' });
+  await userEvent.click(ampliar);
+  expect(screen.getByRole('dialog', { name: 'Evidencia del despacho' })).toBeVisible();
+  expect(publicar).toHaveBeenCalledTimes(1);
+  await userEvent.keyboard('{Escape}');
+  await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+  expect(document.querySelector('img')).not.toBeInTheDocument();
+  expect(document.body.innerHTML).not.toContain('https://storage.example/foto-sintetica');
+  await waitFor(() => expect(screen.getByRole('button', { name: 'Ver fotografía' })).toHaveFocus());
+});
+
 it('distingue sello alterado y liberación pendiente y permite la consulta histórica sin decisiones', async () => {
   const detalle = detallePrueba({ estado: 'PENDIENTE_ASIGNACION' });
   detalle.incidencia.recepcion = { estado: 'RECIBIDO_EN_CENTRO', confirmadaEn: '2026-10-16T18:00:00Z', idUsuario: 'gestor-1', selloIntacto: false, observacion: null,
@@ -69,8 +93,9 @@ it('distingue sello alterado y liberación pendiente y permite la consulta hist�
   obtener.mockResolvedValue({ data: detalle });
   montar();
   await screen.findByText('Consulta histórica. El despacho ya no está fallido.');
-  expect(screen.getByText('No', { exact: true })).toBeVisible();
-  expect(screen.getByText('Sin observaciones')).toBeVisible();
+  const recepcion = within(screen.getByRole('region', { name: 'Recepción en centro' }));
+  expect(recepcion.getByText('No', { exact: true })).toBeVisible();
+  expect(recepcion.getByText('Sin observaciones')).toBeVisible();
   expect(screen.getByText('Liberación de capacidad pendiente de revisión')).toBeVisible();
   expect(screen.queryByRole('button', { name: 'Confirmar recepción' })).not.toBeInTheDocument();
   expect(screen.queryByRole('button', { name: 'Reprogramar' })).not.toBeInTheDocument();
