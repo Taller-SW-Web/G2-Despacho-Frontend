@@ -1,0 +1,3 @@
+/* 10b: hoja inferior sobre la vista atenuada; el alto se ajusta al contenido, como en Figma. */
+.hoja { max-width: 480px; margin-inline: auto; height: auto !important; max-height: 90dvh; padding-bottom: env(safe-area-inset-bottom, 0px); }
+.tituloHoja.tituloHoja { text-transform: none; font-family: var(--mantine-font-family); }

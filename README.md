@@ -101,13 +101,38 @@ npm run test:f01
 npm run test:f01:e2e
 ```
 
-El paquete compartido exporta `ShellRepartidor`, `TarjetaDespacho` y
-`CapturaEvidencia`; la aplicación del repartidor integra el shell y el estado
-bloqueado de captura. Las tarjetas se conectarán a la ruta cuando se integre el
-endpoint. La carga de evidencias y las transiciones siguen pendientes de integrar
-con la API de Operación. No habilitar la captura real hasta acordar la política
-de archivos (formatos, tamaño y procesamiento); los componentes visuales no
-realizan llamadas HTTP.
+## App del repartidor (F-03)
+
+`apps/despacho-repartidor` es una PWA instalable en Android que implementa las
+12 pantallas del Figma de F-03: acceso, mi ruta, detalle, inicio de traslado,
+entrega y fallo con foto, fallo registrado, cierre de jornada y resumen. Consume
+el contrato de Operación §3 y el login propuesto a Seguridad (contrato externo §8.6).
+
+- **Variables:** `VITE_API_BASE_URL` (Gateway), `VITE_SEGURIDAD_URL` (origen del
+  login; vacío usa el Gateway) y `VITE_MODO_DEMO=true` para revisar la interfaz con
+  datos en memoria, sin backend. Ver `apps/despacho-repartidor/.env.example`.
+- **Login:** `src/sesion/servicioAcceso.ts` es el único adaptador hacia Seguridad;
+  si su contrato definitivo difiere, solo cambia ese archivo. En local:
+  `mrojas@despacho.pe` / `Ruta2026!`.
+- **Fotos:** se reducen en el navegador (lado mayor 1600 px, JPEG) para cumplir el
+  límite de 2 MiB, se suben con la URL firmada y luego se confirma el comando. La
+  re-codificación descarta EXIF. Sin bucket configurado en Operación, entrega y fallo
+  responden `503`.
+- **Reintentos:** cada acción conserva su `Idempotency-Key` hasta un resultado
+  definitivo; tras perder señal, el reintento no duplica la transición.
+- **PWA:** `public/manifest.webmanifest`, íconos y `public/sw.js`. El service worker
+  solo guarda la interfaz; nunca respuestas de la API ni fotos. Se registra en
+  producción (HTTPS o `localhost`).
+- **En un teléfono:** `npm run dev:repartidor` publica Vite en la red local
+  (`http://<IP-del-PC>:5174`); el Gateway debe admitir ese origen en `CORS_ORIGENES`.
+  La instalación como app requiere HTTPS, por ejemplo el despliegue en Vercel.
+
+```bash
+npm run test -w @despacho/repartidor
+```
+
+`TarjetaDespacho` (CR-16) acepta dirección y destinatario `null`, porque el contrato
+los omite fuera de `ASIGNADO`/`EN_CAMINO`, y muestra el resultado con su hora.
 
 
 ## Jornadas y monitoreo F-06

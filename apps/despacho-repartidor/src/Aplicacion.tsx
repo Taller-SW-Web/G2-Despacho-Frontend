@@ -1,78 +1,42 @@
-import { useMemo } from 'react';
-import { Alert, Stack, Text } from '@mantine/core';
-import { IconClipboardList, IconDoorExit, IconRoute } from '@tabler/icons-react';
-import { ShellRepartidor } from '@despacho/componentes-compartidos';
-import type { DestinoRepartidor } from '@despacho/componentes-compartidos';
-import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
-import { PaginaDetalle, PaginaResumen, PaginaRuta } from './PaginasRepartidor';
-import { AplicacionPruebaF03 } from './AplicacionPruebaF03';
+import type { ReactNode } from 'react';
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
+import { OperacionProveedor } from './api/ContextoOperacion';
+import type { PuertoOperacion } from './api/tipos';
+import { PaginaAcceso } from './paginas/PaginaAcceso';
+import { PaginaCierre } from './paginas/PaginaCierre';
+import { PaginaDetalle } from './paginas/PaginaDetalle';
+import { PaginaEntrega } from './paginas/PaginaEntrega';
+import { PaginaFallo } from './paginas/PaginaFallo';
+import { PaginaFalloRegistrado } from './paginas/PaginaFalloRegistrado';
+import { PaginaResumen } from './paginas/PaginaResumen';
+import { PaginaRuta } from './paginas/PaginaRuta';
+import { useSesion } from './sesion/SesionProveedor';
 
-const secciones: DestinoRepartidor[] = [
-  { id: 'ruta', ruta: '/repartidor/ruta', titulo: 'Mi ruta', icono: <IconRoute size={20} aria-hidden="true" /> },
-  { id: 'resumen', ruta: '/repartidor/resumen', titulo: 'Resumen', icono: <IconClipboardList size={20} aria-hidden="true" /> },
-  { id: 'cierre', ruta: '/repartidor/cierre', titulo: 'Cerrar jornada', icono: <IconDoorExit size={20} aria-hidden="true" /> },
-];
-
-function OperacionPendiente({ descripcion, endpoint }: { descripcion: string; endpoint: string }) {
-  return (
-    <Stack gap="md">
-      <Text>{descripcion}</Text>
-      <Alert color="yellow" title="Integración pendiente">
-        No se muestran datos ni se ejecutan cambios de estado hasta que esté conectada la API de Operación.
-        <Text component="span" display="block" size="sm" mt="xs">Contrato previsto: {endpoint}</Text>
-      </Alert>
-    </Stack>
-  );
+/** Sin sesión vigente se vuelve al acceso conservando la pantalla pedida. */
+function ConSesion({ children }: { children: ReactNode }) {
+  const { sesion } = useSesion();
+  const ubicacion = useLocation();
+  if (!sesion) return <Navigate to="/repartidor/acceso" replace state={{ desde: ubicacion.pathname }} />;
+  return <>{children}</>;
 }
 
-function AplicacionProduccion() {
-  const ubicacion = useLocation();
-  const navigate = useNavigate();
-  const esDetalle = ubicacion.pathname.startsWith('/repartidor/despachos/');
-  const pagina = useMemo(() => {
-    if (esDetalle) {
-      return { titulo: 'Detalle del despacho', activo: null };
-    }
-    const seccion = secciones.find(({ ruta }) => ubicacion.pathname === ruta);
-    return seccion
-      ? { titulo: seccion.titulo, activo: seccion.id }
-      : { titulo: 'Repartidor', activo: null };
-  }, [esDetalle, ubicacion.pathname]);
-
+export function Aplicacion({ puerto }: { puerto?: PuertoOperacion }) {
+  const protegida = (pagina: ReactNode) => <ConSesion>{pagina}</ConSesion>;
   return (
-    <ShellRepartidor
-      titulo={pagina.titulo}
-      estadoOperativo={null}
-      destinos={secciones}
-      destinoActivo={pagina.activo}
-      modoPie={pagina.activo === null ? 'ninguno' : 'navegacion'}
-      alNavegar={(destino) => navigate(destino.ruta)}
-      alVolver={esDetalle ? () => navigate('/repartidor/ruta') : undefined}
-    >
+    <OperacionProveedor puerto={puerto}>
       <Routes>
         <Route path="/" element={<Navigate to="/repartidor/ruta" replace />} />
-        <Route
-          path="/repartidor/ruta"
-          element={<PaginaRuta />}
-        />
-        <Route
-          path="/repartidor/resumen"
-          element={<PaginaResumen />}
-        />
-        <Route
-          path="/repartidor/cierre"
-          element={<OperacionPendiente descripcion="Revisa los despachos pendientes antes de cerrar tu jornada." endpoint="POST /api/v1/repartidor/jornada/cierre" />}
-        />
-        <Route
-          path="/repartidor/despachos/:id/*"
-          element={<PaginaDetalle />}
-        />
-        <Route path="*" element={<Text>Página no encontrada.</Text>} />
+        <Route path="/repartidor" element={<Navigate to="/repartidor/ruta" replace />} />
+        <Route path="/repartidor/acceso" element={<PaginaAcceso />} />
+        <Route path="/repartidor/ruta" element={protegida(<PaginaRuta />)} />
+        <Route path="/repartidor/despachos/:id" element={protegida(<PaginaDetalle />)} />
+        <Route path="/repartidor/despachos/:id/entrega" element={protegida(<PaginaEntrega />)} />
+        <Route path="/repartidor/despachos/:id/fallo" element={protegida(<PaginaFallo />)} />
+        <Route path="/repartidor/despachos/:id/fallo-registrado" element={protegida(<PaginaFalloRegistrado />)} />
+        <Route path="/repartidor/resumen" element={protegida(<PaginaResumen />)} />
+        <Route path="/repartidor/cierre" element={protegida(<PaginaCierre />)} />
+        <Route path="*" element={<Navigate to="/repartidor/ruta" replace />} />
       </Routes>
-    </ShellRepartidor>
+    </OperacionProveedor>
   );
-}
-
-export function Aplicacion() {
-  return import.meta.env.DEV ? <AplicacionPruebaF03 /> : <AplicacionProduccion />;
 }
