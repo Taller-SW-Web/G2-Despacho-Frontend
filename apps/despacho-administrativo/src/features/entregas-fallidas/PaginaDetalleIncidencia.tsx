@@ -11,6 +11,7 @@ import { useEvidenciaIncidencia } from './useEvidenciaIncidencia';
 import clases from './DetalleIncidencia.module.css';
 import { ModalRecepcionPaquete, type ContextoRecepcion } from './ModalRecepcionPaquete';
 import { ModalReprogramacionDespacho } from './ModalReprogramacionDespacho';
+import { ModalCierreDespacho } from './ModalCierreDespacho';
 import type { ContextoDecisionIncidencia } from './modeloDetalle';
 
 function Fecha({ valor }: { valor: string }) {
@@ -100,6 +101,9 @@ function InformacionIncidencia({ detalle }: { detalle: DetalleIncidencia }) {
       {detalle.comunicaciones.length === 0 ? <Text>No hay comunicaciones registradas</Text> : detalle.comunicaciones.map((evento) => <Stack gap="sm" key={evento.idEvento} className={clases.comunicacion}>
         <Group justify="space-between" align="flex-start"><Text fw={600}>{nombreComunicacion(evento.tipoEvento)}</Text>
           <Text size="sm" className={clases.estadoEnvio}>{evento.estadoEnvio === 'ENVIADO' ? 'Enviado' : evento.estadoEnvio === 'ENVIO_FALLIDO' ? 'Envío fallido' : 'Pendiente'}</Text></Group>
+        {evento.tipoEvento === 'DESPACHO_DEVUELTO_A_ORIGEN' && evento.estadoEnvio === 'ENVIO_FALLIDO' && <Text size="sm">
+          El cierre está registrado. La comunicación requiere revisión o reenvío manual.
+        </Text>}
         <dl className={clases.datos}>
         <Dato etiqueta="Registrado" valor={<Fecha valor={evento.creadoEn} />} />
         {evento.enviadoEn && <Dato etiqueta="Enviado" valor={<Fecha valor={evento.enviadoEn} />} />}
@@ -131,13 +135,25 @@ export function PaginaDetalleIncidencia({ destinos = {} }: { destinos?: Destinos
   const [reprogramacion, establecerReprogramacion] = useState<ContextoDecisionIncidencia | null>(null);
   const [reprogramacionAbierta, establecerReprogramacionAbierta] = useState(false);
   const [reprogramacionPendiente, establecerReprogramacionPendiente] = useState(false);
+  const [cierre, establecerCierre] = useState<ContextoDecisionIncidencia | null>(null);
+  const [cierreAbierto, establecerCierreAbierto] = useState(false);
+  const [cierrePendiente, establecerCierrePendiente] = useState(false);
   useEffect(() => { establecerModalAbierto(false); establecerRecepcion(null); establecerAvisoRecepcion('');
-    establecerReprogramacionAbierta(false); establecerReprogramacion(null); establecerReprogramacionPendiente(false); }, [idDespacho]);
+    establecerReprogramacionAbierta(false); establecerReprogramacion(null); establecerReprogramacionPendiente(false);
+    establecerCierreAbierto(false); establecerCierre(null); establecerCierrePendiente(false); }, [idDespacho]);
   const estado = detalle ? 'datos' : consulta.cargando ? 'carga' : consulta.error?.sinPermiso ? 'sinPermiso' : consulta.error?.noEncontrado ? 'noEncontrado' : 'error';
   if (estado === 'sinPermiso') return <EstadoVista estado="sinPermiso" descripcion={consulta.error?.mensaje}
     accion={{ id: 'reintentar', etiqueta: 'Reintentar detalle' }} alAccionar={consulta.actualizar} />;
   return <Stack ref={paginaRef} gap="md" className={clases.pagina}>
     {avisoRecepcion && <Alert color="green" role="status">{avisoRecepcion}</Alert>}
+    {cierre && <ModalCierreDespacho contexto={cierre} abierto={cierreAbierto && cierre?.idDespacho === idDespacho}
+      alResultadoDesconocido={establecerCierrePendiente}
+      alCerrar={() => establecerCierreAbierto(false)} alActualizar={consulta.actualizar} alRevocar={consulta.retirarAutorizacion}
+      alCompletar={() => navegar(rutaListado, { state: { cierre: true } })}
+      alRecuperarFoco={() => {
+        const titulo = paginaRef.current?.querySelector<HTMLElement>('h1');
+        if (titulo) { titulo.tabIndex = -1; titulo.focus(); }
+      }} />}
     <ModalReprogramacionDespacho contexto={reprogramacion} abierto={reprogramacionAbierta && reprogramacion?.idDespacho === idDespacho}
       alResultadoDesconocido={establecerReprogramacionPendiente}
       alCerrar={() => establecerReprogramacionAbierta(false)} alActualizar={consulta.actualizar} alRevocar={consulta.retirarAutorizacion}
@@ -152,6 +168,10 @@ export function PaginaDetalleIncidencia({ destinos = {} }: { destinos?: Destinos
         if (titulo) { titulo.tabIndex = -1; titulo.focus(); }
       }} alActualizar={consulta.actualizar} alAvisar={establecerAvisoRecepcion} alRevocar={consulta.retirarAutorizacion} />
     <Breadcrumbs><Anchor component={Link} to={rutaListado}>Entregas fallidas</Anchor><Text>Detalle de incidencia</Text></Breadcrumbs>
+    {cierrePendiente && !cierreAbierto && <Alert color="yellow" title="Cierre por comprobar" role="status">
+      <Text size="sm">Hay una solicitud enviada cuyo resultado no se comprobó. Consulta y recupera la solicitud original antes de otra decisión.</Text>
+      <Button variant="outline" mt="sm" onClick={() => establecerCierreAbierto(true)}>Revisar cierre pendiente</Button>
+    </Alert>}
     {reprogramacionPendiente && !reprogramacionAbierta && <Alert color="yellow" title="Reprogramación por comprobar" role="status">
       <Text size="sm">Hay una solicitud enviada cuyo resultado no se comprobó, aunque el despacho haya cambiado de estado.</Text>
       <Button variant="outline" mt="sm" onClick={() => establecerReprogramacionAbierta(true)}>Revisar reprogramación pendiente</Button>
@@ -187,7 +207,8 @@ export function PaginaDetalleIncidencia({ destinos = {} }: { destinos?: Destinos
           <Grid.Col span={{ base: 12, lg: 5 }} className={clases.columnaResolucion}>
             <Stack component="aside" aria-label="Evidencia y decisiones de la incidencia" tabIndex={0} gap="lg" className={clases.panelResolucion}>
             <EvidenciaIncidencia key={detalle.incidencia.idIncidencia} detalle={detalle} alRevocar={consulta.retirarAutorizacion} />
-            <PanelDecisionIncidencia detalle={detalle} bloqueada={consulta.cargando || Boolean(consulta.error)} destinos={{ ...destinos,
+            <PanelDecisionIncidencia detalle={detalle} bloqueada={consulta.cargando || Boolean(consulta.error) || cierrePendiente || reprogramacionPendiente} destinos={{ ...destinos,
+              cerrarComoDevueltoAOrigen: destinos.cerrarComoDevueltoAOrigen ?? ((contexto) => { establecerCierre(contexto); establecerCierreAbierto(true); }),
               reprogramar: destinos.reprogramar ?? ((contexto) => { establecerReprogramacion(contexto); establecerReprogramacionAbierta(true); }),
               confirmarRecepcion: destinos.confirmarRecepcion ?? ((contexto) => { establecerRecepcion(contexto); establecerModalAbierto(true); }) }}
               alCompletar={(resultado) => { if (resultado === 'resolucion') navegar(rutaListado); else consulta.actualizar(); }} />
