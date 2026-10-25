@@ -8,11 +8,17 @@ import { FiltrosEntregasFallidas } from './FiltrosEntregasFallidas';
 import { TablaEntregasFallidas, type DestinosEntregasFallidas } from './TablaEntregasFallidas';
 import { useEntregasFallidas } from './useEntregasFallidas';
 import { ModalRecepcionPaquete, type ContextoRecepcion } from './ModalRecepcionPaquete';
+import { fechaCivilValida, presentarFechaCivil } from './apiReprogramacion';
 
 export function PaginaEntregasFallidas(destinos: DestinosEntregasFallidas) {
   const paginaRef = useRef<HTMLDivElement>(null);
   const [parametros, establecerParametros] = useSearchParams();
   const ubicacion = useLocation();
+  const [fechaReprogramada] = useState<string | null>(() => {
+    const fecha: unknown = ubicacion.state?.reprogramacion?.fechaProgramada;
+    return typeof fecha === 'string' && fechaCivilValida(fecha) ? fecha : null;
+  });
+  const focoRestaurado = useRef(false);
   const clave = parametros.toString();
   const { filtros, errores } = useMemo(() => leerFiltros(new URLSearchParams(clave)), [clave]);
   const valida = Object.keys(errores).length === 0;
@@ -30,6 +36,12 @@ export function PaginaEntregasFallidas(destinos: DestinosEntregasFallidas) {
   const limpiar = () => establecerParametros(parametrosFiltros({ ...filtrosIniciales, tamanoPagina: filtros.tamanoPagina }));
   const reintentar = () => { establecerAccesoRevocado(false); actualizar((valor) => valor + 1); };
   const todos = () => cambiar({ recepcion: 'TODOS', soloRetornosAtrasados: false });
+  useEffect(() => {
+    if (fechaReprogramada && !consulta.cargando && !consulta.sinPermiso && !accesoRevocado && !focoRestaurado.current) {
+      const titulo = paginaRef.current?.querySelector<HTMLElement>('h1');
+      if (titulo) { titulo.tabIndex = -1; titulo.focus(); focoRestaurado.current = true; }
+    }
+  }, [fechaReprogramada, consulta.cargando, consulta.sinPermiso, accesoRevocado]);
 
   // La lectura del servidor puede dejar una página vacía después de una recepción/reprogramación.
   useEffect(() => {
@@ -57,6 +69,10 @@ export function PaginaEntregasFallidas(destinos: DestinosEntregasFallidas) {
   const error = consulta.error;
   if (consulta.sinPermiso || accesoRevocado) return <EstadoVista estado="sinPermiso" alAccionar={reintentar} />;
   return <Stack ref={paginaRef} gap="lg" style={{ minWidth: 0 }}>
+    {fechaReprogramada && <Alert color={consulta.error ? 'yellow' : 'green'} role="status">
+      {consulta.error ? 'Reprogramación registrada. No se pudo actualizar el listado'
+        : `Despacho reprogramado para ${presentarFechaCivil(fechaReprogramada)}.`}
+    </Alert>}
     {avisoRecepcion && <Alert color="green" role="status">{avisoRecepcion}</Alert>}
     <ModalRecepcionPaquete contexto={recepcion} abierto={modalAbierto} alCerrar={() => establecerModalAbierto(false)}
       alRecuperarFoco={() => {
