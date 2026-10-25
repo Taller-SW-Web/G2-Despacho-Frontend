@@ -18,7 +18,7 @@
 
 - El flujo habitual parte de `develop`, usa nombres descriptivos sin `codex/` e integra mediante PR a `develop`; las entregas se promueven por PR a `main`. Seguir las instrucciones explícitas del usuario para excepciones de alcance, rama o publicación.
 - Para cambios de código, ejecutar las pruebas apropiadas de la aplicación o paquete afectado, `npm run typecheck` y `npm run build`; consultar [README.md](./README.md) para los scripts y sus requisitos. Ajustar pruebas cuando cambie un comportamiento; no deshabilitarlas ni debilitar aserciones para ocultar fallos.
-- `npm test` cubre componentes compartidos; `npm run test:administrativo`, la aplicación administrativa. Los scripts `test:f01`, `test:f02`, `test:f04`, `test:f05` y `test:f06` permiten comprobaciones focalizadas. La app del repartidor no tiene una suite propia en la línea base; no atribuirle una inexistente.
+- `npm test` cubre componentes compartidos; `npm run test:administrativo`, la aplicación administrativa. Los scripts `test:f01`, `test:f02`, `test:f04`, `test:f05` y `test:f06` permiten comprobaciones focalizadas. La app del repartidor dispone de su suite propia mediante `npm run test -w @despacho/repartidor` desde la integración de F-03 posterior a la línea base.
 - JSDOM y APIs simuladas no acreditan layout, accesibilidad manual ni servicios reales. Verificar en navegador los cambios visuales/interactivos cuando corresponda y registrar los límites.
 - Las pruebas E2E F-01 escriben mediante APIs reales y no aíslan su base automáticamente. Comprobar un entorno de prueba autorizado antes de ejecutarlas; no apuntar pruebas a bases compartidas o de producción. F-02 E2E utiliza APIs simuladas.
 - Para cambios exclusivamente documentales, comprobar enlaces, comandos, trazabilidad y `git diff --check`; no atribuirles una ejecución nueva de las pruebas de código. Respetar las restricciones de ejecución y comunicar los resultados reales.
@@ -32,6 +32,6 @@
 ## Documentación y entregas
 
 - El [README](./README.md) concentra arranque, configuración, pruebas y despliegue; actualizarlo cuando cambien esas instrucciones.
-- Registrar cambios significativos en `Sin publicar` de [CHANGELOG.md](./CHANGELOG.md). Cerrar versión/fecha al preparar una entrega, distinguiendo lo incorporado en `main` de avances de otras ramas. No mezclar cambios posteriores con la línea base `v0.1.0`.
+- Actualizar [CHANGELOG.md](./CHANGELOG.md) únicamente al preparar y publicar una nueva línea base en `main`; no añadir entradas por especificación ni durante el desarrollo de ramas funcionales. En ese corte se consolidan los cambios de la entrega con versión y fecha, sin mezclarlos con la línea base `v0.1.0`.
 - Mantener el seguimiento por especificación en Specs: plan, tareas y evidencia con commits, resultados, simulaciones y pendientes. No crear automáticamente otro documento por especificación en frontend; conservar guías locales solo si aportan instrucciones técnicas distintas y enlazarlas desde la evidencia canónica.
 - Usar Conventional Commits en español. Los tags se crean manualmente sobre el commit de `main` elegido para una entrega; no crear/mover tags, publicar una Release ni dar por realizada una aprobación a partir de una actualización documental.

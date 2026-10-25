@@ -10,6 +10,8 @@ import { useDetalleIncidencia } from './useDetalleIncidencia';
 import { useEvidenciaIncidencia } from './useEvidenciaIncidencia';
 import clases from './DetalleIncidencia.module.css';
 import { ModalRecepcionPaquete, type ContextoRecepcion } from './ModalRecepcionPaquete';
+import { ModalReprogramacionDespacho } from './ModalReprogramacionDespacho';
+import type { ContextoDecisionIncidencia } from './modeloDetalle';
 
 function Fecha({ valor }: { valor: string }) {
   return <Text component="time" dateTime={valor}>{formatoFechaLima.format(new Date(valor))}</Text>;
@@ -126,18 +128,34 @@ export function PaginaDetalleIncidencia({ destinos = {} }: { destinos?: Destinos
   const [recepcion, establecerRecepcion] = useState<ContextoRecepcion | null>(null);
   const [modalAbierto, establecerModalAbierto] = useState(false);
   const [avisoRecepcion, establecerAvisoRecepcion] = useState('');
-  useEffect(() => { establecerModalAbierto(false); establecerRecepcion(null); establecerAvisoRecepcion(''); }, [idDespacho]);
+  const [reprogramacion, establecerReprogramacion] = useState<ContextoDecisionIncidencia | null>(null);
+  const [reprogramacionAbierta, establecerReprogramacionAbierta] = useState(false);
+  const [reprogramacionPendiente, establecerReprogramacionPendiente] = useState(false);
+  useEffect(() => { establecerModalAbierto(false); establecerRecepcion(null); establecerAvisoRecepcion('');
+    establecerReprogramacionAbierta(false); establecerReprogramacion(null); establecerReprogramacionPendiente(false); }, [idDespacho]);
   const estado = detalle ? 'datos' : consulta.cargando ? 'carga' : consulta.error?.sinPermiso ? 'sinPermiso' : consulta.error?.noEncontrado ? 'noEncontrado' : 'error';
   if (estado === 'sinPermiso') return <EstadoVista estado="sinPermiso" descripcion={consulta.error?.mensaje}
     accion={{ id: 'reintentar', etiqueta: 'Reintentar detalle' }} alAccionar={consulta.actualizar} />;
   return <Stack ref={paginaRef} gap="md" className={clases.pagina}>
     {avisoRecepcion && <Alert color="green" role="status">{avisoRecepcion}</Alert>}
+    <ModalReprogramacionDespacho contexto={reprogramacion} abierto={reprogramacionAbierta && reprogramacion?.idDespacho === idDespacho}
+      alResultadoDesconocido={establecerReprogramacionPendiente}
+      alCerrar={() => establecerReprogramacionAbierta(false)} alActualizar={consulta.actualizar} alRevocar={consulta.retirarAutorizacion}
+      alCompletar={(resultado) => navegar(rutaListado, { state: { reprogramacion: { fechaProgramada: resultado.fechaProgramada } } })}
+      alRecuperarFoco={() => {
+        const titulo = paginaRef.current?.querySelector<HTMLElement>('h1');
+        if (titulo) { titulo.tabIndex = -1; titulo.focus(); }
+      }} />
     <ModalRecepcionPaquete contexto={recepcion} abierto={modalAbierto && recepcion?.idDespacho === idDespacho} alCerrar={() => establecerModalAbierto(false)}
       alRecuperarFoco={() => {
         const titulo = paginaRef.current?.querySelector<HTMLElement>('h1');
         if (titulo) { titulo.tabIndex = -1; titulo.focus(); }
       }} alActualizar={consulta.actualizar} alAvisar={establecerAvisoRecepcion} alRevocar={consulta.retirarAutorizacion} />
     <Breadcrumbs><Anchor component={Link} to={rutaListado}>Entregas fallidas</Anchor><Text>Detalle de incidencia</Text></Breadcrumbs>
+    {reprogramacionPendiente && !reprogramacionAbierta && <Alert color="yellow" title="Reprogramación por comprobar" role="status">
+      <Text size="sm">Hay una solicitud enviada cuyo resultado no se comprobó, aunque el despacho haya cambiado de estado.</Text>
+      <Button variant="outline" mt="sm" onClick={() => establecerReprogramacionAbierta(true)}>Revisar reprogramación pendiente</Button>
+    </Alert>}
     <EncabezadoPagina titulo={detalle ? `Incidencia · ${detalle.codigoRastreoInterno}` : 'Detalle de incidencia'}
       subtitulo="Última incidencia y trazabilidad del despacho · Hora de Lima" acciones={<Group>
         <Button type="button" variant="subtle" leftSection={<IconArrowLeft size={18} aria-hidden="true" />} onClick={() => navegar(rutaListado)}>Volver al listado</Button>
@@ -170,6 +188,7 @@ export function PaginaDetalleIncidencia({ destinos = {} }: { destinos?: Destinos
             <Stack component="aside" aria-label="Evidencia y decisiones de la incidencia" tabIndex={0} gap="lg" className={clases.panelResolucion}>
             <EvidenciaIncidencia key={detalle.incidencia.idIncidencia} detalle={detalle} alRevocar={consulta.retirarAutorizacion} />
             <PanelDecisionIncidencia detalle={detalle} bloqueada={consulta.cargando || Boolean(consulta.error)} destinos={{ ...destinos,
+              reprogramar: destinos.reprogramar ?? ((contexto) => { establecerReprogramacion(contexto); establecerReprogramacionAbierta(true); }),
               confirmarRecepcion: destinos.confirmarRecepcion ?? ((contexto) => { establecerRecepcion(contexto); establecerModalAbierto(true); }) }}
               alCompletar={(resultado) => { if (resultado === 'resolucion') navegar(rutaListado); else consulta.actualizar(); }} />
           </Stack></Grid.Col></Grid>
