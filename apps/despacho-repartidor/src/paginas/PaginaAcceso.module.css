@@ -1,0 +1,6 @@
+.raiz { min-height: 100dvh; max-width: 480px; margin-inline: auto; padding: 72px var(--mantine-spacing-md) var(--mantine-spacing-xl); background: var(--ia-color-surface-ink); color: var(--ia-color-text-inverse); }
+:global(body):has(.raiz) { background: var(--ia-color-surface-ink); }
+.marca { margin-bottom: var(--mantine-spacing-xl); }
+.titulo.titulo { margin: var(--mantine-spacing-sm) 0 0; font-size: 2.25rem; color: var(--ia-color-text-inverse); letter-spacing: 0.02em; }
+.formulario { background: var(--mantine-color-white); color: var(--ia-color-text-primary); }
+.ayuda { margin-top: var(--mantine-spacing-lg); }
