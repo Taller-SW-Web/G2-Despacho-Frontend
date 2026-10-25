@@ -6,13 +6,15 @@ import { MemoryRouter, useLocation } from 'react-router-dom';
 import { beforeEach, expect, it, vi } from 'vitest';
 import { tema } from '@despacho/componentes-compartidos';
 import { PaginaEntregasFallidas } from './PaginaEntregasFallidas';
+import { detallePrueba } from './fixtures.detalle.prueba';
+import { within } from '@testing-library/react';
 import { filtrosIniciales, leerFiltros, parametrosFiltros, type PaginaFallidos } from './modelo';
 
-const { obtener } = vi.hoisted(() => ({ obtener: vi.fn() }));
+const { obtener, publicar } = vi.hoisted(() => ({ obtener: vi.fn(), publicar: vi.fn() }));
 vi.stubGlobal('ResizeObserver', class { observe() {} unobserve() {} disconnect() {} });
 Element.prototype.scrollIntoView = vi.fn();
 vi.mock('../../cliente/useClienteApi', () => {
-  const cliente = { get: obtener };
+  const cliente = { get: obtener, post: publicar };
   return { useClienteApi: () => cliente };
 });
 
@@ -40,6 +42,40 @@ function montar(ruta = '/entregas-fallidas') {
   return render(<MantineProvider theme={tema}><MemoryRouter initialEntries={[ruta]} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}><PaginaEntregasFallidas /><Ubicacion /></MemoryRouter></MantineProvider>);
 }
 function fallo(status: number, code = '') { return { isAxiosError: true, response: { status, data: { status, code } } }; }
+it('recibe desde el listado con la versión actual del detalle, refresca indicadores y conserva filtros', async () => {
+  Object.defineProperty(document, 'fonts', { configurable: true, value: new EventTarget() });
+  const detalle = detallePrueba({ idDespacho: 'DSP-1', versionDespacho: 8 });
+  detalle.incidencia.idIncidencia = 'INC-1';
+  const implementacion = obtener.getMockImplementation()!;
+  obtener.mockImplementation((ruta: string, opciones: unknown) => ruta.endsWith('/incidencia')
+    ? Promise.resolve({ data: detalle }) : implementacion(ruta, opciones));
+  let recibida = false;
+  responder = async () => {
+    const pagina = structuredClone(paginaBase);
+    if (recibida) { pagina.contenido[1].recepcion = 'RECIBIDO_EN_CENTRO'; pagina.contenido[1].retornoAtrasado = false;
+      pagina.indicadores.pendientesRetorno = 6; pagina.indicadores.recibidosCentro = 6; }
+    return { data: pagina };
+  };
+  publicar.mockImplementation(async () => {
+    recibida = true;
+    return { status: 202, data: { idDespacho: 'DSP-1', idIncidencia: 'INC-1', estado: 'FALLIDO', versionDespacho: 9,
+      recepcion: { estado: 'RECIBIDO_EN_CENTRO', confirmadaEn: '2026-10-24T12:00:00Z', idUsuario: 'gestor',
+        selloIntacto: false, observacion: null, liberacionCapacidad: { idSolicitud: 'lib-1', estado: 'PENDIENTE',
+          requiereRevision: false, actualizadaEn: '2026-10-24T12:00:00Z', confirmadaEn: null } } } };
+  });
+  montar('/entregas-fallidas?motivo=NO_INTENTADO');
+  await screen.findByRole('table');
+  const fila = screen.getByText('COD-1').closest('tr')!;
+  await userEvent.click(within(fila).getByRole('button', { name: 'Confirmar recepción' }));
+  const modal = await screen.findByRole('dialog', { name: 'Confirmar recepción del paquete' });
+  await userEvent.click(await within(modal).findByRole('radio', { name: 'No' }));
+  await userEvent.click(within(modal).getByRole('button', { name: 'Confirmar recepción' }));
+  await screen.findByText('Paquete recibido. Liberación de capacidad pendiente.');
+  expect(publicar).toHaveBeenCalledWith('/api/v1/despachos/DSP-1/recepcion-centro',
+    { idIncidencia: 'INC-1', versionDespacho: 8, selloIntacto: false, observacion: null }, expect.anything());
+  await waitFor(() => expect(screen.getByRole('button', { name: 'Recibidos en centro: 6' })).toBeVisible());
+  expect(screen.getByTestId('url')).toHaveTextContent('motivo=NO_INTENTADO');
+});
 beforeEach(() => {
   responder = async () => ({ data: structuredClone(paginaBase) });
   obtener.mockImplementation((ruta: string, opciones: { params: URLSearchParams }) => ruta.includes('/catalogos/')
