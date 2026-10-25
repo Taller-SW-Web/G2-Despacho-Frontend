@@ -1,0 +1,4 @@
+.etiquetaGrupo { font-weight: 700; font-size: var(--mantine-font-size-md); }
+.opcion { padding: var(--mantine-spacing-md); min-height: 56px; border: 1px solid var(--ia-color-border-default); background: var(--mantine-color-white); }
+.opcion[data-checked] { border: 2px solid var(--ia-color-action-primary); }
+.etiquetaComentario { font-weight: 700; }

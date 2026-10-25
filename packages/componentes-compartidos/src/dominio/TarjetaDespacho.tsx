@@ -1,4 +1,4 @@
-import { Card, Group, Stack, Text, UnstyledButton } from '@mantine/core';
+import { Badge, Card, Group, Stack, Text, UnstyledButton } from '@mantine/core';
 import { BadgeEstado } from './BadgeEstado';
 import clases from './TarjetaDespacho.module.css';
 
@@ -6,8 +6,9 @@ export type TarjetaDespachoProps = {
   idDespacho: string;
   codigo: string;
   posicion: number;
-  direccion: string;
-  destinatario: string;
+  /** Contrato de Operación §3.1: fuera de ASIGNADO/EN_CAMINO llega en null y no se muestra. */
+  direccion: string | null;
+  destinatario: string | null;
   /** Valor del estado del despacho; CR-09 resuelve etiqueta, icono y color. */
   estado: string;
   /** Indicación adicional prevista por la UI, p. ej. «Regresa al centro de despacho» para FALLIDO en F-03. */
@@ -37,43 +38,26 @@ export function TarjetaDespacho({
     <UnstyledButton
       type="button"
       onClick={() => alAbrir(idDespacho)}
-      aria-label={`Abrir despacho ${codigo}, ${direccion}`}
+      aria-label={`Abrir despacho ${codigo}${direccion ? `, ${direccion}` : ''}`}
       w="100%"
       className={clases.raiz}
     >
-      {/* §16.2 y §16.5: siguiente con action/primary-soft; resuelto con cloud-subtle y texto secundario, sin opacidad. */}
-      <Card
-        className={clases.tarjeta}
-        bg={siguiente ? 'var(--ia-color-action-primary-soft)' : resuelto ? 'var(--ia-color-surface-cloud-subtle)' : 'white'}
-        c={resuelto ? 'var(--ia-color-text-secondary)' : undefined}
-        style={{
-          borderColor: siguiente ? 'var(--ia-color-action-primary)' : undefined,
-          borderWidth: siguiente ? 2 : undefined,
-        }}
-      >
+      {/* §16.2 y §16.5: siguiente con borde action/primary; resuelto con cloud-subtle y texto secundario, sin opacidad. */}
+      <Card className={clases.tarjeta} data-variante={variante}>
         <Group align="flex-start" gap="md" wrap="nowrap">
-          <Text
-            aria-label={`Posición ${posicion}`}
-            fw={700}
-            size="lg"
-            bg={resuelto ? 'white' : 'var(--ia-color-surface-cloud-subtle)'}
-            w={32}
-            h={32}
-            ta="center"
-            className="ia-num"
-            style={{ borderRadius: '50%', flex: '0 0 32px', lineHeight: '32px' }}
-          >
+          <Text aria-label={`Posición ${posicion}`} fw={700} size="lg" ta="center" className={`ia-num ${clases.posicion}`}>
             {posicion}
           </Text>
           <Stack gap={6} style={{ minWidth: 0, flex: 1 }}>
-            <Group justify="space-between" align="flex-start" gap="xs" wrap="nowrap">
-              <Text fw={700} size="md" className={clases.codigo}>{codigo}</Text>
-              <BadgeEstado contexto="despacho" valor={estado} size="sm" />
-            </Group>
-            {siguiente && <BadgeEstado contexto="etiqueta" valor="SIGUIENTE" size="sm" />}
+            {siguiente && <Badge color="orange" variant="light" tt="none" className={clases.siguiente}>Siguiente</Badge>}
+            <Text size="sm" c="var(--ia-color-text-secondary)" className={clases.codigo}>{codigo}</Text>
+            {direccion && <Text fw={700} size="lg" lineClamp={2} className={clases.direccion}>{direccion}</Text>}
+            {destinatario && <Text size="md" c="var(--ia-color-text-secondary)">{destinatario}</Text>}
             {complementoEstado && <Text size="sm" fw={600}>{complementoEstado}</Text>}
-            <Text size="md" lineClamp={2}>{direccion}</Text>
-            <Text size="md" c={resuelto ? undefined : 'var(--ia-color-text-secondary)'}>{destinatario} · {etiquetaIntento}</Text>
+            <Group gap="xs" wrap="wrap">
+              <BadgeEstado contexto="despacho" valor={estado} size="sm" />
+              <Badge color="gray" variant="light" tt="none" className="ia-num">{etiquetaIntento}</Badge>
+            </Group>
           </Stack>
         </Group>
       </Card>

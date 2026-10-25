@@ -3,7 +3,8 @@
 .cabecera { min-height: 56px; padding-inline: var(--mantine-spacing-md); background: var(--ia-color-surface-ink); color: var(--ia-color-text-inverse); }
 .cabecera > :global(.mantine-Group-root) { min-height: 56px; }
 .tituloYRegreso { min-width: 0; flex: 1; }
-.titulo.titulo { min-width: 0; font-size: var(--mantine-h3-font-size); line-height: var(--mantine-h3-line-height); overflow-wrap: anywhere; }
+/* Figma F-03: el título del shell de campo va en Inter, tipo oración; Oswald queda para los titulares del contenido. */
+.titulo.titulo { min-width: 0; font-family: var(--mantine-font-family); font-size: var(--mantine-font-size-xl); font-weight: 700; line-height: var(--mantine-line-height-xl); text-transform: none; overflow-wrap: anywhere; }
 .estado { flex-shrink: 0; max-width: 48%; }
 .contenido { min-width: 0; }
 .navegacion, .pieAcciones { position: fixed; bottom: 0; left: 0; right: 0; margin-inline: auto; width: min(100%, 480px); z-index: 100; border-top: 1px solid var(--ia-color-border-default); background: var(--mantine-color-white); }
