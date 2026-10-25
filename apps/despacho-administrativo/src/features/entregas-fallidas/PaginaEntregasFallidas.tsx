@@ -14,6 +14,7 @@ export function PaginaEntregasFallidas(destinos: DestinosEntregasFallidas) {
   const paginaRef = useRef<HTMLDivElement>(null);
   const [parametros, establecerParametros] = useSearchParams();
   const ubicacion = useLocation();
+  const [cierreRegistrado] = useState(() => ubicacion.state?.cierre === true);
   const [fechaReprogramada] = useState<string | null>(() => {
     const fecha: unknown = ubicacion.state?.reprogramacion?.fechaProgramada;
     return typeof fecha === 'string' && fechaCivilValida(fecha) ? fecha : null;
@@ -37,11 +38,11 @@ export function PaginaEntregasFallidas(destinos: DestinosEntregasFallidas) {
   const reintentar = () => { establecerAccesoRevocado(false); actualizar((valor) => valor + 1); };
   const todos = () => cambiar({ recepcion: 'TODOS', soloRetornosAtrasados: false });
   useEffect(() => {
-    if (fechaReprogramada && !consulta.cargando && !consulta.sinPermiso && !accesoRevocado && !focoRestaurado.current) {
+    if ((fechaReprogramada || cierreRegistrado) && !consulta.cargando && !consulta.sinPermiso && !accesoRevocado && !focoRestaurado.current) {
       const titulo = paginaRef.current?.querySelector<HTMLElement>('h1');
       if (titulo) { titulo.tabIndex = -1; titulo.focus(); focoRestaurado.current = true; }
     }
-  }, [fechaReprogramada, consulta.cargando, consulta.sinPermiso, accesoRevocado]);
+  }, [fechaReprogramada, cierreRegistrado, consulta.cargando, consulta.sinPermiso, accesoRevocado]);
 
   // La lectura del servidor puede dejar una página vacía después de una recepción/reprogramación.
   useEffect(() => {
@@ -69,6 +70,9 @@ export function PaginaEntregasFallidas(destinos: DestinosEntregasFallidas) {
   const error = consulta.error;
   if (consulta.sinPermiso || accesoRevocado) return <EstadoVista estado="sinPermiso" alAccionar={reintentar} />;
   return <Stack ref={paginaRef} gap="lg" style={{ minWidth: 0 }}>
+    {cierreRegistrado && <Alert color={consulta.error ? 'yellow' : 'green'} role="status">
+      {consulta.error ? 'Cierre registrado. No se pudo actualizar el listado' : 'Despacho cerrado como devuelto a origen'}
+    </Alert>}
     {fechaReprogramada && <Alert color={consulta.error ? 'yellow' : 'green'} role="status">
       {consulta.error ? 'Reprogramación registrada. No se pudo actualizar el listado'
         : `Despacho reprogramado para ${presentarFechaCivil(fechaReprogramada)}.`}

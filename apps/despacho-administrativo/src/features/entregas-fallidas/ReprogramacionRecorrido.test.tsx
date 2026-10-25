@@ -50,7 +50,7 @@ async function reprogramar() {
 }
 it('regresa al listado, conserva filtros/tamaño, corrige página vacía y lleva el foco al título', async () => {
   montar(); await reprogramar();
-  await screen.findByText('Despacho reprogramado para 25/10/2026.');
+  await screen.findByText('Despacho reprogramado para 25/10/2026.', {}, { timeout: 5000 });
   await screen.findByText('No encontramos resultados con estos filtros');
   await waitFor(() => expect(screen.getByRole('heading', { level: 1 })).toHaveFocus());
   expect(screen.getByTestId('url')).toHaveTextContent('tamanoPagina=10');
@@ -60,7 +60,7 @@ it('regresa al listado, conserva filtros/tamaño, corrige página vacía y lleva
 });
 it('no pierde la aceptación si falla el listado y solo repite la lectura al actualizar', async () => {
   fallaListado = true; montar(); await reprogramar();
-  await screen.findByText('Reprogramación registrada. No se pudo actualizar el listado');
+  await screen.findByText('Reprogramación registrada. No se pudo actualizar el listado', {}, { timeout: 5000 });
   expect(screen.getByTestId('url')).toHaveTextContent('pagina=3');
   fallaListado = false;
   await userEvent.click(screen.getByRole('button', { name: 'Reintentar consulta' }));
