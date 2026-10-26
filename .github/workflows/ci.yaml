@@ -38,6 +38,8 @@ jobs:
             comando: npm run typecheck && npm run build
           - comprobacion: e2e-f02
             comando: npm run test:f02:e2e
+          - comprobacion: e2e-flota
+            comando: npm run test:flota:e2e
     steps:
       - name: Obtener el código
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -55,7 +57,7 @@ jobs:
         run: npm ci
 
       - name: Preparar Chromium para las pruebas de navegador
-        if: matrix.comprobacion == 'e2e-f02'
+        if: startsWith(matrix.comprobacion, 'e2e-')
         run: npx playwright install --with-deps chromium
 
       # F-02 intercepta las APIs; F-01 y F-04 requieren entornos backend aislados.
@@ -63,10 +65,10 @@ jobs:
         run: ${{ matrix.comando }}
 
       - name: Conservar las capturas y resultados de navegador
-        if: ${{ always() && matrix.comprobacion == 'e2e-f02' }}
+        if: ${{ always() && startsWith(matrix.comprobacion, 'e2e-') }}
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
-          name: pruebas-e2e-f02
+          name: pruebas-${{ matrix.comprobacion }}
           path: |
             test-results/
             docs/evidencia/f02/

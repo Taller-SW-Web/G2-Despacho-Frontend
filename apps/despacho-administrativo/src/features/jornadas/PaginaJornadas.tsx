@@ -11,6 +11,7 @@ import { FormularioJornada } from './FormularioJornada';
 import { ConfirmarCierreJornada } from './ConfirmarCierreJornada';
 import { DetalleJornada } from './DetalleJornada';
 import { MetricasJornada } from './MetricasJornada';
+import { useVersionSesion } from '../../sesion/useVersionSesion';
 
 const etiquetas = { DISPONIBLE: 'Disponible', EN_RUTA: 'En ruta', SATURADO: 'Saturado', FUERA_DE_TURNO: 'Fuera de turno' };
 const kpis = [
@@ -21,6 +22,11 @@ const kpis = [
 ] as const;
 type Seleccion = { tipo: 'abrir' } | { tipo: 'cerrar'; jornada: Jornada } | { tipo: 'detalle'; id: string };
 export function PaginaJornadas() {
+  const sesion = useVersionSesion();
+  return <PanelJornadas key={sesion} />;
+}
+
+function PanelJornadas() {
   const cliente = useClienteApi();
   const [parametros, establecerParametros] = useSearchParams();
   const clave = parametros.toString(), errores = validarParametros(parametros);

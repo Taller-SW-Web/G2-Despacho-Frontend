@@ -7,11 +7,17 @@ import { useCatalogoFlota, type DefinicionFiltro } from './useCatalogoFlota';
 import { CatalogoFlota } from './CatalogoFlota';
 import { FormularioFurgoneta } from './FormularioFurgoneta';
 import { ConfirmacionEstadoFlota } from './ConfirmacionEstadoFlota';
+import { useVersionSesion } from '../../sesion/useVersionSesion';
 
 const definiciones: DefinicionFiltro[] = [{ clave: 'estado', etiqueta: 'Estado', opciones: estadosFurgoneta }, { clave: 'placa', etiqueta: 'Placa', maximoCaracteres: 10 }];
 const numero = new Intl.NumberFormat('es-PE', { maximumFractionDigits: 4 });
 type Seleccion = { tipo: 'nuevo' } | { tipo: 'editar' | 'estado'; furgoneta: Furgoneta };
 export function PaginaFurgonetas() {
+  const sesion = useVersionSesion();
+  return <PanelFurgonetas key={sesion} />;
+}
+
+function PanelFurgonetas() {
   const consulta = useCatalogoFlota(listarFurgonetas, definiciones);
   const [seleccion, establecerSeleccion] = useState<Seleccion | null>(null);
   useEffect(() => { if (consulta.denegado) establecerSeleccion(null); }, [consulta.denegado]);

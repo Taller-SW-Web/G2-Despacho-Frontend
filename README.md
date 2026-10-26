@@ -134,10 +134,26 @@ Para impedir que se integre un PR con fallos, un administrador debe configurar e
 - `Frontend (repartidor)`
 - `Frontend (tipos-y-compilacion)`
 - `Frontend (e2e-f02)`
+- `Frontend (e2e-flota)`
 
 Aplicar los requisitos también a administradores y evitar excepciones de bypass si se quiere exigirlos a todo el equipo. La misma configuración puede aplicarse a `main` para la promoción de entregas. Añadir el YAML no configura por sí solo la protección remota. Consultar la [documentación de GitHub sobre ramas protegidas](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/about-protected-branches).
 
 F-01 E2E y F-04 E2E (reprogramación y cierre) quedan fuera de este workflow: necesitan preparar los servicios, identidades y bases desechables descritos arriba y en el README del backend. Por tanto, este CI no acredita todos los recorridos con servicios reales. No ejecutar esas suites contra bases compartidas ni sustituir sus resultados por las pruebas con APIs simuladas.
+
+### Verificación de F-05 y F-06
+
+Los catálogos `/repartidores`, `/furgonetas` y el tablero `/jornadas` invalidan consultas, datos, selecciones y formularios al cambiar/cerrar la sesión de prueba o cambiar su almacenamiento en otra pestaña. Las respuestas y notificaciones tardías de la identidad anterior se descartan. Esto funciona con el proveedor de sesión actual; no supone una integración ya realizada con Seguridad.
+
+`npm run test:f05` y `npm run test:f06` comprueban reglas de presentación, transporte, paginación, errores, recuperación e aislamiento de sesión con APIs simuladas. Para el recorrido en navegador ejecutar:
+
+```powershell
+npx playwright install chromium
+npm run test:flota:e2e
+```
+
+La suite abre un Vite exclusivo en `127.0.0.1:4186` y comprueba seis recorridos a 1440 y 390 px: alta/edición/vinculación manual/baja de repartidor; alta/edición/mantenimiento/rehabilitación de furgoneta; apertura/detalle/cierre de jornada y cambio de sesión entre pestañas. Conserva capturas en `test-results/flota/` y trazas solo ante fallo. Todas sus APIs están interceptadas; no usa cuentas reales, no crea datos en el backend y no acredita autorización ni persistencia reales. La comprobación `Frontend (e2e-flota)` la ejecuta también en CI.
+
+Para probar con servicios reales locales, iniciar el Compose desde la raíz del backend y preparar la sesión de gestor en `/desarrollo/f01` durante desarrollo. La vinculación del repartidor sigue siendo manual con el UUID del emisor temporal. La suite backend de Operación usa PostgreSQL desechable y valida reservas, cierres, auditoría y concurrencia; el recorrido con Seguridad real y la aceptación humana permanecen pendientes.
 
 ## Detalle de incidencias de F-04
 

@@ -20,7 +20,11 @@ El contenedor actualiza cada 30 segundos mientras la página es visible y permit
 
 Los formularios y confirmaciones bloquean envíos repetidos. Un resultado incierto conserva lo ingresado y exige consultar antes de repetir; un rechazo permite corregir sin inventar éxito. El cierre informa que no resuelve despachos pendientes ni libera reservas de retornos. La autorización y las reglas definitivas pertenecen al backend.
 
+Al cambiar o cerrar la sesión local, o recibir un cambio de almacenamiento de sesión desde otra pestaña, se desmonta el tablero protegido completo. Se retiran datos, detalle y formularios, se cancelan las lecturas anteriores y se descartan respuestas/notificaciones tardías. Los catálogos F-05 aplican la misma regla.
+
 ## 4. Verificación
+
+Los resultados siguientes son históricos y corresponden al incremento original. La revisión posterior de F-05/F-06 se registra en la evidencia SDD y en sus PR; no debe sumarse a estos conteos como una ejecución única. `npm run test:flota:e2e` añade seis recorridos de navegador (escritorio/móvil) con APIs simuladas; la configuración y los límites están en el README raíz.
 
 - `npm run test:f06`: 19 pruebas aprobadas de modelos, interacción, consultas y contrato del proveedor.
 - Pruebas CR-10/11/14: 18 casos aprobados sobre indicadores, umbrales, exceso, avisos y recuperación.
@@ -31,7 +35,7 @@ Las pruebas usan datos sintéticos y transporte simulado. El caso contractual co
 
 ## 5. Configuración e integración
 
-`VITE_API_BASE_URL=https://taller-api-gateway.onrender.com`, sin agregar `/api/v1`. El cliente compartido envía el token de la sesión existente. El login administrativo sigue dependiendo de la integración transversal con Seguridad; F-06 no emite credenciales ni omite JWT.
+`VITE_API_BASE_URL` apunta al Gateway, sin agregar `/api/v1`; en local se usa `http://localhost:8080`. El cliente compartido envía el token de la sesión existente y el probador de desarrollo puede obtenerlo del emisor temporal local. El login administrativo real sigue pendiente de Seguridad. El modo demo sin token requiere configuración explícita tanto en frontend como en backend; esta revisión no activa ese modo en despliegues.
 
 Backend implementado: monitoreo, detalle, apertura/cierre y disponibilidad del contrato de Operación. El backend valida la zona en Gestión y conecta reservas/liberaciones/proyecciones con los clientes de F-02/F-04. La adaptación F-06 se aplicó en Supabase después de probarla en copia aislada y en una transacción revertida. El recorrido desplegado sigue requiriendo Seguridad y una sesión integrada; publicar el frontend no acredita esa aceptación.
 

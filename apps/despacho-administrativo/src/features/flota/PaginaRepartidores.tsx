@@ -8,6 +8,7 @@ import { CatalogoFlota } from './CatalogoFlota';
 import { FormularioRepartidor } from './FormularioRepartidor';
 import { VinculacionRepartidor } from './VinculacionRepartidor';
 import { ConfirmacionEstadoFlota } from './ConfirmacionEstadoFlota';
+import { useVersionSesion } from '../../sesion/useVersionSesion';
 
 const definiciones: DefinicionFiltro[] = [
   { clave: 'estadoRegistro', etiqueta: 'Registro', opciones: registros },
@@ -17,6 +18,11 @@ const definiciones: DefinicionFiltro[] = [
 type Seleccion = { tipo: 'nuevo' } | { tipo: 'editar' | 'baja' | 'vincular'; repartidor: Repartidor };
 
 export function PaginaRepartidores() {
+  const sesion = useVersionSesion();
+  return <PanelRepartidores key={sesion} />;
+}
+
+function PanelRepartidores() {
   const consulta = useCatalogoFlota(listarRepartidores, definiciones);
   const [seleccion, establecerSeleccion] = useState<Seleccion | null>(null);
   useEffect(() => { if (consulta.denegado) establecerSeleccion(null); }, [consulta.denegado]);

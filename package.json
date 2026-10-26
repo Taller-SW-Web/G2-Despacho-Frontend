@@ -15,6 +15,7 @@
     "test:f04:cierre:e2e": "playwright test --config playwright.f04-cierre.config.ts",
     "test:f05": "npm run test -w @despacho/administrativo -- src/features/flota",
     "test:f06": "npm run test -w @despacho/administrativo -- src/features/jornadas",
+    "test:flota:e2e": "playwright test --config playwright.flota.config.ts",
     "test:f01": "npm run test -w @despacho/administrativo -- src/features/zonas",
     "test:f02": "npm run test -w @despacho/administrativo -- src/features/programacion",
     "test:f02:e2e": "playwright test --config playwright.f02.config.ts",
