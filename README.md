@@ -119,7 +119,25 @@ npm run test:f01:e2e
 
 F-02 intercepta las APIs con fixtures y utiliza un servidor exclusivo en `127.0.0.1:4182`. F-01 utiliza el Gateway de `localhost:8080`, el emisor temporal y persistencia real; crea/modifica datos de zonas y tarifas. Antes de ejecutarla, comprobar que los servicios apuntan a un entorno de prueba aislado y autorizado; el script heredado no prepara ni aísla la base por sí mismo. No forma parte de las comprobaciones sin servicios.
 
-Los informes de navegador se generan en `test-results/` según el resultado. Esta rama no incorpora un workflow de CI; los comandos anteriores son manuales. Registrar resultados reales en la evidencia correspondiente, diferenciando datos simulados, pruebas con persistencia e integración conjunta.
+Los informes de navegador se generan en `test-results/` según el resultado. Registrar resultados reales en la evidencia correspondiente, diferenciando datos simulados, pruebas con persistencia e integración conjunta.
+
+### Integración continua y protección de develop
+
+El workflow [CI frontend](.github/workflows/ci.yaml) se ejecuta en cada PR dirigido a `develop` o `main`, en los push a esas ramas y manualmente desde Actions. Usa Node.js 22 y `npm ci` con el lockfile raíz. Ejecuta por separado las suites de componentes, administrativo y repartidor, la comprobación de tipos y compilación de ambas aplicaciones, y las pruebas de navegador F-02 con Chromium y APIs simuladas. Conserva capturas y resultados de F-02 durante siete días. No necesita secretos ni despliega aplicaciones.
+
+La suite administrativa excluye temporalmente `src/features/zonas/**`: sus pruebas necesitan actualizar el mensaje de permisos esperado y las respuestas simuladas del catálogo al abrir tarifas. Esta exclusión no depende de la integración con Seguridad y debe retirarse al corregir esas pruebas; `npm run test:f01` y `npm run test:administrativo` siguen ejecutándolas manualmente. Zonas permanece incluida en tipos y compilación.
+
+Para impedir que se integre un PR con fallos, un administrador debe configurar en GitHub una protección o ruleset para `develop`: exigir PR, activar **Require status checks to pass before merging** y **Require branches to be up to date before merging**, y seleccionar estas comprobaciones tras su primera ejecución:
+
+- `Frontend (componentes)`
+- `Frontend (administrativo)`
+- `Frontend (repartidor)`
+- `Frontend (tipos-y-compilacion)`
+- `Frontend (e2e-f02)`
+
+Aplicar los requisitos también a administradores y evitar excepciones de bypass si se quiere exigirlos a todo el equipo. La misma configuración puede aplicarse a `main` para la promoción de entregas. Añadir el YAML no configura por sí solo la protección remota. Consultar la [documentación de GitHub sobre ramas protegidas](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/about-protected-branches).
+
+F-01 E2E y F-04 E2E (reprogramación y cierre) quedan fuera de este workflow: necesitan preparar los servicios, identidades y bases desechables descritos arriba y en el README del backend. Por tanto, este CI no acredita todos los recorridos con servicios reales. No ejecutar esas suites contra bases compartidas ni sustituir sus resultados por las pruebas con APIs simuladas.
 
 ## Detalle de incidencias de F-04
 
