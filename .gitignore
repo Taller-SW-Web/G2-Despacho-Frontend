@@ -17,6 +17,7 @@ docs/evidencia/*
 !docs/F-01-PruebasLocales.md
 !docs/F-02-ProgramacionAsignacion.md
 !docs/evidencia/f02/
+!docs/evidencia/f02-rutas/
 test-results/
 playwright-report/
 

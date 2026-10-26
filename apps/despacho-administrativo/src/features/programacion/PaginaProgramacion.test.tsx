@@ -41,7 +41,7 @@ it('presenta cifras del servidor, reintentos con contador cero y el bloqueo de f
   expect(within(futura).getByText('Reintento')).toBeVisible();
   await usuario.click(within(futura).getByRole('button', { name: 'Ver detalle' }));
   expect(within(screen.getByRole('dialog')).getByText(/0[.,]000000000000016 m³/)).toBeVisible();
-  expect(screen.getByRole('tab', { name: 'Rutas por repartidor' })).toBeDisabled();
+  expect(screen.getByRole('tab', { name: 'Rutas por repartidor' })).toBeEnabled();
 });
 
 it('sincroniza filtros y KPI con la URL usando hoy del servidor y conserva el tamaño de página', async () => {

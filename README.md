@@ -121,6 +121,12 @@ F-02 intercepta las APIs con fixtures y utiliza un servidor exclusivo en `127.0.
 
 Los informes de navegador se generan en `test-results/` según el resultado. Esta rama no incorpora un workflow de CI; los comandos anteriores son manuales. Registrar resultados reales en la evidencia correspondiente, diferenciando datos simulados, pruebas con persistencia e integración conjunta.
 
+## Incremento de rutas F-02 posterior a la línea base
+
+`/programacion` habilita **Rutas por repartidor**: selección de jornada activa mediante monitoreo F-06 (incluye saturados), consulta de ruta, arrastre y flechas accesibles, posiciones fijas para paradas iniciadas/cerradas y barra de guardado/descarte. Conserva huecos históricos sin renumerarlos. El guardado usa fotografía/versionado e identidad de comando; ante respuesta perdida bloquea nuevas ediciones y permite recuperar exactamente el resultado original. La llegada a la web del repartidor depende de procesar las proyecciones de Gestión, no es una actualización distribuida instantánea. Reasignación y cancelación siguen fuera de esta pantalla.
+
+`npm run test:f02` cubre interacción y transporte simulados. Para el recorrido con Gateway, Gestión, Operación y PostgreSQL reales y desechables, ejecutar `python3 pruebas/verificar_f02_rutas.py` desde el backend hermano tras construir sus tres servicios con `clean verify`. Ese script prepara los datos y credenciales temporales e invoca `npm run test:f02:rutas:e2e`; no se debe apuntar el recorrido a un entorno compartido. Usa puertos `18080/18090/4186` y Chromium. La evidencia se mantiene en [ES-F02-05](../despacho-docs/especificaciones/ES-F02-05-ConsultarReordenarSecuenciaRuta/evidence.md), no en otra guía local.
+
 ## Detalle de incidencias de F-04
 
 Desde `Ver detalle` en entregas fallidas se abre `/entregas-fallidas/:idDespacho`, conservando filtros, página y tamaño en la URL para regresar. La vista presenta la última incidencia, su recepción, historial completo, comunicaciones y decisiones permitidas por Gestión. Consulta de nuevo cada 30 segundos mientras está activa, bloquea las decisiones al actualizar o fallar y descarta respuestas de otro recurso.

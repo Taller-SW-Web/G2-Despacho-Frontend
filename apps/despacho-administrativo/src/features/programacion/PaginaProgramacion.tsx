@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useSearchParams } from 'react-router-dom';
-import { Alert, Badge, Button, Group, Modal, SimpleGrid, Stack, Tabs, Text, Tooltip } from '@mantine/core';
+import { Alert, Badge, Button, Group, Modal, SimpleGrid, Stack, Tabs, Text } from '@mantine/core';
 import { IconCalendarEvent, IconCalendarTime, IconChevronDown, IconFlask, IconRefresh, IconRepeat } from '@tabler/icons-react';
 import { EncabezadoPagina, EstadoVista, notificarOperacion, TarjetaKpi, type EstadoConsulta } from '@despacho/componentes-compartidos';
 import { useClienteApi } from '../../cliente/useClienteApi';
@@ -12,6 +12,7 @@ import { TablaCola } from './TablaCola';
 import { ModalSimulacion } from './ModalSimulacion';
 import { ModalAsignacion } from './ModalAsignacion';
 import { ResumenDespacho } from './ResumenDespacho';
+import { RutasProgramacion } from './RutasProgramacion';
 import clases from './Programacion.module.css';
 
 /** Cambiar/cerrar sesión desmonta consultas, selección y formularios protegidos. */
@@ -35,6 +36,17 @@ function PanelProgramacion() {
   const { filtros, errores } = useMemo(() => leerFiltros(new URLSearchParams(clave)), [clave]);
   const valida = Object.keys(errores).length === 0;
   const [denegada, establecerDenegada] = useState(false);
+  const [pestania, establecerPestania] = useState('pendientes');
+  const [cambiosRuta, establecerCambiosRuta] = useState(false);
+  const [rutaBloqueada, establecerRutaBloqueada] = useState(false);
+  const [salidaRuta, establecerSalidaRuta] = useState<string | null>(null);
+  const cambiarPendientesRuta = useCallback((valor: boolean, bloqueada: boolean) => {
+    establecerCambiosRuta(valor); establecerRutaBloqueada(bloqueada);
+  }, []);
+  const cambiarPestania = (valor: string | null) => {
+    if (!valor || rutaBloqueada) return;
+    if (cambiosRuta) establecerSalidaRuta(valor); else establecerPestania(valor);
+  };
   const [asignacion, establecerAsignacion] = useState<Pendiente | null>(null);
   const [detalle, establecerDetalle] = useState<Pendiente | null>(null);
   const [personalizada, establecerPersonalizada] = useState(false);
@@ -123,9 +135,10 @@ function PanelProgramacion() {
             loading={generando} disabled={Boolean(errorSimulacion?.incierto)} onClick={() => { void generar({}); }}>Generar pedido de prueba</Button>
             <Button variant="outline" type="button" px="sm" mih={44} aria-label="Personalizar pedido de prueba" disabled={generando || Boolean(errorSimulacion?.incierto)}
               onClick={() => { recordarFoco(); establecerErrorSimulacion(null); establecerPersonalizada(true); }}><IconChevronDown size={20} aria-hidden="true" /></Button></Group>}
-          pestanias={<Tabs value="pendientes"><Tabs.List><Tabs.Tab value="pendientes" rightSection={pagina && <Badge color="gray" variant="light">{pagina.indicadores.pendientesHoy + pagina.indicadores.programadosFuturo}</Badge>}>Cola de pendientes</Tabs.Tab>
-            <Tooltip label="Las rutas y el reordenamiento aún no están disponibles."><span><Tabs.Tab value="rutas" disabled>Rutas por repartidor</Tabs.Tab></span></Tooltip>
+          pestanias={<Tabs value={pestania} onChange={cambiarPestania}><Tabs.List><Tabs.Tab value="pendientes" disabled={rutaBloqueada} rightSection={pagina && <Badge color="gray" variant="light">{pagina.indicadores.pendientesHoy + pagina.indicadores.programadosFuturo}</Badge>}>Cola de pendientes</Tabs.Tab>
+            <Tabs.Tab value="rutas">Rutas por repartidor</Tabs.Tab>
           </Tabs.List></Tabs>} />
+        {pestania === 'rutas' ? <RutasProgramacion alCambiarPendientes={cambiarPendientesRuta} alDenegar={denegar} /> : <>
         <SimpleGrid cols={{ base: 1, xs: 2, md: 3 }} className={clases.kpis}>
           <TarjetaKpi id="hoy" etiqueta="Pendientes para hoy" valor={pagina?.indicadores.pendientesHoy ?? null} icono={<IconCalendarTime size={24} aria-hidden="true" />}
             accionable cargando={consulta.cargando} disabled={!pagina || bloqueada} seleccionada={Boolean(hoy && filtros.fechaHasta === hoy && !filtros.fechaDesde)}
@@ -158,6 +171,13 @@ function PanelProgramacion() {
         {detalle && <Modal opened title={`Detalle del despacho ${detalle.codigoOperativo}`} size={880} radius="lg"
           returnFocus={false} closeButtonProps={{ 'aria-label': 'Cerrar detalle' }}
           classNames={{ content: clases.modal, title: clases.tituloModal, header: clases.cabeceraModal, body: clases.cuerpoModal }} onClose={() => { establecerDetalle(null); devolverFoco(); }}><ResumenDespacho despacho={detalle} /></Modal>}
+        </>}
+        <Modal opened={Boolean(salidaRuta)} onClose={() => establecerSalidaRuta(null)} title="¿Descartar los cambios?" centered>
+          <Text>El orden de la ruta todavía no se guardó.</Text><Group justify="flex-end" mt="md">
+            <Button variant="subtle" onClick={() => establecerSalidaRuta(null)}>Seguir editando</Button>
+            <Button onClick={() => { establecerPestania(salidaRuta!); establecerSalidaRuta(null); }}>Descartar cambios</Button>
+          </Group>
+        </Modal>
       </Stack>
     </EstadoVista>
   </Stack>;
