@@ -17,7 +17,8 @@ const id = (numero: number) => `00000000-0000-4000-8000-${String(numero).padStar
 const ruta: Ruta = { idJornada: id(100), estadoJornada: 'ACTIVA', versionRuta: `"${'a'.repeat(64)}"`, consultadoEn: '2026-10-26T15:00:00Z',
   despachos: [1, 2, 3].map((numero) => ({ idDespacho: id(numero), codigoOperativo: `DSP-${numero}`, codigoRastreoInterno: `TRK-${numero}`,
     estado: numero === 2 ? 'EN_CAMINO' : 'ASIGNADO', posicion: numero, version: 1, destinatario: 'Prueba', direccion: `Dirección ${numero}`,
-    pesoKg: 2, volumenM3: 0.01, cantidadPaquetes: 1, actualizadoEn: '2026-10-26T15:00:00Z' })) };
+    pesoKg: 2, volumenM3: 0.01, cantidadPaquetes: 1, actualizadoEn: '2026-10-26T15:00:00Z',
+    idPedido: `PED-${numero}`, idRepartidor: id(200), reasignacionEnProceso: false, cancelacionEnProceso: false })) };
 beforeEach(() => {
   vi.clearAllMocks();
   // JSDOM no implementa el desplazamiento que usa Mantine al seleccionar con flechas.
@@ -100,4 +101,13 @@ it('la permutación conserva huecos históricos y no permite arrastrar a un espa
   const larga = [...ruta.despachos, { ...ruta.despachos[0], idDespacho: id(4), posicion: 5 }];
   expect(moverParada(larga, 0, 3).map((p) => [p.idDespacho, p.posicion]))
     .toEqual([[id(3), 1], [id(2), 2], [id(4), 3], [id(1), 5]]);
+});
+it('una cancelación pendiente conserva la parada fija y no ofrece otra reasignación', async () => {
+  const actual = structuredClone(ruta); actual.despachos[0].cancelacionEnProceso = true;
+  consultar.mockResolvedValue(actual);
+  await montar();
+  expect(screen.getByText('Cancelación en proceso. Se actualizará la ruta al confirmarse.')).toBeVisible();
+  expect(screen.queryByRole('button', { name: 'Reasignar DSP-1' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Bajar DSP-1' })).not.toBeInTheDocument();
+  expect(moverParada(actual.despachos, 0, 2)).toBe(actual.despachos);
 });

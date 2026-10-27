@@ -7,6 +7,7 @@ import { interpretarError, type ErrorProgramacion } from './api';
 import { useLecturaProgramacion, useVigenciaProgramacion } from './useLecturaProgramacion';
 import { consultarJornadasRuta, consultarRuta, guardarSecuencia, moverParada, type ComandoSecuencia, type ParadaRuta } from './rutasApi';
 import { formatoInstante, formatoNumero } from './modelo';
+import { ModalReasignacionDespacho } from './ModalReasignacionDespacho';
 
 export function RutasProgramacion({ alCambiarPendientes, alDenegar }: { alCambiarPendientes: (valor: boolean, bloqueada: boolean) => void; alDenegar: () => void }) {
   const cliente = useClienteApi();
@@ -17,6 +18,8 @@ export function RutasProgramacion({ alCambiarPendientes, alDenegar }: { alCambia
   const [guardando, establecerGuardando] = useState(false);
   const [error, establecerError] = useState<ErrorProgramacion | null>(null);
   const [anuncio, establecerAnuncio] = useState('');
+  const [reasignacion, establecerReasignacion] = useState<ParadaRuta | null>(null);
+  const origenReasignacion = useRef<HTMLElement | null>(null);
   const comando = useRef<ComandoSecuencia | null>(null);
   const enCurso = useRef(false);
   const arrastre = useRef<number | null>(null);
@@ -31,8 +34,8 @@ export function RutasProgramacion({ alCambiarPendientes, alDenegar }: { alCambia
   const filas = edicion ?? ruta?.despachos ?? [];
   const cambios = edicion !== null && Boolean(ruta) && edicion.some((p, i) => p.idDespacho !== ruta!.despachos[i]?.idDespacho);
   const incierto = Boolean(error?.incierto);
-  const pendiente = cambios || incierto || guardando;
-  useEffect(() => { alCambiarPendientes(pendiente, guardando || incierto); return () => alCambiarPendientes(false, false); }, [pendiente, guardando, incierto, alCambiarPendientes]);
+  const pendiente = cambios || incierto || guardando || Boolean(reasignacion);
+  useEffect(() => { alCambiarPendientes(pendiente, guardando || incierto || Boolean(reasignacion)); return () => alCambiarPendientes(false, false); }, [pendiente, guardando, incierto, reasignacion, alCambiarPendientes]);
   useEffect(() => { if (catalogo.error?.permiso || consulta.error?.permiso) alDenegar(); }, [catalogo.error, consulta.error, alDenegar]);
   useEffect(() => {
     if (!pendiente) return;
@@ -41,7 +44,7 @@ export function RutasProgramacion({ alCambiarPendientes, alDenegar }: { alCambia
     return () => window.removeEventListener('beforeunload', avisar);
   }, [pendiente]);
   useVigenciaProgramacion(consulta.actualizar, Boolean(jornada) && !pendiente && !confirmarSalida);
-  const bloqueada = guardando || incierto || consulta.cargando || Boolean(consulta.error) || ruta?.estadoJornada !== 'ACTIVA';
+  const bloqueada = guardando || incierto || Boolean(reasignacion) || consulta.cargando || Boolean(consulta.error) || ruta?.estadoJornada !== 'ACTIVA';
   const mover = (origen: number, destino: number) => {
     if (bloqueada) return;
     const nuevas = moverParada(filas, origen, destino);
@@ -50,7 +53,7 @@ export function RutasProgramacion({ alCambiarPendientes, alDenegar }: { alCambia
     establecerAnuncio(`${filas[origen].codigoOperativo} movido a la posición ${filas[destino].posicion}.`);
   };
   const cambiarJornada = (valor: string | null) => {
-    if (guardando || incierto) return;
+    if (guardando || incierto || reasignacion) return;
     if (cambios) { establecerDestino(valor); establecerConfirmarSalida(true); return; }
     establecerJornada(valor); establecerEdicion(null); establecerError(null); comando.current = null;
   };
@@ -83,7 +86,7 @@ export function RutasProgramacion({ alCambiarPendientes, alDenegar }: { alCambia
   return <Stack gap="lg">
     <Text component="h2" ref={titulo} tabIndex={-1} size="xl" fw={700}>Rutas por repartidor</Text>
     <Select label="Repartidor en jornada" placeholder="Selecciona una jornada" searchable clearable
-      data={catalogo.datos ?? []} value={jornada} onChange={cambiarJornada} disabled={guardando || incierto || catalogo.cargando}
+      data={catalogo.datos ?? []} value={jornada} onChange={cambiarJornada} disabled={guardando || incierto || Boolean(reasignacion) || catalogo.cargando}
       error={catalogo.error?.mensaje} nothingFoundMessage="No hay jornadas activas" />
     {catalogo.error && <Button variant="outline" onClick={catalogo.actualizar}>Reintentar jornadas</Button>}
     {error && <Alert color={error.estado === 409 ? 'yellow' : 'red'} title={incierto ? 'Resultado sin confirmar' : 'No se pudo guardar el orden'}>
@@ -99,9 +102,9 @@ export function RutasProgramacion({ alCambiarPendientes, alDenegar }: { alCambia
           <Button variant="subtle" disabled={pendiente || consulta.cargando} onClick={consulta.actualizar}>Actualizar ruta</Button></Group>
         {ruta?.estadoJornada === 'CERRADA' && <Alert color="yellow">Jornada cerrada. Solo puedes consultar la ruta.</Alert>}
         {filas.map((parada, indice) => {
-          const editable = parada.estado === 'ASIGNADO';
-          const anterior = filas.map((p, i) => p.estado === 'ASIGNADO' && i < indice ? i : -1).filter((i) => i >= 0).at(-1) ?? -1;
-          const siguiente = filas.findIndex((p, i) => p.estado === 'ASIGNADO' && i > indice);
+          const editable = parada.estado === 'ASIGNADO' && !parada.reasignacionEnProceso && !parada.cancelacionEnProceso;
+          const anterior = filas.map((p, i) => p.estado === 'ASIGNADO' && !p.reasignacionEnProceso && !p.cancelacionEnProceso && i < indice ? i : -1).filter((i) => i >= 0).at(-1) ?? -1;
+          const siguiente = filas.findIndex((p, i) => p.estado === 'ASIGNADO' && !p.reasignacionEnProceso && !p.cancelacionEnProceso && i > indice);
           return <Card key={parada.idDespacho} withBorder padding="md" radius="md" data-testid={`parada-${parada.idDespacho}`}
             onDragOver={(evento) => { if (editable && !bloqueada) evento.preventDefault(); }}
             onDrop={(evento) => { evento.preventDefault(); if (arrastre.current !== null) mover(arrastre.current, indice); arrastre.current = null; }}>
@@ -116,6 +119,10 @@ export function RutasProgramacion({ alCambiarPendientes, alDenegar }: { alCambia
             <Text size="sm" mt="xs">{parada.codigoRastreoInterno}</Text>
             <Text mt="sm">{parada.destinatario} · {parada.direccion}</Text>
             <Text size="sm">{formatoNumero.format(parada.pesoKg)} kg · {formatoNumero.format(parada.volumenM3)} m³ · {parada.cantidadPaquetes} {parada.cantidadPaquetes === 1 ? 'paquete' : 'paquetes'}</Text>
+            {parada.reasignacionEnProceso && <Alert color="yellow" mt="sm">Reasignación en proceso. Se actualizará la ruta al confirmarse.</Alert>}
+            {parada.cancelacionEnProceso && <Alert color="yellow" mt="sm">Cancelación en proceso. Se actualizará la ruta al confirmarse.</Alert>}
+            {editable && <Button variant="outline" mt="sm" disabled={bloqueada || cambios} aria-label={`Reasignar ${parada.codigoOperativo}`}
+              onClick={() => { origenReasignacion.current = document.activeElement as HTMLElement; establecerReasignacion(parada); }}>Reasignar</Button>}
           </Card>;
         })}
       </Stack>
@@ -130,5 +137,10 @@ export function RutasProgramacion({ alCambiarPendientes, alDenegar }: { alCambia
       <Text>El nuevo orden todavía no se guardó.</Text><Group justify="flex-end" mt="md"><Button variant="subtle" onClick={() => establecerConfirmarSalida(false)}>Seguir editando</Button>
         <Button onClick={() => { establecerConfirmarSalida(false); establecerEdicion(null); establecerError(null); comando.current = null; establecerJornada(destino); }}>Descartar cambios</Button></Group>
     </Modal>
+    {reasignacion && jornada && <ModalReasignacionDespacho despacho={reasignacion} jornada={jornada}
+      conductorActual={catalogo.datos?.find((j) => j.value === jornada)?.label ?? reasignacion.idRepartidor} alDenegar={alDenegar}
+      alCerrar={() => { establecerReasignacion(null); requestAnimationFrame(() => origenReasignacion.current?.focus()); }}
+      alActualizar={() => { establecerReasignacion(null); establecerEdicion(null); consulta.actualizar(); catalogo.actualizar();
+        requestAnimationFrame(() => titulo.current?.focus()); }} />}
   </Stack>;
 }

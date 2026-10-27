@@ -438,16 +438,16 @@
     "semantic_hash": "59eda51152189754fa3aa490de79b5ac"
   },
   "apps/despacho-administrativo/src/features/programacion/PaginaProgramacion.test.tsx": {
-    "mtime": 1793037791.1477237,
-    "seen": 1793039283.6307292,
-    "ast_hash": "d4e3e29249911720e3b08e13777cb3b2",
-    "semantic_hash": "d4e3e29249911720e3b08e13777cb3b2"
+    "mtime": 1793045313.632307,
+    "seen": 1793063962.3594816,
+    "ast_hash": "9c72118eeed2e9295d59d9461ec15d0d",
+    "semantic_hash": "9c72118eeed2e9295d59d9461ec15d0d"
   },
   "apps/despacho-administrativo/src/features/programacion/PaginaProgramacion.tsx": {
-    "mtime": 1793037791.1477237,
-    "seen": 1793039283.6307318,
-    "ast_hash": "0f029d665c52c356e45854c85a11dfa0",
-    "semantic_hash": "0f029d665c52c356e45854c85a11dfa0"
+    "mtime": 1793045313.6316905,
+    "seen": 1793063962.3594859,
+    "ast_hash": "e6e35678909d159ac13bec87fbcb92f0",
+    "semantic_hash": "e6e35678909d159ac13bec87fbcb92f0"
   },
   "apps/despacho-administrativo/src/features/programacion/ResumenDespacho.tsx": {
     "mtime": 1793037791.1477237,
@@ -810,10 +810,10 @@
     "semantic_hash": "ef7b75367e8cde185060eb927fbc9eca"
   },
   "package.json": {
-    "mtime": 1793037791.156661,
-    "seen": 1793039283.6308873,
-    "ast_hash": "b52244277961801093aa9dbbd145e8a2",
-    "semantic_hash": "b52244277961801093aa9dbbd145e8a2"
+    "mtime": 1793045536.7744746,
+    "seen": 1793063962.3632188,
+    "ast_hash": "07b1371dc029aabcf1041ccb182054be",
+    "semantic_hash": "07b1371dc029aabcf1041ccb182054be"
   },
   "packages/cliente-api/package.json": {
     "mtime": 1792195706.0898304,
@@ -1162,5 +1162,59 @@
     "seen": 1793039283.6310446,
     "ast_hash": "df08e656a0d4bf77cc38df160c32c518",
     "semantic_hash": "df08e656a0d4bf77cc38df160c32c518"
+  },
+  "apps/despacho-administrativo/src/features/programacion/ModalReasignacionDespacho.test.tsx": {
+    "mtime": 1793062496.520941,
+    "seen": 1793063962.3594115,
+    "ast_hash": "aa2599d4e95d4f76485037287795e84d",
+    "semantic_hash": "aa2599d4e95d4f76485037287795e84d"
+  },
+  "apps/despacho-administrativo/src/features/programacion/ModalReasignacionDespacho.tsx": {
+    "mtime": 1793062207.51178,
+    "seen": 1793063962.3594174,
+    "ast_hash": "b95240a52b9093549c45525bd1eabe02",
+    "semantic_hash": "b95240a52b9093549c45525bd1eabe02"
+  },
+  "apps/despacho-administrativo/src/features/programacion/RutasProgramacion.test.tsx": {
+    "mtime": 1793061896.2788622,
+    "seen": 1793063962.35955,
+    "ast_hash": "49cf0ea1c11bb07948d0ac54bb606a25",
+    "semantic_hash": "49cf0ea1c11bb07948d0ac54bb606a25"
+  },
+  "apps/despacho-administrativo/src/features/programacion/RutasProgramacion.tsx": {
+    "mtime": 1793061913.7129962,
+    "seen": 1793063962.3595536,
+    "ast_hash": "7b9833d59fc97451cb5263482e4a8054",
+    "semantic_hash": "7b9833d59fc97451cb5263482e4a8054"
+  },
+  "apps/despacho-administrativo/src/features/programacion/reasignacionApi.ts": {
+    "mtime": 1793061870.862693,
+    "seen": 1793063962.3597987,
+    "ast_hash": "d8db6953d97976b00012bf4b35312524",
+    "semantic_hash": "d8db6953d97976b00012bf4b35312524"
+  },
+  "apps/despacho-administrativo/src/features/programacion/rutasApi.ts": {
+    "mtime": 1793061870.862693,
+    "seen": 1793063962.359803,
+    "ast_hash": "530f2203bee3fe47ef1b53e0cdc64a63",
+    "semantic_hash": "530f2203bee3fe47ef1b53e0cdc64a63"
+  },
+  "playwright.f02-rutas.config.ts": {
+    "mtime": 1793046491.4841914,
+    "seen": 1793063962.3664415,
+    "ast_hash": "c92faa395668583aec1f2e54e9408884",
+    "semantic_hash": "c92faa395668583aec1f2e54e9408884"
+  },
+  "pruebas/f02-rutas/reasignacion.spec.ts": {
+    "mtime": 1793061995.9434347,
+    "seen": 1793063962.3666542,
+    "ast_hash": "b62439123a9cc4cb343c810d24109d2d",
+    "semantic_hash": "b62439123a9cc4cb343c810d24109d2d"
+  },
+  "pruebas/f02-rutas/rutas.spec.ts": {
+    "mtime": 1793046491.4841914,
+    "seen": 1793063962.3666596,
+    "ast_hash": "ce5d04ee3c12e5a5d27a1164862294fe",
+    "semantic_hash": "ce5d04ee3c12e5a5d27a1164862294fe"
   }
 }

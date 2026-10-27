@@ -8,6 +8,7 @@ const parada = z.object({
   estado: z.string(), posicion: z.number().int().positive(), version: z.number().int(),
   destinatario: z.string().nullable(), direccion: z.string().nullable(), pesoKg: z.number().positive(),
   volumenM3: z.number().positive(), cantidadPaquetes: z.number().int().positive(), actualizadoEn: z.string().datetime({ offset: true }),
+  idPedido: z.string().min(1), idRepartidor: z.string().min(1), reasignacionEnProceso: z.boolean(), cancelacionEnProceso: z.boolean(),
 });
 export const esquemaRuta = z.object({ idJornada: z.string(), estadoJornada: z.enum(['ACTIVA', 'CERRADA']),
   despachos: z.array(parada), versionRuta: z.string().regex(/^"[a-f0-9]{64}"$/), consultadoEn: z.string().datetime({ offset: true }),
@@ -45,11 +46,13 @@ export async function guardarSecuencia(cliente: ClienteApi, comando: ComandoSecu
 /** Inserta entre asignados: las posiciones fijas y huecos históricos no se desplazan. */
 export function moverParada(paradas: ParadaRuta[], origen: number, destino: number): ParadaRuta[] {
   if (origen < 0 || destino < 0 || origen >= paradas.length || destino >= paradas.length
-      || paradas[origen].estado !== 'ASIGNADO' || paradas[destino].estado !== 'ASIGNADO') return paradas;
-  const espacios = paradas.map((p, i) => p.estado === 'ASIGNADO' ? i : -1).filter((i) => i >= 0);
+      || paradas[origen].estado !== 'ASIGNADO' || paradas[destino].estado !== 'ASIGNADO'
+      || paradas[origen].reasignacionEnProceso || paradas[destino].reasignacionEnProceso
+      || paradas[origen].cancelacionEnProceso || paradas[destino].cancelacionEnProceso) return paradas;
+  const espacios = paradas.map((p, i) => p.estado === 'ASIGNADO' && !p.reasignacionEnProceso && !p.cancelacionEnProceso ? i : -1).filter((i) => i >= 0);
   const asignados = espacios.map((i) => paradas[i]);
   const [movida] = asignados.splice(espacios.indexOf(origen), 1);
   asignados.splice(espacios.indexOf(destino), 0, movida);
   let siguiente = 0;
-  return paradas.map((p) => p.estado === 'ASIGNADO' ? { ...asignados[siguiente++], posicion: p.posicion } : p);
+  return paradas.map((p) => p.estado === 'ASIGNADO' && !p.reasignacionEnProceso && !p.cancelacionEnProceso ? { ...asignados[siguiente++], posicion: p.posicion } : p);
 }

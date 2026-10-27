@@ -18,6 +18,7 @@ docs/evidencia/*
 !docs/F-02-ProgramacionAsignacion.md
 !docs/evidencia/f02/
 !docs/evidencia/f02-rutas/
+!docs/evidencia/f02-reasignacion/
 test-results/
 playwright-report/
 
