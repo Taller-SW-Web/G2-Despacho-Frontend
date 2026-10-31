@@ -34,7 +34,9 @@ describe('CR-03 ShellAdministrativo', () => {
     disparador.focus();
     await usuario.keyboard('{Enter}');
     const menu = await screen.findByRole('dialog');
-    expect(within(menu).getAllByRole('link')).toHaveLength(2);
+    expect(within(menu).getByRole('link', { name: 'Inka Athletics · Despacho · Inicio' })).toHaveAttribute('href', '/');
+    const navegacion = within(menu).getByRole('navigation', { name: 'Navegación administrativa' });
+    expect(within(navegacion).getAllByRole('link')).toHaveLength(2);
     const destino = within(menu).getByRole('link', { name: 'Repartidores' });
     within(menu).getByRole('link', { name: 'Zonas y Tarifas' }).focus();
     await usuario.tab();
