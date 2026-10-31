@@ -1,0 +1,11 @@
+.raiz { display: block; min-width: 0; text-align: left; border-radius: var(--mantine-radius-md); }
+.tarjeta { min-height: 96px; border-color: var(--ia-color-border-default); background: var(--mantine-color-white); transition: border-color 150ms ease; }
+.raiz:hover .tarjeta { border-color: var(--ia-color-action-primary-hover); }
+.tarjeta[data-variante='siguiente'] { border: 2px solid var(--ia-color-action-primary); }
+.tarjeta[data-variante='resuelto'] { background: var(--ia-color-surface-cloud-subtle); color: var(--ia-color-text-secondary); }
+.posicion { flex: 0 0 40px; width: 40px; height: 40px; line-height: 40px; border-radius: 50%; background: var(--ia-color-surface-ink); color: var(--ia-color-text-inverse); }
+.tarjeta[data-variante='resuelto'] .posicion { background: var(--mantine-color-white); color: var(--ia-color-text-secondary); }
+.siguiente { align-self: flex-start; text-transform: none; }
+.codigo { min-width: 0; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+.direccion { overflow-wrap: anywhere; }
+@media (prefers-reduced-motion: reduce) { .tarjeta { transition: none; } }

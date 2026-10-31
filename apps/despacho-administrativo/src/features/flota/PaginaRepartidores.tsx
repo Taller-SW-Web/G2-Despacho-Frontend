@@ -8,6 +8,7 @@ import { CatalogoFlota } from './CatalogoFlota';
 import { FormularioRepartidor } from './FormularioRepartidor';
 import { VinculacionRepartidor } from './VinculacionRepartidor';
 import { ConfirmacionEstadoFlota } from './ConfirmacionEstadoFlota';
+import { useVersionSesion } from '../../sesion/useVersionSesion';
 
 const definiciones: DefinicionFiltro[] = [
   { clave: 'estadoRegistro', etiqueta: 'Registro', opciones: registros },
@@ -17,6 +18,11 @@ const definiciones: DefinicionFiltro[] = [
 type Seleccion = { tipo: 'nuevo' } | { tipo: 'editar' | 'baja' | 'vincular'; repartidor: Repartidor };
 
 export function PaginaRepartidores() {
+  const sesion = useVersionSesion();
+  return <PanelRepartidores key={sesion} />;
+}
+
+function PanelRepartidores() {
   const consulta = useCatalogoFlota(listarRepartidores, definiciones);
   const [seleccion, establecerSeleccion] = useState<Seleccion | null>(null);
   useEffect(() => { if (consulta.denegado) establecerSeleccion(null); }, [consulta.denegado]);
@@ -44,7 +50,7 @@ export function PaginaRepartidores() {
   ];
   return <CatalogoFlota titulo="Repartidores" subtitulo="Administra perfiles locales y su vinculación con cuentas de Seguridad." etiquetaNuevo="Nuevo repartidor"
     consulta={consulta} definiciones={definiciones} columnas={columnas} obtenerId={(fila) => fila.idRepartidor} alNuevo={() => establecerSeleccion({ tipo: 'nuevo' })}
-    estiloFila={(fila) => fila.estadoRegistro === 'INACTIVO' ? { background: 'var(--mantine-color-cloud-2)', color: 'var(--mantine-color-gray-7)' } : {}}>
+    estiloFila={(fila) => fila.estadoRegistro === 'INACTIVO' ? { background: 'var(--ia-color-surface-cloud-subtle)', color: 'var(--ia-color-text-secondary)' } : {}}>
     {seleccion && (seleccion.tipo === 'nuevo' || seleccion.tipo === 'editar') && <FormularioRepartidor
       repartidor={seleccion.tipo === 'editar' ? seleccion.repartidor : undefined} cliente={consulta.cliente} alCerrar={cerrar} alGuardar={cerrar} alDenegar={consulta.denegar} />}
     {seleccion?.tipo === 'vincular' && <VinculacionRepartidor repartidor={seleccion.repartidor} cliente={consulta.cliente} alCerrar={cerrar} alGuardar={cerrar} alDenegar={consulta.denegar} />}

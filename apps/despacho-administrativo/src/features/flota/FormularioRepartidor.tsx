@@ -57,6 +57,6 @@ export function FormularioRepartidor({ repartidor, cliente, alCerrar, alGuardar,
         onBlur={() => establecerTocados((anteriores) => ({ ...anteriores, turnoHabitual: true }))}
         error={operacion.campos.turnoHabitual ?? (tocados.turnoHabitual ? errores.turnoHabitual : undefined)} onChange={(valor) => cambiar('turnoHabitual', valor ?? '')} />
     </SimpleGrid>
-    {!repartidor && <Alert color="blue" variant="light" c="ink.9">El registro crea el perfil local. Solicita al administrador la cuenta en Seguridad y vincula su identificador desde el listado.</Alert>}
+    {!repartidor && <Alert color="blue" variant="light">El registro crea el perfil local. Solicita al administrador la cuenta en Seguridad y vincula su identificador desde el listado.</Alert>}
   </ModalFormularioFlota>;
 }

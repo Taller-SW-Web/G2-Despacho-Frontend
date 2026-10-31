@@ -1,5 +1,6 @@
-.raiz { min-width: 0; width: 100%; color: var(--ia-color-text-primary, var(--mantine-color-ink-9)); }
+.raiz { min-width: 0; width: 100%; color: var(--ia-color-text-primary); }
 .etiquetas { flex-wrap: wrap; }
+.exceso { color: var(--ia-color-error-default); }
 .raiz[data-variante='compacta'] .etiquetas { gap: var(--mantine-spacing-xs); }
 .raiz :global(.ia-num) { font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
 

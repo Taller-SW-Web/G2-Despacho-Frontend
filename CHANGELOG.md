@@ -6,7 +6,14 @@ Revisar el corte aproximadamente cada dos semanas. La versión cambia cuando se 
 
 ## Sin publicar
 
-Sin cambios funcionales de una entrega posterior registrados todavía en esta rama. Al integrar nuevos avances, documentarlos aquí antes de cerrar la siguiente versión. Las ramas `develop` y de trabajo pueden contener código posterior que aún no forma parte de esta línea base.
+### Añadido
+
+- F-03: app del repartidor como PWA instalable en Android con las 12 pantallas de Figma (acceso, ruta, detalle, inicio de traslado, entrega y fallo con foto, fallo registrado, cierre y resumen), integrada con Operación §3 y con el login propuesto a Seguridad; modo demostración sin backend y suite propia (`npm run test -w @despacho/repartidor`).
+- F-03: fotos reducidas en el navegador (1600 px, JPEG < 2 MiB, sin EXIF), subida con URL firmada e `Idempotency-Key` conservada entre reintentos.
+
+### Cambiado
+
+- CR-16 `TarjetaDespacho` acepta dirección y destinatario nulos y muestra el resultado con su hora; título de `ShellRepartidor` alineado con Figma.
 
 ## 0.1.0
 

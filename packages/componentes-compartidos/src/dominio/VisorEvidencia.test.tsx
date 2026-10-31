@@ -64,6 +64,22 @@ describe('CR-18 VisorEvidencia', () => {
     expect(document.body.innerHTML).not.toContain(urlA);
   });
 
+  it('comparte la fotografía autorizada entre vista previa y ampliación y la retira al desactivar ambas', () => {
+    const { propiedades, rerender } = preparar({ abierto: false, vistaPrevia: true });
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    fireEvent.load(screen.getByAltText(propiedades.descripcion));
+    expect(screen.getByRole('img', { name: propiedades.descripcion })).toBeVisible();
+    rerender(<VisorEvidencia {...propiedades} abierto vistaPrevia={false} />);
+    expect(screen.getByRole('dialog', { name: 'Evidencia del despacho' })).toBeInTheDocument();
+    expect(document.querySelectorAll('img')).toHaveLength(1);
+    rerender(<VisorEvidencia {...propiedades} abierto={false} vistaPrevia estado="expirada" urlAutorizada={null} />);
+    expect(document.querySelector('img')).not.toBeInTheDocument();
+    expect(document.body.innerHTML).not.toContain(urlA);
+    expect(screen.getByRole('button', { name: 'Volver a cargar' })).toBeInTheDocument();
+    rerender(<VisorEvidencia {...propiedades} abierto={false} vistaPrevia={false} />);
+    expect(document.body.innerHTML).not.toContain(urlA);
+  });
+
   it('durante la autorización muestra carga y omite cualquier URL anterior recibida', () => {
     preparar({ estado: 'carga' });
     expect(screen.getByRole('region', { name: 'Cargando fotografía de evidencia' })).toHaveAttribute('aria-busy', 'true');

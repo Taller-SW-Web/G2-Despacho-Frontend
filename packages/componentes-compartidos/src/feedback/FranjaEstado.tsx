@@ -1,4 +1,5 @@
-import { Alert, Button, Stack } from '@mantine/core';
+import { useId } from 'react';
+import { Alert, Button, Stack, Text } from '@mantine/core';
 import { IconAlertTriangle, IconMoon, IconWifiOff } from '@tabler/icons-react';
 import type { AccionUi } from '../tipos-ui';
 
@@ -16,11 +17,14 @@ const estados = {
 /** CR-14 presenta la causa; consultas, reintentos y autorización pertenecen al contenedor. */
 export function FranjaEstado({ tipo, mensaje, accion, alAccionar }: PropiedadesFranjaEstado) {
   const estado = estados[tipo];
-  return <Alert color={tipo === 'sinConexion' ? 'red' : 'yellow'} variant="light" c="ink.9"
+  const idMotivo = useId();
+  return <Alert color={tipo === 'sinConexion' ? 'red' : 'yellow'} variant="light"
     title={estado.titulo} icon={<estado.Icono size={20} aria-hidden="true" />} role="status">
     <Stack gap="xs"><span>{mensaje ?? estado.texto}</span>
-      {accion && <Button type="button" variant="outline" disabled={accion.disabled} loading={accion.loading}
-        title={accion.motivoDeshabilitado} onClick={() => alAccionar?.(accion.id)}>{accion.etiqueta}</Button>}
+      {accion && <Stack gap="xs" align="flex-start"><Button type="button" variant="outline" mih={44} disabled={accion.disabled} loading={accion.loading}
+        aria-describedby={accion.motivoDeshabilitado ? idMotivo : undefined} onClick={() => alAccionar?.(accion.id)}>{accion.etiqueta}</Button>
+        {accion.motivoDeshabilitado && <Text id={idMotivo} size="sm">{accion.motivoDeshabilitado}</Text>}
+      </Stack>}
     </Stack>
   </Alert>;
 }

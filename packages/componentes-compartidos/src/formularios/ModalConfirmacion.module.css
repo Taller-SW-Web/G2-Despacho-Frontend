@@ -1,8 +1,12 @@
 .raiz .contenido {
   min-width: 0;
-  color: var(--ia-color-text-primary, var(--mantine-color-ink-9));
+  color: var(--ia-color-text-primary);
   overflow-wrap: anywhere;
+  border: 1px solid var(--ia-color-border-default);
 }
+.raiz .cabecera, .raiz .cuerpo { padding-inline: var(--mantine-spacing-lg); }
+.raiz .cabecera { padding-top: var(--mantine-spacing-lg); padding-bottom: var(--mantine-spacing-md); }
+.raiz .cuerpo { padding-bottom: var(--mantine-spacing-lg); }
 
 .raiz .cabecera {
   align-items: flex-start;
@@ -30,15 +34,15 @@
 }
 
 .advertencia {
-  color: var(--mantine-color-yellow-8);
+  color: var(--ia-color-warning-default);
 }
 
 .informacion {
-  color: var(--mantine-color-blue-8);
+  color: var(--ia-color-info-default);
 }
 
 .raiz .error {
-  background-color: var(--mantine-color-red-0);
+  background-color: var(--ia-color-error-background);
 }
 
 .acciones {
@@ -66,7 +70,7 @@
 
 .raiz .boton:focus-visible,
 .raiz .cerrar:focus-visible {
-  outline: 2px solid var(--ia-color-accent-signal, var(--mantine-color-signal-7));
+  outline: 2px solid var(--ia-color-accent-signal);
   outline-offset: 2px;
 }
 
@@ -87,6 +91,7 @@
   }
 
   .raiz .cuerpo {
+    padding-inline: var(--mantine-spacing-md);
     padding-bottom: calc(var(--mantine-spacing-lg) + env(safe-area-inset-bottom, 0px));
   }
 
@@ -97,7 +102,9 @@
 
   .raiz .boton {
     width: 100%;
+    min-height: 50px;
   }
+  .raiz .cabecera { padding: var(--mantine-spacing-md); }
 }
 
 @media (prefers-reduced-motion: reduce) {

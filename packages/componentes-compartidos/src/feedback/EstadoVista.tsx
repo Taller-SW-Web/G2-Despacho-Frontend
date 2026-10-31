@@ -25,16 +25,18 @@ const mensajes = {
   vacio: { titulo: 'Todavía no hay registros', descripcion: 'Los registros aparecerán aquí cuando estén disponibles.', Icono: IconPackageOff },
   sinResultados: { titulo: 'No encontramos resultados con estos filtros', descripcion: 'Prueba con otros filtros o limpia la búsqueda.', Icono: IconFilterOff },
   error: { titulo: 'No pudimos cargar la información', descripcion: 'Inténtalo nuevamente.', Icono: IconAlertCircle },
-  sinPermiso: { titulo: 'No tienes permisos para ver esta información', descripcion: 'Solicita acceso a la persona responsable.', Icono: IconLock },
+  sinPermiso: { titulo: 'No tienes permisos para ver esta información', descripcion: 'Inicia sesión con una cuenta autorizada para acceder a esta información.', Icono: IconLock },
   noEncontrado: { titulo: 'No encontramos este registro', descripcion: 'Vuelve al listado para continuar.', Icono: IconSearch },
 } satisfies Record<EstadoSinDatos, { titulo: string; descripcion: string; Icono: typeof IconLock }>;
 
 /** CR-08: el consumidor determina el estado y envuelve también los filtros protegidos. */
-export function EstadoVista({ estado, titulo, descripcion, accion, alAccionar, compacto = false, esqueleto, children }: PropiedadesEstadoVista) {
+export function EstadoVista({ estado, titulo, descripcion, accion: accionRecibida, alAccionar, compacto = false, esqueleto, children }: PropiedadesEstadoVista) {
   const id = useId();
   const idTitulo = `${id}-titulo`;
   const idDescripcion = `${id}-descripcion`;
   const idMotivo = `${id}-motivo`;
+  const accion: AccionUi | undefined = accionRecibida ?? (estado === 'sinPermiso' && alAccionar
+    ? { id: 'reintentar-acceso', etiqueta: 'Reintentar acceso' } : undefined);
   const mensaje = estado === 'carga' || estado === 'datos' ? null : mensajes[estado];
   const tituloVisible = titulo ?? mensaje?.titulo;
   const descripcionVisible = descripcion ?? mensaje?.descripcion;

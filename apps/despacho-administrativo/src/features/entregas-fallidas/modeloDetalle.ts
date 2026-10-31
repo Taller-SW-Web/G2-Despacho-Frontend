@@ -58,16 +58,32 @@ export type DestinosDetalleIncidencia = Partial<Record<AccionIncidencia, (contex
 
 const nombresOperacion = { TRANSICION: 'Cambio de estado', REASIGNACION: 'Reasignación', REORDENAMIENTO: 'Reordenamiento',
   RECEPCION_EN_CENTRO: 'Recepción en centro', ANULACION_REGISTRADA: 'Anulación registrada' };
-const nombresDatos: Record<string, string> = { idIncidencia: 'Incidencia', idRepartidor: 'Repartidor', idJornada: 'Jornada', idReserva: 'Reserva',
+const nombresDatos: Record<string, string> = { idIncidencia: 'ID de incidencia', idRepartidor: 'ID del repartidor', idJornada: 'ID de jornada', idReserva: 'ID de reserva',
   consumeIntento: 'Consume intento', numeroIntentos: 'Intentos consumidos', selloIntacto: 'Sello intacto', observacionRecepcion: 'Observación de recepción',
-  nuevaFechaProgramada: 'Nueva fecha programada', motivoCierre: 'Motivo de cierre', idNuevoRepartidor: 'Nuevo repartidor', idNuevaJornada: 'Nueva jornada', despachos: 'Secuencia de despachos' };
+  nuevaFechaProgramada: 'Nueva fecha programada', motivoCierre: 'Motivo de cierre', idNuevoRepartidor: 'ID del nuevo repartidor', idNuevaJornada: 'ID de la nueva jornada', despachos: 'Secuencia de despachos' };
+const nombresFuncionalidad = { 'F-02': 'Programación de despachos', 'F-03': 'Operación del repartidor', 'F-04': 'Gestión de entregas fallidas' };
+function tituloOperacion(entrada: DetalleIncidencia['historial'][number]) {
+  if (entrada.tipoOperacion !== 'TRANSICION') return nombresOperacion[entrada.tipoOperacion];
+  if (entrada.estadoNuevo === 'PENDIENTE_ASIGNACION' && entrada.estadoAnterior === 'FALLIDO') return 'Despacho reprogramado';
+  const titulos: Partial<Record<DetalleIncidencia['estado'], string>> = {
+    PENDIENTE_ASIGNACION: 'Despacho registrado', ASIGNADO: 'Repartidor asignado', EN_CAMINO: 'Traslado iniciado',
+    ENTREGADO: 'Entrega confirmada', FALLIDO: 'Entrega fallida registrada', DEVUELTO_A_ORIGEN: 'Despacho devuelto a origen', CANCELADO: 'Despacho cancelado',
+  };
+  return titulos[entrada.estadoNuevo] ?? nombresOperacion.TRANSICION;
+}
 export function adaptarHistorial(detalle: DetalleIncidencia): EntradaHistorialEstados[] {
   return detalle.historial.map((entrada) => ({ id: entrada.id, fechaServidor: entrada.fechaServidor,
-    descripcionEvento: nombresOperacion[entrada.tipoOperacion], estadoAnterior: entrada.estadoAnterior, estadoNuevo: entrada.estadoNuevo,
-    ejecutor: `${entrada.ejecutorTipo === 'USUARIO' ? 'Usuario' : entrada.ejecutorTipo === 'SERVICIO' ? 'Servicio' : 'Sistema'}${entrada.ejecutorId ? ` ${entrada.ejecutorId}` : ''}`,
-    observacion: [entrada.origen === 'AUTOMATICO' ? 'Origen automático' : 'Origen manual', entrada.funcionalidadOrigen,
-      entrada.motivo?.etiqueta, entrada.observacion, ...Object.entries(entrada.datos).map(([campo, valor]) => `${nombresDatos[campo]}: ${
+    descripcionEvento: tituloOperacion(entrada), estadoAnterior: entrada.estadoAnterior, estadoNuevo: entrada.estadoNuevo,
+    observacion: entrada.observacion ? `Observación: ${entrada.observacion}` : null,
+    detalles: [
+      { etiqueta: 'Registrado por', valor: `${entrada.ejecutorTipo === 'USUARIO' ? 'Usuario' : entrada.ejecutorTipo === 'SERVICIO' ? 'Servicio' : 'Sistema'}${entrada.ejecutorId ? ` · ${entrada.ejecutorId}` : ''}` },
+      { etiqueta: 'Registro', valor: entrada.origen === 'AUTOMATICO' ? 'Origen automático' : 'Origen manual' },
+      { etiqueta: 'Área', valor: nombresFuncionalidad[entrada.funcionalidadOrigen] },
+      ...(entrada.motivo ? [{ etiqueta: 'Motivo', valor: entrada.motivo.etiqueta }] : []),
+      ...Object.entries(entrada.datos).map(([campo, valor]) => ({ etiqueta: nombresDatos[campo], valor:
         typeof valor === 'boolean' ? valor ? 'Sí' : 'No' : valor == null ? 'Sin observaciones'
-          : Array.isArray(valor) ? valor.map((posicion) => `${posicion.idDespacho} (${posicion.posicion})`).join(', ') : valor}`)].filter(Boolean).join('\n'),
+          : Array.isArray(valor) ? valor.map((posicion) => `${posicion.idDespacho} (posición ${posicion.posicion})`).join(', ')
+          : campo === 'nuevaFechaProgramada' && typeof valor === 'string' ? valor.split('-').reverse().join('/') : String(valor) })),
+    ],
   }));
 }

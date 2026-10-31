@@ -6,14 +6,22 @@
 .raiz .cuerpoEvento {
   min-width: 0;
 }
+.titulo.titulo { font-family: var(--mantine-font-family); font-size: var(--mantine-h4-font-size); line-height: var(--mantine-h4-line-height); text-transform: none; }
+.raiz :global(.mantine-Timeline-item) { border-color: var(--ia-color-border-default); }
 
 .fecha {
   font-variant-numeric: tabular-nums;
-  color: var(--mantine-color-gray-7);
+  color: var(--ia-color-text-secondary);
 }
 
 .observacion {
   white-space: pre-wrap;
+}
+.detalles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--mantine-spacing-sm) var(--mantine-spacing-md); margin: 0; }
+.detalles > div { min-width: 0; }
+.detalles dd { white-space: pre-wrap; overflow-wrap: anywhere; }
+@media (max-width: 35.99em) {
+  .detalles { grid-template-columns: minmax(0, 1fr); }
 }
 
 @media (prefers-reduced-motion: reduce) {

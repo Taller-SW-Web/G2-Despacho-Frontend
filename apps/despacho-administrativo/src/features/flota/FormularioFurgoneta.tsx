@@ -47,6 +47,6 @@ export function FormularioFurgoneta({ furgoneta, cliente, alCerrar, alGuardar, a
         description="Cantidad entera entre 1 y 32767."
         error={operacion.campos.maximoPaquetes ?? (tocados.maximoPaquetes ? errores.maximoPaquetes : undefined)} hideControls />
     </SimpleGrid>
-    {furgoneta && <Alert color="blue" variant="light" c="ink.9">Los nuevos límites se aplican a jornadas futuras. Las jornadas activas conservan su capacidad original.</Alert>}
+    {furgoneta && <Alert color="blue" variant="light">Los nuevos límites se aplican a jornadas futuras. Las jornadas activas conservan su capacidad original.</Alert>}
   </ModalFormularioFlota>;
 }

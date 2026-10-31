@@ -1,20 +1,33 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useSearchParams } from 'react-router-dom';
 import { Alert, Button, Group, SimpleGrid, Stack, Text } from '@mantine/core';
 import { IconAlertTriangle, IconClockHour4, IconPackageImport, IconRefresh } from '@tabler/icons-react';
-import { EncabezadoPagina, EstadoVista, TarjetaKpi, type EstadoConsulta } from '@despacho/componentes-compartidos';
+import { EncabezadoPagina, EstadoVista, FranjaEstado, TarjetaKpi, type EstadoConsulta } from '@despacho/componentes-compartidos';
 import { filtrosIniciales, formatoFechaLima, leerFiltros, parametrosFiltros, type FiltrosFallidos } from './modelo';
 import { FiltrosEntregasFallidas } from './FiltrosEntregasFallidas';
 import { TablaEntregasFallidas, type DestinosEntregasFallidas } from './TablaEntregasFallidas';
 import { useEntregasFallidas } from './useEntregasFallidas';
+import { ModalRecepcionPaquete, type ContextoRecepcion } from './ModalRecepcionPaquete';
+import { fechaCivilValida, presentarFechaCivil } from './apiReprogramacion';
 
 export function PaginaEntregasFallidas(destinos: DestinosEntregasFallidas) {
+  const paginaRef = useRef<HTMLDivElement>(null);
   const [parametros, establecerParametros] = useSearchParams();
   const ubicacion = useLocation();
+  const [cierreRegistrado] = useState(() => ubicacion.state?.cierre === true);
+  const [fechaReprogramada] = useState<string | null>(() => {
+    const fecha: unknown = ubicacion.state?.reprogramacion?.fechaProgramada;
+    return typeof fecha === 'string' && fechaCivilValida(fecha) ? fecha : null;
+  });
+  const focoRestaurado = useRef(false);
   const clave = parametros.toString();
   const { filtros, errores } = useMemo(() => leerFiltros(new URLSearchParams(clave)), [clave]);
   const valida = Object.keys(errores).length === 0;
   const [revision, actualizar] = useState(0);
+  const [recepcion, establecerRecepcion] = useState<ContextoRecepcion | null>(null);
+  const [modalAbierto, establecerModalAbierto] = useState(false);
+  const [avisoRecepcion, establecerAvisoRecepcion] = useState('');
+  const [accesoRevocado, establecerAccesoRevocado] = useState(false);
   // Cambiar de entrada del historial vuelve a consultar, incluso con la misma búsqueda.
   const consulta = useEntregasFallidas(clave, valida, `${ubicacion.key}:${revision}`);
   const pagina = consulta.resultado?.pagina ?? null;
@@ -22,8 +35,14 @@ export function PaginaEntregasFallidas(destinos: DestinosEntregasFallidas) {
   const confirmada = valida && !desfasada && !consulta.error && !consulta.cargando;
   const cambiar = (cambio: Partial<FiltrosFallidos>) => establecerParametros(parametrosFiltros({ ...filtros, pagina: 1, ...cambio }));
   const limpiar = () => establecerParametros(parametrosFiltros({ ...filtrosIniciales, tamanoPagina: filtros.tamanoPagina }));
-  const reintentar = () => actualizar((valor) => valor + 1);
+  const reintentar = () => { establecerAccesoRevocado(false); actualizar((valor) => valor + 1); };
   const todos = () => cambiar({ recepcion: 'TODOS', soloRetornosAtrasados: false });
+  useEffect(() => {
+    if ((fechaReprogramada || cierreRegistrado) && !consulta.cargando && !consulta.sinPermiso && !accesoRevocado && !focoRestaurado.current) {
+      const titulo = paginaRef.current?.querySelector<HTMLElement>('h1');
+      if (titulo) { titulo.tabIndex = -1; titulo.focus(); focoRestaurado.current = true; }
+    }
+  }, [fechaReprogramada, cierreRegistrado, consulta.cargando, consulta.sinPermiso, accesoRevocado]);
 
   // La lectura del servidor puede dejar una página vacía después de una recepción/reprogramación.
   useEffect(() => {
@@ -49,21 +68,34 @@ export function PaginaEntregasFallidas(destinos: DestinosEntregasFallidas) {
   if (consulta.error?.jornadas) estadoTabla = 'error';
   const indicadores = pagina?.indicadores;
   const error = consulta.error;
-  return <Stack gap="lg" style={{ minWidth: 0 }}>
+  if (consulta.sinPermiso || accesoRevocado) return <EstadoVista estado="sinPermiso" alAccionar={reintentar} />;
+  return <Stack ref={paginaRef} gap="lg" style={{ minWidth: 0 }}>
+    {cierreRegistrado && <Alert color={consulta.error ? 'yellow' : 'green'} role="status">
+      {consulta.error ? 'Cierre registrado. No se pudo actualizar el listado' : 'Despacho cerrado como devuelto a origen'}
+    </Alert>}
+    {fechaReprogramada && <Alert color={consulta.error ? 'yellow' : 'green'} role="status">
+      {consulta.error ? 'Reprogramación registrada. No se pudo actualizar el listado'
+        : `Despacho reprogramado para ${presentarFechaCivil(fechaReprogramada)}.`}
+    </Alert>}
+    {avisoRecepcion && <Alert color="green" role="status">{avisoRecepcion}</Alert>}
+    <ModalRecepcionPaquete contexto={recepcion} abierto={modalAbierto} alCerrar={() => establecerModalAbierto(false)}
+      alRecuperarFoco={() => {
+        const titulo = paginaRef.current?.querySelector<HTMLElement>('h1');
+        if (titulo) { titulo.tabIndex = -1; titulo.focus(); }
+      }} alActualizar={reintentar} alAvisar={establecerAvisoRecepcion} alRevocar={() => establecerAccesoRevocado(true)} />
     <EncabezadoPagina titulo="Entregas fallidas" subtitulo="Consulta las incidencias vigentes y el retorno de paquetes al centro."
       acciones={<Button type="button" variant="default" size="sm" mih={44} leftSection={<IconRefresh size={18} aria-hidden="true" />}
         disabled={consulta.cargando || !valida} onClick={reintentar}>Actualizar</Button>} />
-    <EstadoVista estado={consulta.sinPermiso ? 'sinPermiso' : 'datos'} descripcion={consulta.sinPermiso ? error?.mensaje : undefined}
-      accion={consulta.sinPermiso ? { id: 'reintentar', etiqueta: 'Reintentar' } : undefined} alAccionar={reintentar}>
+    <EstadoVista estado="datos">
       <Stack gap="lg" style={{ minWidth: 0 }}>
         <SimpleGrid cols={{ base: 1, xs: 2, md: 3 }}>
-          <TarjetaKpi id="pendientes" etiqueta="Pendientes de retorno" valor={indicadores?.pendientesRetorno ?? null} icono={<IconClockHour4 aria-hidden="true" />}
+          <TarjetaKpi id="pendientes" etiqueta="Pendientes de retorno" tono="warning" valor={indicadores?.pendientesRetorno ?? null} icono={<IconClockHour4 aria-hidden="true" />}
             accionable seleccionada={filtros.recepcion === 'PENDIENTE_RETORNO' && !filtros.soloRetornosAtrasados} cargando={!pagina && consulta.cargando}
             disabled={!confirmada || !pagina} alSeleccionar={seleccionar} descripcion="Paquetes que aún deben volver al centro" />
-          <TarjetaKpi id="recibidos" etiqueta="Recibidos en centro" valor={indicadores?.recibidosCentro ?? null} icono={<IconPackageImport aria-hidden="true" />}
+          <TarjetaKpi id="recibidos" etiqueta="Recibidos en centro" tono="success" valor={indicadores?.recibidosCentro ?? null} icono={<IconPackageImport aria-hidden="true" />}
             accionable seleccionada={filtros.recepcion === 'RECIBIDO_EN_CENTRO'} cargando={!pagina && consulta.cargando}
             disabled={!confirmada || !pagina} alSeleccionar={seleccionar} descripcion="Listos para revisar la incidencia" />
-          <TarjetaKpi id="atrasados" etiqueta="Retornos atrasados" valor={indicadores?.retornosAtrasados ?? null} icono={<IconAlertTriangle aria-hidden="true" />}
+          <TarjetaKpi id="atrasados" etiqueta="Retornos atrasados" tono="error" valor={indicadores?.retornosAtrasados ?? null} icono={<IconAlertTriangle aria-hidden="true" />}
             accionable seleccionada={filtros.soloRetornosAtrasados} cargando={!pagina && consulta.cargando}
             disabled={!confirmada || indicadores?.retornosAtrasados == null} alSeleccionar={seleccionar} descripcion="Incluidos en pendientes de retorno" />
         </SimpleGrid>
@@ -85,21 +117,21 @@ export function PaginaEntregasFallidas(destinos: DestinosEntregasFallidas) {
             {error.jornadas ? <Button type="button" variant="subtle" mih={44} onClick={todos}>Ver todos los grupos</Button>
               : <Button type="button" variant="subtle" mih={44} onClick={limpiar}>Restablecer consulta</Button>}</Group>
         </Alert>}
-        {pagina && (desfasada || consulta.cargando || error || !valida) && <Alert color="blue.8" role="status">
-          {desfasada || !valida ? 'Se conservan los resultados anteriores; no corresponden a los filtros actuales.'
-            : error ? 'Se conservan los resultados anteriores. No se pudieron actualizar.' : 'Actualizando. Se muestran los últimos resultados confirmados.'}
-        </Alert>}
+        {pagina && (desfasada || consulta.cargando || error || !valida) && <FranjaEstado tipo="datosDesactualizados"
+          mensaje={desfasada || !valida ? 'Se conservan los resultados anteriores; no corresponden a los filtros actuales.'
+            : error ? 'Se conservan los resultados anteriores. No se pudieron actualizar.' : 'Actualizando. Se muestran los últimos resultados confirmados.'} />}
         {pagina && <Text size="sm" c="dimmed">Última consulta confirmada: {formatoFechaLima.format(new Date(pagina.consultadoEn))} · America/Lima</Text>}
-        <TablaEntregasFallidas {...destinos} pagina={pagina} consulta={consulta.resultado?.clave ?? clave} estado={estadoTabla}
+        <TablaEntregasFallidas {...destinos} alConfirmarRecepcion={destinos.alConfirmarRecepcion ?? ((fila) => {
+          establecerRecepcion(fila); establecerModalAbierto(true);
+        })} pagina={pagina} consulta={consulta.resultado?.clave ?? clave} estado={estadoTabla}
           actualizando={!confirmada} alCambiarPagina={(numero) => cambiar({ pagina: numero })} alCambiarTamano={(tamano) => cambiar({ tamanoPagina: tamano })}
           renderizarEstado={() => <EstadoVista estado={estadoTabla === 'datos' || estadoTabla === 'carga' ? 'error' : estadoTabla}
             titulo={estadoTabla === 'vacio' ? 'No hay entregas fallidas por resolver' : estadoTabla === 'error' ? 'La consulta no está disponible' : undefined}
             descripcion={estadoTabla === 'vacio' ? 'Aquí aparecerán los despachos que requieran revisar una incidencia.' : estadoTabla === 'error' ? 'Revisa el aviso y utiliza las acciones de recuperación.' : undefined}
             accion={estadoTabla === 'sinResultados' ? { id: 'limpiar', etiqueta: 'Limpiar filtros' } : undefined}
             alAccionar={limpiar} />} />
-        {(!destinos.alVerDetalle || !destinos.alConfirmarRecepcion) && <Text id="dependencias-f04" size="sm" c="dimmed">
+        {!destinos.alVerDetalle && <Text id="dependencias-f04" size="sm" c="dimmed">
           {!destinos.alVerDetalle && 'Ver detalle estará disponible al integrar la consulta de incidencia. '}
-          {!destinos.alConfirmarRecepcion && 'Confirmar recepción estará disponible al integrar el registro de retorno.'}
         </Text>}
       </Stack>
     </EstadoVista>

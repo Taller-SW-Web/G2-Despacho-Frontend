@@ -69,18 +69,18 @@ export function BarraFiltros({ busqueda, etiquetaBusqueda, alCambiarBusqueda, al
             }}><IconX size={20} aria-hidden="true" /></ActionIcon>}
           </Group>} />}
         {controles && <div className={clases.adicionales}>{controles}</div>}
+        <Button type="button" variant="subtle" color="orange.8" size="sm" mih={44} className={clases.limpiar}
+          leftSection={<IconFilterOff size={16} aria-hidden="true" />} disabled={!activos.length && !busqueda}
+          onClick={() => { cancelarPendiente(); alLimpiar(); }}>Limpiar filtros</Button>
       </div>
-      <Group justify="space-between" align="flex-start">
+      {(activos.length > 0 || consultando) && <Group align="flex-start">
         <Group gap="xs" className={clases.activos}>
           {activos.map(({ id, etiqueta }) => <Pill key={id} withRemoveButton h={44}
             removeButtonProps={{ 'aria-label': `Quitar ${etiqueta}`, 'aria-hidden': false, tabIndex: 0, w: 44, h: 44 }}
             onRemove={() => { cancelarPendiente(); alQuitarFiltro(id); }}>{etiqueta}</Pill>)}
           {consultando && <Text size="sm" c="dimmed" role="status">Consultando…</Text>}
         </Group>
-        <Button type="button" variant="subtle" color="orange.8" bg="cloud.1" size="sm" mih={44}
-          leftSection={<IconFilterOff size={16} aria-hidden="true" />} disabled={!activos.length && !busqueda}
-          onClick={() => { cancelarPendiente(); alLimpiar(); }}>Limpiar filtros</Button>
-      </Group>
+      </Group>}
     </Stack>
   </Paper>;
 }

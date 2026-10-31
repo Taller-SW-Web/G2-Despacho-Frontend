@@ -11,6 +11,7 @@ export function useConsultaJornadas<T>(cargar: (signal: AbortSignal) => Promise<
   const [revision, revisar] = useState(0);
   const vigente = useRef(0);
   const actualizar = useCallback(() => revisar((valor) => valor + 1), []);
+  const reintentarAcceso = useCallback(() => { establecerDenegado(false); actualizar(); }, [actualizar]);
   const denegar = useCallback(() => { vigente.current++; establecerDatos(undefined); establecerDenegado(true); establecerConfirmada(false); establecerCargando(false); }, []);
   useEffect(() => {
     const version = ++vigente.current;
@@ -35,5 +36,5 @@ export function useConsultaJornadas<T>(cargar: (signal: AbortSignal) => Promise<
     document.addEventListener('visibilitychange', consultarVisible);
     return () => { window.clearInterval(temporizador); document.removeEventListener('visibilitychange', consultarVisible); };
   }, [intervalo, activa, denegado, cargando, actualizar]);
-  return { datos, error, denegado, cargando, confirmada, actualizar, denegar };
+  return { datos, error, denegado, cargando, confirmada, actualizar, reintentarAcceso, denegar };
 }

@@ -92,3 +92,24 @@ it('sin conexión comunica la causa y bloquea nuevas aperturas sin encolar coman
   expect(screen.getByText('Sin conexión')).toBeVisible(); expect(screen.getByRole('button', { name: 'Abrir jornada' })).toBeDisabled();
   expect(crear).not.toHaveBeenCalled();
 });
+
+it('retira detalle y métricas al cambiar sesión y descarta la consulta anterior aunque ignore cancelación', async () => {
+  const usuario = userEvent.setup();
+  let resolverAnterior!: (valor: unknown) => void;
+  montar(); await screen.findByText('Ana Jornada Prueba');
+  await usuario.click(screen.getByRole('button', { name: 'Ver jornada de Ana Jornada Prueba' }));
+  await screen.findByRole('dialog', { name: 'Detalle de jornada' });
+  obtener.mockImplementationOnce(() => new Promise((resolver) => { resolverAnterior = resolver; }));
+  act(() => window.dispatchEvent(new Event('despacho:sesion')));
+  expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  expect(screen.queryByText('Ana Jornada Prueba')).not.toBeInTheDocument();
+  expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+  const signal = obtener.mock.calls.at(-1)![1].signal as AbortSignal;
+  obtener.mockResolvedValue({ data: { ...monitoreoPrueba, contenido: [], totalElementos: 0, totalPaginas: 0,
+    resumen: { disponible: 0, enRuta: 0, saturado: 0, fueraDeTurno: 0 } } });
+  act(() => window.dispatchEvent(new StorageEvent('storage', { key: 'despacho.token' })));
+  expect(signal.aborted).toBe(true);
+  await waitFor(() => expect(screen.getByRole('button', { name: 'Abrir jornada' })).toBeEnabled());
+  await act(async () => resolverAnterior({ data: monitoreoPrueba }));
+  expect(screen.queryByText('Ana Jornada Prueba')).not.toBeInTheDocument();
+});

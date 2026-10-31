@@ -11,8 +11,9 @@ export function DetalleJornada({ cliente, id, alCerrar, alDenegar }: { cliente: 
   const consulta = useConsultaJornadas(cargar);
   useEffect(() => { if (consulta.denegado) alDenegar(); }, [consulta.denegado, alDenegar]);
   const jornada = consulta.datos;
+  if (consulta.denegado) return <EstadoVista estado="sinPermiso" alAccionar={consulta.reintentarAcceso} />;
   return <Modal opened title="Detalle de jornada" size="xl" onClose={alCerrar} centered><Stack gap="md">
-    <EstadoVista estado={consulta.denegado ? 'sinPermiso' : !jornada && consulta.cargando ? 'carga' : consulta.error ? 'error' : 'datos'} esqueleto={<Loader aria-label="Cargando jornada" />}
+    <EstadoVista estado={!jornada && consulta.cargando ? 'carga' : consulta.error ? 'error' : 'datos'} esqueleto={<Loader aria-label="Cargando jornada" />}
       accion={{ id: 'actualizar', etiqueta: 'Reintentar detalle' }} alAccionar={consulta.actualizar}>
       {jornada && <Stack gap="lg">
         <Text>Furgoneta {jornada.placa} · {jornada.fecha} · {jornada.estado}</Text>

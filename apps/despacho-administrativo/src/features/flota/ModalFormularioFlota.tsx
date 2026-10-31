@@ -9,7 +9,7 @@ export function ModalFormularioFlota({ titulo, procesando, error, desconocido, i
     closeOnClickOutside={false} closeOnEscape={!procesando} closeButtonProps={{ 'aria-label': 'Cerrar formulario', disabled: procesando }}>
     <form noValidate onSubmit={alEnviar} aria-busy={procesando}>
       <Stack gap="lg">
-        {error && <Alert color="red" variant="light" c="ink.9" title="No se pudo completar la operación" role="alert">{error}</Alert>}
+        {error && <Alert color="red" variant="light" title="No se pudo completar la operación" role="alert">{error}</Alert>}
         <fieldset disabled={procesando || desconocido} style={{ border: 0, padding: 0, margin: 0, minWidth: 0 }}>
           <Stack gap="md">{children}</Stack>
         </fieldset>

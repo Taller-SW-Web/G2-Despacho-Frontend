@@ -33,7 +33,7 @@ export function TarjetaRepartidor({ idRepartidor, nombre, placa, zona, estadoOpe
   seleccionada = false, disabled = false, motivoDeshabilitado, alSeleccionar }: PropiedadesTarjetaRepartidor) {
   const id = useId();
   return <Radio.Card value={idRepartidor} checked={seleccionada && !disabled} disabled={disabled} data-bloqueo-funcional={disabled && Boolean(motivoDeshabilitado) || undefined}
-    type="button" radius="sm" p="md" className={clases.tarjeta}
+    type="button" radius="md" p="md" className={clases.tarjeta}
     aria-labelledby={`${id}-nombre`} aria-describedby={`${id}-detalle${disabled && motivoDeshabilitado ? ` ${id}-motivo` : ''}`}
     onClick={() => { if (!disabled) alSeleccionar(idRepartidor); }}
     onKeyDownCapture={(evento) => {

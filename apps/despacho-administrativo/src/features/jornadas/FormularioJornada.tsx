@@ -30,8 +30,8 @@ export function FormularioJornada({ cliente, fecha, alCerrar, alGuardar, alDeneg
       });
     }}><Stack gap="md">
       <Text>Selecciona los recursos del catálogo. El servidor confirmará que siguen disponibles.</Text>
-      {operacion.error && <Alert color="red" c="ink.9" role="alert">{operacion.error}</Alert>}
-      {recursos.error && <Alert color="red" c="ink.9" role="alert">{recursos.error}<Button variant="subtle" onClick={recursos.actualizar}>Reintentar catálogos</Button></Alert>}
+      {operacion.error && <Alert color="red" role="alert">{operacion.error}</Alert>}
+      {recursos.error && <Alert color="red" role="alert">{recursos.error}<Button variant="subtle" onClick={recursos.actualizar}>Reintentar catálogos</Button></Alert>}
       <EstadoVista estado={recursos.cargando && !recursos.datos ? 'carga' : 'datos'} esqueleto={<Loader aria-label="Cargando recursos" />}>
         <fieldset disabled={cerrado} style={{ border: 0, padding: 0 }}><Stack gap="md">
           <TextInput label="Fecha de la jornada" type="date" value={fecha} readOnly required description="Fecha actual de Operación en America/Bogota." />

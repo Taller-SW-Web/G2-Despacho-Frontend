@@ -1,5 +1,5 @@
 import type { CSSProperties, ReactNode } from 'react';
-import { Box, Button, Group, Paper, Select, Skeleton, Table, Text, UnstyledButton } from '@mantine/core';
+import { Box, Button, Group, Pagination, Paper, Select, Skeleton, Table, Text, UnstyledButton } from '@mantine/core';
 import { IconArrowDown, IconArrowUp, IconArrowsSort } from '@tabler/icons-react';
 import { EstadoVista } from '../feedback/EstadoVista';
 import type { EstadoConsulta, OrdenUi, PaginacionUi } from '../tipos-ui';
@@ -29,6 +29,7 @@ export type PropiedadesTablaDatos<Fila> = {
   /** Compatibilidad con los listados existentes que permiten elegir tamaño de página. */
   alCambiarTamano?: (tamano: number) => void;
   tamaniosPagina?: number[];
+  paginacionNumerada?: boolean;
   renderizarAcciones?: (fila: Fila) => ReactNode;
   renderizarEstado?: (estado: EstadoConsulta) => ReactNode;
   estiloFila?: (fila: Fila) => CSSProperties;
@@ -38,7 +39,7 @@ export type PropiedadesTablaDatos<Fila> = {
 /** CR-07: solicita orden/página sin ordenar, recortar ni volver a paginar las filas recibidas. */
 export function TablaDatos<Fila>({ filas, obtenerId, columnas, tituloAccesible, estado, actualizando = false,
   orden = null, paginacion, alCambiarOrden, alCambiarPagina, alCambiarTamano, renderizarAcciones,
-  renderizarEstado, estiloFila, anchoMinimo = 1000, tamaniosPagina = [20, 50, 100] }: PropiedadesTablaDatos<Fila>) {
+  renderizarEstado, estiloFila, anchoMinimo = 1000, tamaniosPagina = [20, 50, 100], paginacionNumerada = false }: PropiedadesTablaDatos<Fila>) {
   const conservaDatos = estado === 'error' && filas.length > 0;
   const muestraDatos = estado === 'datos' || conservaDatos;
   const muestraTabla = muestraDatos || estado === 'carga';
@@ -96,11 +97,15 @@ export function TablaDatos<Fila>({ filas, obtenerId, columnas, tituloAccesible, 
         data={Array.from(new Set([...tamaniosPagina, paginacion.tamanioPagina])).sort((a, b) => a - b).map(String)}
         onChange={(valor) => { if (valor) alCambiarTamano(Number(valor)); }} />}
       {paginacion.total > 0 && <Group component="nav" gap="xs" aria-label="Paginación">
+        {paginacionNumerada ? <Pagination size="sm" total={ultima} value={paginacion.pagina} disabled={!alCambiarPagina || actualizando}
+          onChange={alCambiarPagina} getItemProps={(numero) => ({ 'aria-label': `Ir a la página ${numero}`, style: { minWidth: 44, minHeight: 44 } })}
+          getControlProps={(control) => ({ 'aria-label': control === 'previous' ? 'Página anterior' : 'Página siguiente', style: { minWidth: 44, minHeight: 44 } })} /> : <>
         <Button type="button" size="sm" mih={44} variant="outline" color="orange.8"
           disabled={!alCambiarPagina || paginacion.pagina <= 1 || actualizando} onClick={() => alCambiarPagina?.(paginacion.pagina - 1)}>Anterior</Button>
         <Text size="sm">Página {paginacion.pagina} de {ultima}</Text>
         <Button type="button" size="sm" mih={44} variant="outline" color="orange.8"
           disabled={!alCambiarPagina || paginacion.pagina >= ultima || actualizando} onClick={() => alCambiarPagina?.(paginacion.pagina + 1)}>Siguiente</Button>
+        </>}
       </Group>}
     </Group>}
   </Paper>;

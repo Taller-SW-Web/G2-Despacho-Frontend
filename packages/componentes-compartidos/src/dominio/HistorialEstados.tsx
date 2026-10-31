@@ -21,6 +21,7 @@ export type EntradaHistorialEstados = {
   estadoNuevo?: string | null;
   ejecutor?: string | null;
   observacion?: string | null;
+  detalles?: readonly { etiqueta: string; valor: string }[];
 };
 
 export type PropiedadesHistorialEstados = {
@@ -77,7 +78,7 @@ export function HistorialEstados({ entradas, estado, orden = 'ascendente', titul
 
   return <Card component="section" aria-labelledby={idTitulo} className={clases.raiz}>
     <Stack gap="lg">
-      <Title order={3} id={idTitulo}>{titulo}</Title>
+      <Title order={3} id={idTitulo} className={clases.titulo}>{titulo}</Title>
       <EstadoVista
         estado={estadoVista}
         esqueleto={esqueleto}
@@ -97,6 +98,12 @@ export function HistorialEstados({ entradas, estado, orden = 'ascendente', titul
                   : <Text size="sm" c="gray.7">Fecha no disponible</Text>}
                 <EstadosEvento entrada={entrada} />
                 {entrada.ejecutor?.trim() && <Text size="sm">Registrado por: {entrada.ejecutor}</Text>}
+                {entrada.detalles?.length ? <dl className={clases.detalles}>
+                  {entrada.detalles.map(({ etiqueta, valor }) => <div key={etiqueta}>
+                    <Text component="dt" size="sm" c="dimmed">{etiqueta}</Text>
+                    <Text component="dd" size="sm" m={0}>{valor}</Text>
+                  </div>)}
+                </dl> : null}
                 {entrada.observacion?.trim() && <Text className={clases.observacion}>{entrada.observacion}</Text>}
               </Stack>
             </Timeline.Item>)}

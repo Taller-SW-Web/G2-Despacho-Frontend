@@ -115,8 +115,7 @@ function PanelProgramacion() {
     else if (hoy) cambiar({ fechaHasta: '', fechaDesde: filtros.fechaDesde === diaSiguiente(hoy) && !filtros.fechaHasta ? '' : diaSiguiente(hoy) });
   };
   return <Stack gap="lg" className={clases.pagina}>
-    <EstadoVista estado={sinPermiso ? 'sinPermiso' : 'datos'} descripcion={sinPermiso ? 'Inicia sesión con una cuenta autorizada para acceder a Programación.' : undefined}
-      accion={sinPermiso ? { id: 'reintentar', etiqueta: 'Reintentar acceso' } : undefined}
+    <EstadoVista estado={sinPermiso ? 'sinPermiso' : 'datos'}
       alAccionar={() => { establecerDenegada(false); refrescar(); }}>
       <Stack gap="lg">
         <EncabezadoPagina titulo="Programación y asignación" subtitulo="Organiza los despachos de hoy y prepara las próximas entregas."
@@ -131,10 +130,10 @@ function PanelProgramacion() {
           <TarjetaKpi id="hoy" etiqueta="Pendientes para hoy" valor={pagina?.indicadores.pendientesHoy ?? null} icono={<IconCalendarTime size={24} aria-hidden="true" />}
             accionable cargando={consulta.cargando} disabled={!pagina || bloqueada} seleccionada={Boolean(hoy && filtros.fechaHasta === hoy && !filtros.fechaDesde)}
             descripcion="Incluye fechas anteriores a hoy" alSeleccionar={indicador} />
-          <TarjetaKpi id="futuro" etiqueta="Programados a futuro" valor={pagina?.indicadores.programadosFuturo ?? null} icono={<IconCalendarEvent size={24} color="var(--mantine-color-blue-8)" aria-hidden="true" />}
+          <TarjetaKpi id="futuro" etiqueta="Programados a futuro" valor={pagina?.indicadores.programadosFuturo ?? null} icono={<IconCalendarEvent size={24} color="var(--ia-color-info-default)" aria-hidden="true" />}
             accionable cargando={consulta.cargando} disabled={!pagina || bloqueada} seleccionada={Boolean(hoy && filtros.fechaDesde === diaSiguiente(hoy) && !filtros.fechaHasta)}
             descripcion="Se asignan desde su fecha programada" alSeleccionar={indicador} />
-          <TarjetaKpi id="reintentos" etiqueta="Reintentos" valor={pagina?.indicadores.reintentos ?? null} icono={<IconRepeat size={24} color="var(--mantine-color-yellow-8)" aria-hidden="true" />}
+          <TarjetaKpi id="reintentos" etiqueta="Reintentos" valor={pagina?.indicadores.reintentos ?? null} icono={<IconRepeat size={24} color="var(--ia-color-warning-default)" aria-hidden="true" />}
             accionable cargando={consulta.cargando} disabled={!pagina || bloqueada} seleccionada={filtros.tipoIntento === 'REINTENTOS'}
             descripcion="Despachos con reprogramaciones previas" alSeleccionar={indicador} />
         </SimpleGrid>

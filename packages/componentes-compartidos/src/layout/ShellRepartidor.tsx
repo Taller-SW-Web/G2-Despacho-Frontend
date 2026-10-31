@@ -1,5 +1,8 @@
-import type { ReactNode } from 'react';
-import { Badge, Box, Group, Stack, Text, Title, UnstyledButton } from '@mantine/core';
+import { useLayoutEffect, useRef, type ReactNode } from 'react';
+import { Box, Group, Stack, Text, Title, UnstyledButton } from '@mantine/core';
+import { IconArrowLeft } from '@tabler/icons-react';
+import { BadgeEstado } from '../dominio/BadgeEstado';
+import clases from './ShellRepartidor.module.css';
 
 export type DestinoRepartidor = {
   id: string;
@@ -11,6 +14,7 @@ export type DestinoRepartidor = {
 type ShellRepartidorProps = {
   titulo: string;
   children: ReactNode;
+  /** Valor del estado operativo (DISPONIBLE, EN_RUTA, SATURADO, FUERA_DE_TURNO); `null` si aún se desconoce. */
   estadoOperativo: string | null;
   destinos: DestinoRepartidor[];
   destinoActivo: string | null;
@@ -35,13 +39,29 @@ export function ShellRepartidor({
   alNavegar,
   alVolver,
 }: ShellRepartidorProps) {
-  const alturaPie = modoPie === 'navegacion' ? 88 : modoPie === 'acciones' ? 96 : 16;
+  const raiz = useRef<HTMLDivElement>(null);
+  const pie = useRef<HTMLElement>(null);
+  const tienePie = modoPie === 'navegacion' || (modoPie === 'acciones' && Boolean(accionesFijas));
+  useLayoutEffect(() => {
+    const contenedor = raiz.current;
+    const contenidoPie = pie.current;
+    if (!contenedor || !contenidoPie || !tienePie) {
+      contenedor?.style.setProperty('--shell-altura-pie', '0px');
+      return;
+    }
+    const medir = () => contenedor.style.setProperty('--shell-altura-pie', `${contenidoPie.getBoundingClientRect().height}px`);
+    medir();
+    const observador = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(medir) : undefined;
+    observador?.observe(contenidoPie);
+    window.addEventListener('resize', medir);
+    return () => { observador?.disconnect(); window.removeEventListener('resize', medir); };
+  }, [modoPie, tienePie]);
 
   return (
-    <Box mih="100dvh" maw={480} mx="auto" bg="cloud.1" pb={`calc(${alturaPie}px + env(safe-area-inset-bottom, 0px))`}>
-      <Box component="header" bg="ink.9" c="white" h={56} px="md">
+    <Box ref={raiz} className={clases.raiz} data-pie={tienePie ? modoPie : 'ninguno'}>
+      <Box component="header" className={clases.cabecera}>
         <Group h="100%" justify="space-between" wrap="nowrap">
-          <Group gap="sm" wrap="nowrap">
+          <Group gap="sm" wrap="nowrap" className={clases.tituloYRegreso}>
             {alVolver && (
               <UnstyledButton
                 type="button"
@@ -50,15 +70,16 @@ export function ShellRepartidor({
                 c="white"
                 style={{ minWidth: 44, minHeight: 44, display: 'grid', placeItems: 'center' }}
               >
-                <Text aria-hidden="true" size="xl">←</Text>
+                <IconArrowLeft size={24} aria-hidden="true" />
               </UnstyledButton>
             )}
-            <Title order={1} size={20} m={0} lineClamp={1}>
+            <Title order={1} size="h3" m={0} className={clases.titulo}>
               {titulo}
             </Title>
           </Group>
-          <Group gap="xs" wrap="nowrap">
-            {estadoOperativo && <Badge color="white" variant="light" c="ink.9">{estadoOperativo}</Badge>}
+          <Group gap="xs" wrap="nowrap" className={clases.estado}>
+            {/* §16.3: mismo BadgeEstado que en administración; sus fondos claros mantienen text/primary sobre ink. */}
+            {estadoOperativo && <BadgeEstado contexto="operacionRepartidor" valor={estadoOperativo} size="sm" />}
             {accionEncabezado}
           </Group>
         </Group>
@@ -66,25 +87,16 @@ export function ShellRepartidor({
 
       {franjas}
 
-      <Stack component="main" gap="md" p="md">
+      <Stack component="main" gap="md" p="md" className={clases.contenido}>
         {children}
       </Stack>
 
       {modoPie === 'navegacion' && (
         <Box
           component="nav"
+          ref={pie}
+          className={clases.navegacion}
           aria-label="Navegación del repartidor"
-          pos="fixed"
-          bottom={0}
-          left="50%"
-          style={{
-            transform: 'translateX(-50%)',
-            width: 'min(100%, 480px)',
-            zIndex: 100,
-            borderTop: '1px solid var(--mantine-color-gray-3)',
-            padding: '4px 8px calc(4px + env(safe-area-inset-bottom, 0px))',
-          }}
-          bg="white"
         >
           <Group justify="space-around" gap={4} wrap="nowrap">
             {destinos.map((destino) => {
@@ -93,23 +105,13 @@ export function ShellRepartidor({
                 <UnstyledButton
                   key={destino.id}
                   type="button"
+                  className={clases.destino}
                   aria-current={activo ? 'page' : undefined}
                   onClick={() => alNavegar(destino)}
-                  c={activo ? 'orange.8' : 'ink.7'}
-                  style={{
-                    flex: 1,
-                    minWidth: 0,
-                    minHeight: 56,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: 2,
-                    borderRadius: 'var(--mantine-radius-sm)',
-                  }}
+                  c={activo ? 'orange.8' : 'var(--ia-color-text-secondary)'}
                 >
                   {destino.icono}
-                  <Text size="xs" fw={activo ? 700 : 500} lineClamp={1}>{destino.titulo}</Text>
+                  <Text size="sm" fw={activo ? 600 : 500}>{destino.titulo}</Text>
                 </UnstyledButton>
               );
             })}
@@ -120,17 +122,8 @@ export function ShellRepartidor({
       {modoPie === 'acciones' && accionesFijas && (
         <Box
           component="footer"
-          pos="fixed"
-          bottom={0}
-          left="50%"
-          style={{
-            transform: 'translateX(-50%)',
-            width: 'min(100%, 480px)',
-            zIndex: 100,
-            borderTop: '1px solid var(--mantine-color-gray-3)',
-            padding: '12px 16px calc(12px + env(safe-area-inset-bottom, 0px))',
-          }}
-          bg="white"
+          ref={pie}
+          className={clases.pieAcciones}
         >
           {accionesFijas}
         </Box>

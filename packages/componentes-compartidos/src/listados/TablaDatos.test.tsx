@@ -60,6 +60,19 @@ describe('CR-07 TablaDatos', () => {
     expect(screen.queryByText(/1–0/)).not.toBeInTheDocument();
   });
 
+  it('la paginación numerada solicita la página remota y bloquea cambios durante la actualización', async () => {
+    const cambiar = vi.fn();
+    const propiedades = { ...base, paginacionNumerada: true, paginacion: { pagina: 2, tamanioPagina: 20, total: 42 }, alCambiarPagina: cambiar };
+    const { rerender } = render(<TablaDatos {...propiedades} />, { wrapper: Proveedor });
+    await userEvent.click(screen.getByRole('button', { name: 'Ir a la página 3' }));
+    expect(cambiar).toHaveBeenCalledExactlyOnceWith(3);
+    expect(screen.getByText('Mostrando 21–22 de 42')).toBeVisible();
+    expect(screen.getAllByRole('row')).toHaveLength(3);
+    rerender(<TablaDatos {...propiedades} actualizando />);
+    expect(screen.getByRole('button', { name: 'Ir a la página 3' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Página siguiente' })).toBeDisabled();
+  });
+
   it('distingue la carga inicial con cinco filas skeleton de la actualización con datos', () => {
     const { rerender } = render(<TablaDatos {...base} estado="carga" />, { wrapper: Proveedor });
     expect(screen.queryByText('DSP-000001')).not.toBeInTheDocument();

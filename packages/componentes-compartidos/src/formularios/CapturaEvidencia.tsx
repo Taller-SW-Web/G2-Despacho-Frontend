@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Alert, Button, FileButton, Group, Image, Loader, Paper, Progress, Stack, Text } from '@mantine/core';
 import { IconAlertCircle, IconCamera, IconPhoto } from '@tabler/icons-react';
+import clases from './CapturaEvidencia.module.css';
 
 export type PoliticaArchivoEvidencia = {
   tiposPermitidos: string[];
@@ -55,23 +56,19 @@ export function CapturaEvidencia({
     <Stack gap="sm">
       <Paper
         withBorder
-        p="sm"
+        p={0}
         radius="lg"
-        style={{
-          aspectRatio: '4 / 3',
-          borderStyle: archivo ? 'solid' : 'dashed',
-          borderColor: fase === 'error' ? 'var(--mantine-color-error)' : undefined,
-          overflow: 'hidden',
-        }}
+        className={clases.marco}
+        data-fase={fase}
+        data-con-foto={Boolean(archivo) || undefined}
       >
         {archivo && urlPrevisualizacion ? (
-          <Stack h="100%" justify="space-between">
+          <div className={clases.previsualizacion}>
             <Image
               src={urlPrevisualizacion}
               alt={descripcionFoto}
               fit="cover"
-              h="calc(100% - 48px)"
-              radius="md"
+              className={clases.imagen}
             />
             <FileButton
               accept={aceptados}
@@ -87,7 +84,8 @@ export function CapturaEvidencia({
                   type="button"
                   disabled={capturaDeshabilitada}
                   variant="subtle"
-                  size="md"
+                  size="lg"
+                  className={clases.retomar}
                   fullWidth
                   leftSection={<IconCamera size={20} />}
                   onClick={() => {
@@ -99,7 +97,7 @@ export function CapturaEvidencia({
                 </Button>
               )}
             </FileButton>
-          </Stack>
+          </div>
         ) : (
           <FileButton
             accept={aceptados}
@@ -116,14 +114,14 @@ export function CapturaEvidencia({
                 disabled={capturaDeshabilitada}
                 variant="subtle"
                 fullWidth
-                h="100%"
-                style={{ whiteSpace: 'normal' }}
-                leftSection={<IconCamera size={22} />}
+                size="lg"
+                className={clases.tomar}
                 aria-label="Tomar foto"
               >
                 <Stack gap={4} align="center">
-                  <Text fw={700}>Tomar foto</Text>
-                  <Text size="sm" fw={400}>{obligatoria ? 'Foto obligatoria como evidencia' : 'Agregar evidencia fotográfica'}</Text>
+                  <IconCamera size={48} aria-hidden="true" />
+                  <Text size="md" fw={600}>Tomar foto</Text>
+                  <Text size="md" fw={400}>{obligatoria ? 'Foto obligatoria como evidencia' : 'Agregar evidencia fotográfica'}</Text>
                 </Stack>
               </Button>
             )}
@@ -156,7 +154,7 @@ export function CapturaEvidencia({
             <Button
               type="button"
               variant="outline"
-              size="md"
+              size="lg"
               leftSection={<IconPhoto size={18} />}
               onClick={alReintentar}
               disabled={!archivo || disabled || !politicaArchivo}

@@ -1,0 +1,11 @@
+.marco.marco { position: relative; width: 100%; aspect-ratio: 4 / 3; overflow: hidden; background: var(--mantine-color-white); border: 2px dashed var(--ia-color-border-default); }
+.marco[data-con-foto] { border-style: solid; }
+.marco[data-fase='error'] { border-color: var(--ia-color-error-default); }
+.previsualizacion { position: absolute; inset: 0; }
+.imagen.imagen { width: 100%; height: 100%; object-fit: cover; }
+.retomar.retomar { position: absolute; left: var(--mantine-spacing-sm); right: var(--mantine-spacing-sm); bottom: var(--mantine-spacing-sm); width: calc(100% - 2 * var(--mantine-spacing-sm)); min-height: 50px; background: var(--mantine-color-white); }
+.retomar.retomar:hover { background: var(--ia-color-surface-cloud); }
+.tomar.tomar { position: absolute; inset: 0; width: 100%; height: 100%; padding: var(--mantine-spacing-md); white-space: normal; color: var(--ia-color-text-primary); }
+.tomar.tomar:hover { background: var(--ia-color-surface-cloud); }
+.tomar :global(.mantine-Button-label) { white-space: normal; }
+.tomar svg { color: var(--ia-color-text-secondary); flex-shrink: 0; }

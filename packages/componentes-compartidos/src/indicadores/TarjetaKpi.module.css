@@ -1,0 +1,7 @@
+.tarjeta.tarjeta { min-width: 0; min-height: 128px; background: var(--mantine-color-white); overflow-wrap: anywhere; }
+.tarjeta[data-accionable] { transition: background-color 150ms ease; }
+.tarjeta[data-accionable]:not(:disabled):hover { background: var(--ia-color-surface-cloud); }
+.tarjeta[data-accionable]:disabled { cursor: not-allowed; }
+.icono { display: flex; flex-shrink: 0; }
+.icono svg { width: 20px; height: 20px; }
+@media (prefers-reduced-motion: reduce) { .tarjeta { transition: none; } }

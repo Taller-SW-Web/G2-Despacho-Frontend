@@ -66,7 +66,7 @@ export function BarraOcupacion({ metrica, usado, limite, proyeccion, variante = 
         color={colorNivel(porcentajeProyectado!)} striped withAria={false} />}
     </Progress.Root>
     {textoProyeccion && <Text size="sm" className="ia-num">{textoProyeccion}</Text>}
-    {textoExceso && <Group gap="xs" wrap="nowrap">
+    {textoExceso && <Group gap="xs" wrap="nowrap" className={clases.exceso}>
       <IconAlertCircle size={16} aria-hidden="true" />
       <Text size="sm" fw={600} className="ia-num">{textoExceso}</Text>
     </Group>}

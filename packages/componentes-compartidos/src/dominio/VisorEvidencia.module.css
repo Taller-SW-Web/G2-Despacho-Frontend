@@ -1,8 +1,12 @@
 .raiz .contenido {
   min-width: 0;
-  color: var(--ia-color-text-primary, var(--mantine-color-ink-9));
+  color: var(--ia-color-text-primary);
   overflow-wrap: anywhere;
+  border: 1px solid var(--ia-color-border-default);
 }
+.raiz .cabecera, .raiz .cuerpo { padding-inline: var(--mantine-spacing-lg); }
+.raiz .cabecera { padding-top: var(--mantine-spacing-lg); padding-bottom: var(--mantine-spacing-md); }
+.raiz .cuerpo { padding-bottom: var(--mantine-spacing-lg); }
 
 .raiz .cabecera {
   gap: var(--mantine-spacing-sm);
@@ -24,7 +28,7 @@
   width: 100%;
   overflow: hidden;
   border-radius: var(--mantine-radius-lg);
-  background-color: var(--mantine-color-cloud-2);
+  background-color: var(--ia-color-surface-cloud-subtle);
 }
 
 .marco .imagen,
@@ -36,7 +40,7 @@
 }
 
 .marco .esqueleto::after {
-  background-color: var(--mantine-color-cloud-2);
+  background-color: var(--ia-color-surface-cloud-subtle);
 }
 
 .raiz .cerrar {
@@ -52,7 +56,7 @@
 
 .raiz .cerrar:focus-visible,
 .raiz .volver:focus-visible {
-  outline: 2px solid var(--ia-color-accent-signal, var(--mantine-color-signal-7));
+  outline: 2px solid var(--ia-color-accent-signal);
   outline-offset: 2px;
 }
 
@@ -69,12 +73,15 @@
   }
 
   .raiz .cuerpo {
+    padding-inline: var(--mantine-spacing-md);
     padding-bottom: calc(var(--mantine-spacing-lg) + env(safe-area-inset-bottom, 0px));
   }
 
   .raiz .volver {
     width: 100%;
+    min-height: 50px;
   }
+  .raiz .cabecera { padding: var(--mantine-spacing-md); }
 }
 
 @media (prefers-reduced-motion: reduce) {

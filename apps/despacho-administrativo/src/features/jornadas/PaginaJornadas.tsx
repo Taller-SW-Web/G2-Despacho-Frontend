@@ -11,6 +11,7 @@ import { FormularioJornada } from './FormularioJornada';
 import { ConfirmarCierreJornada } from './ConfirmarCierreJornada';
 import { DetalleJornada } from './DetalleJornada';
 import { MetricasJornada } from './MetricasJornada';
+import { useVersionSesion } from '../../sesion/useVersionSesion';
 
 const etiquetas = { DISPONIBLE: 'Disponible', EN_RUTA: 'En ruta', SATURADO: 'Saturado', FUERA_DE_TURNO: 'Fuera de turno' };
 const kpis = [
@@ -21,6 +22,11 @@ const kpis = [
 ] as const;
 type Seleccion = { tipo: 'abrir' } | { tipo: 'cerrar'; jornada: Jornada } | { tipo: 'detalle'; id: string };
 export function PaginaJornadas() {
+  const sesion = useVersionSesion();
+  return <PanelJornadas key={sesion} />;
+}
+
+function PanelJornadas() {
   const cliente = useClienteApi();
   const [parametros, establecerParametros] = useSearchParams();
   const clave = parametros.toString(), errores = validarParametros(parametros);
@@ -59,13 +65,14 @@ export function PaginaJornadas() {
         onClick={() => seleccionar({ tipo: 'cerrar', jornada: fila.jornada! })} aria-label={`Cerrar jornada de ${fila.nombre}`}>Cerrar jornada</Button>
     </Group> },
   ];
+  if (consulta.denegado) return <EstadoVista estado="sinPermiso" alAccionar={consulta.reintentarAcceso} />;
   return <Stack gap="lg" style={{ minWidth: 0 }}>
     <EncabezadoPagina titulo="Jornadas y monitoreo" subtitulo="Asigna recursos y supervisa la ocupación confirmada de la flota."
-      acciones={!consulta.denegado && <Group>
+      acciones={<Group>
         <Button variant="outline" leftSection={<IconRefresh size={20} aria-hidden="true" />} disabled={consulta.cargando} onClick={consulta.actualizar}>Actualizar</Button>
         <Button leftSection={<IconPlus size={20} aria-hidden="true" />} disabled={!habilitada} onClick={() => seleccionar({ tipo: 'abrir' })}>Abrir jornada</Button>
       </Group>} />
-    <EstadoVista estado={consulta.denegado ? 'sinPermiso' : 'datos'}>
+    <EstadoVista estado="datos">
       <Stack gap="lg">
         <BarraFiltros consultando={consulta.cargando} alLimpiar={() => establecerParametros({})} alQuitarFiltro={(id) => cambiar({ [id]: '' })}
           activos={['fecha', 'estadoOperativo', 'idZona'].filter((id) => parametros.has(id)).map((id) => ({ id, etiqueta: `${id === 'fecha' ? 'Fecha' : id === 'idZona' ? 'Zona' : 'Estado'}: ${id === 'estadoOperativo' ? etiquetas[parametros.get(id) as keyof typeof etiquetas] ?? 'Estado no disponible' : parametros.get(id)}` }))}
@@ -74,7 +81,7 @@ export function PaginaJornadas() {
           <Select label="Estado operativo" clearable value={parametros.get('estadoOperativo')} data={estadosOperativos.map((id) => ({ value: id, label: etiquetas[id] }))} onChange={(v) => cambiar({ estadoOperativo: v ?? '' })} />
           <TextInput label="Identificador de zona" value={parametros.get('idZona') ?? ''} onChange={(e) => cambiar({ idZona: e.currentTarget.value })} />
         </SimpleGrid>} />
-        {errores.length > 0 && <Alert role="alert" title="Revisa los filtros" color="red" c="ink.9">{errores.join(' ')}</Alert>}
+        {errores.length > 0 && <Alert role="alert" title="Revisa los filtros" color="red">{errores.join(' ')}</Alert>}
         {sinConexion && <FranjaEstado tipo="sinConexion" />}
         {datos && !consulta.confirmada && <FranjaEstado tipo="datosDesactualizados" accion={{ id: 'actualizar', etiqueta: 'Actualizar datos', disabled: consulta.cargando }} alAccionar={consulta.actualizar} />}
         {consulta.error && !datos && <EstadoVista estado="error" descripcion={consulta.error} accion={{ id: 'reintentar', etiqueta: 'Reintentar consulta' }} alAccionar={consulta.actualizar} />}

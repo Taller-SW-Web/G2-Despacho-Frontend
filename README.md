@@ -107,7 +107,7 @@ npm run build
 | `npm run typecheck` | Tipos del paquete compartido y ambas aplicaciones, incluidas sus pruebas donde están configuradas. |
 | `npm run build` | Comprueba tipos y construye ambas aplicaciones en sus respectivos `dist/`. |
 
-Las suites Vitest usan Testing Library/JSDOM y APIs simuladas. No comprueban layout real ni autorización de servicios desplegados. La app del repartidor no tiene un script de pruebas propio en esta línea base; sus tipos y compilación están incluidos en los comandos generales.
+Las suites Vitest usan Testing Library/JSDOM y APIs simuladas. No comprueban layout real ni autorización de servicios desplegados. La app del repartidor tiene su propia suite: `npm run test -w @despacho/repartidor`; sus tipos y compilación también están incluidos en los comandos generales.
 
 Las pruebas de navegador disponibles son:
 
@@ -119,7 +119,86 @@ npm run test:f01:e2e
 
 F-02 intercepta las APIs con fixtures y utiliza un servidor exclusivo en `127.0.0.1:4182`. F-01 utiliza el Gateway de `localhost:8080`, el emisor temporal y persistencia real; crea/modifica datos de zonas y tarifas. Antes de ejecutarla, comprobar que los servicios apuntan a un entorno de prueba aislado y autorizado; el script heredado no prepara ni aísla la base por sí mismo. No forma parte de las comprobaciones sin servicios.
 
-Los informes de navegador se generan en `test-results/` según el resultado. Esta rama no incorpora un workflow de CI; los comandos anteriores son manuales. Registrar resultados reales en la evidencia correspondiente, diferenciando datos simulados, pruebas con persistencia e integración conjunta.
+Los informes de navegador se generan en `test-results/` según el resultado. Registrar resultados reales en la evidencia correspondiente, diferenciando datos simulados, pruebas con persistencia e integración conjunta.
+
+### Integración continua y protección de develop
+
+El workflow [CI frontend](.github/workflows/ci.yaml) se ejecuta en cada PR dirigido a `develop` o `main`, en los push a esas ramas y manualmente desde Actions. Usa Node.js 22 y `npm ci` con el lockfile raíz. Ejecuta por separado las suites de componentes, administrativo y repartidor, la comprobación de tipos y compilación de ambas aplicaciones, y las pruebas de navegador F-02 con Chromium y APIs simuladas. Conserva capturas y resultados de F-02 durante siete días. No necesita secretos ni despliega aplicaciones.
+
+La suite administrativa excluye temporalmente `src/features/zonas/**`: sus pruebas necesitan actualizar el mensaje de permisos esperado y las respuestas simuladas del catálogo al abrir tarifas. Esta exclusión no depende de la integración con Seguridad y debe retirarse al corregir esas pruebas; `npm run test:f01` y `npm run test:administrativo` siguen ejecutándolas manualmente. Zonas permanece incluida en tipos y compilación.
+
+Para impedir que se integre un PR con fallos, un administrador debe configurar en GitHub una protección o ruleset para `develop`: exigir PR, activar **Require status checks to pass before merging** y **Require branches to be up to date before merging**, y seleccionar estas comprobaciones tras su primera ejecución:
+
+- `Frontend (componentes)`
+- `Frontend (administrativo)`
+- `Frontend (repartidor)`
+- `Frontend (tipos-y-compilacion)`
+- `Frontend (e2e-f02)`
+- `Frontend (e2e-flota)`
+
+Aplicar los requisitos también a administradores y evitar excepciones de bypass si se quiere exigirlos a todo el equipo. La misma configuración puede aplicarse a `main` para la promoción de entregas. Añadir el YAML no configura por sí solo la protección remota. Consultar la [documentación de GitHub sobre ramas protegidas](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/about-protected-branches).
+
+F-01 E2E y F-04 E2E (reprogramación y cierre) quedan fuera de este workflow: necesitan preparar los servicios, identidades y bases desechables descritos arriba y en el README del backend. Por tanto, este CI no acredita todos los recorridos con servicios reales. No ejecutar esas suites contra bases compartidas ni sustituir sus resultados por las pruebas con APIs simuladas.
+
+### Verificación de F-05 y F-06
+
+Los catálogos `/repartidores`, `/furgonetas` y el tablero `/jornadas` invalidan consultas, datos, selecciones y formularios al cambiar/cerrar la sesión de prueba o cambiar su almacenamiento en otra pestaña. Las respuestas y notificaciones tardías de la identidad anterior se descartan. Esto funciona con el proveedor de sesión actual; no supone una integración ya realizada con Seguridad.
+
+`npm run test:f05` y `npm run test:f06` comprueban reglas de presentación, transporte, paginación, errores, recuperación e aislamiento de sesión con APIs simuladas. Para el recorrido en navegador ejecutar:
+
+```powershell
+npx playwright install chromium
+npm run test:flota:e2e
+```
+
+La suite abre un Vite exclusivo en `127.0.0.1:4186` y comprueba seis recorridos a 1440 y 390 px: alta/edición/vinculación manual/baja de repartidor; alta/edición/mantenimiento/rehabilitación de furgoneta; apertura/detalle/cierre de jornada y cambio de sesión entre pestañas. Conserva capturas en `test-results/flota/` y trazas solo ante fallo. Todas sus APIs están interceptadas; no usa cuentas reales, no crea datos en el backend y no acredita autorización ni persistencia reales. La comprobación `Frontend (e2e-flota)` la ejecuta también en CI.
+
+Para probar con servicios reales locales, iniciar el Compose desde la raíz del backend y preparar la sesión de gestor en `/desarrollo/f01` durante desarrollo. La vinculación del repartidor sigue siendo manual con el UUID del emisor temporal. La suite backend de Operación usa PostgreSQL desechable y valida reservas, cierres, auditoría y concurrencia; el recorrido con Seguridad real y la aceptación humana permanecen pendientes.
+
+## Detalle de incidencias de F-04
+
+Desde `Ver detalle` en entregas fallidas se abre `/entregas-fallidas/:idDespacho`, conservando filtros, página y tamaño en la URL para regresar. La vista presenta la última incidencia, su recepción, historial completo, comunicaciones y decisiones permitidas por Gestión. Consulta de nuevo cada 30 segundos mientras está activa, bloquea las decisiones al actualizar o fallar y descarta respuestas de otro recurso.
+
+La fotografía se solicita por separado a Operación y se presenta en el visor compartido. Al vencer, cerrar, cambiar de incidencia o perder autorización se retiran la imagen y la URL temporal. La recepción (ES-F04-03) está integrada desde el listado y el detalle. Su modal consulta el contexto vigente, registra sello y observación, controla concurrencia y recupera resultados desconocidos. La reprogramación (ES-F04-04) se abre desde el detalle, valida una fecha futura en Lima y observación opcional, recupera la solicitud original ante respuesta perdida y vuelve al listado conservando la consulta. El cierre ES-F04-05 se abre desde el detalle con motivo obligatorio de texto libre y observación opcional; conserva el contexto, consulta antes de recuperar una respuesta perdida y vuelve al listado con sus filtros. Las decisiones quedan bloqueadas mientras haya una solicitud de resultado desconocido. La [guía de recepción y verificación](./docs/ES-F04-03-ConfirmarRecepcionPaquete.md) conserva su alcance propio.
+
+`npm run test:f04` cubre interacción y transporte con fixtures. `npm run test:f04:e2e` recorre reprogramación con Gestión y PostgreSQL desechables; primero iniciar el [arranque de pruebas del backend](../G2-Despacho-Backend/README.md#pruebas-y-contratos). Usa Chromium de Playwright; para usar Edge instalado, establecer `$env:PLAYWRIGHT_F04_CHANNEL = 'msedge'` en PowerShell. El proxy `4184 → 18085` y la identidad sintética son exclusivos de pruebas. Los resultados, capturas y dependencias reales pendientes están en la [evidencia SDD de ES-F04-04](../G2-Despacho-Specs/especificaciones/ES-F04-04-ReprogramarDespachoFallido/evidence.md).
+
+`npm run test:f04:cierre:e2e` verifica ES-F04-05 en navegador contra `CierreNavegadorPruebas` de Gestión, con PostgreSQL desechable (backend en 18086 y proxy de pruebas en 4185). Primero iniciar ese arranque siguiendo el README del backend. Puede usarse `PLAYWRIGHT_F04_CHANNEL=msedge` con Edge instalado. Comprueba recuperación exacta tras perder la respuesta, filtros, teclado/foco, móvil y reflujo equivalente al 200 %. Las capturas y límites se conservan en [la evidencia SDD de cierre](../G2-Despacho-Specs/especificaciones/ES-F04-05-CerrarDespachoComoDevueltoAOrigen/evidence.md).
+
+Las pruebas del detalle utilizan fixtures y APIs simuladas; ejecutar `npm run test -w @despacho/administrativo -- src/features/entregas-fallidas/PaginaDetalleIncidencia.test.tsx`. `npm run test:f04` incluye también la regresión del listado y la sesión. La integración con servicios reales, teclado del visor y revisión visual en móvil siguen registradas en la [evidencia SDD](../G2-Despacho-Specs/especificaciones/ES-F04-02-ConsultarDetalleIncidencia/evidence.md).
+
+## App del repartidor (F-03)
+
+`apps/despacho-repartidor` es una PWA instalable en Android que implementa las
+12 pantallas del Figma de F-03: acceso, mi ruta, detalle, inicio de traslado,
+entrega y fallo con foto, fallo registrado, cierre de jornada y resumen. Consume
+el contrato de Operación §3 y el login propuesto a Seguridad (contrato externo §8.6).
+
+- **Variables:** `VITE_API_BASE_URL` (Gateway), `VITE_SEGURIDAD_URL` (origen del
+  login; vacío usa el Gateway) y `VITE_MODO_DEMO=true` para revisar la interfaz con
+  datos en memoria, sin backend. Ver `apps/despacho-repartidor/.env.example`.
+- **Login:** `src/sesion/servicioAcceso.ts` es el único adaptador hacia Seguridad;
+  si su contrato definitivo difiere, solo cambia ese archivo. En local:
+  `mrojas@despacho.pe` / `Ruta2026!`.
+- **Fotos:** se reducen en el navegador (lado mayor 1600 px, JPEG) para cumplir el
+  límite de 2 MiB, se suben con la URL firmada y luego se confirma el comando. La
+  re-codificación descarta EXIF. Sin bucket configurado en Operación, entrega y fallo
+  responden `503`.
+- **Reintentos:** cada acción conserva su `Idempotency-Key` hasta un resultado
+  definitivo; tras perder señal, el reintento no duplica la transición.
+- **PWA:** `public/manifest.webmanifest`, íconos y `public/sw.js`. El service worker
+  solo guarda la interfaz; nunca respuestas de la API ni fotos. Se registra en
+  producción (HTTPS o `localhost`).
+- **En un teléfono:** `npm run dev:repartidor` publica Vite en la red local
+  (`http://<IP-del-PC>:5174`); el Gateway debe admitir ese origen en `CORS_ORIGENES`.
+  La instalación como app requiere HTTPS, por ejemplo el despliegue en Vercel.
+
+```bash
+npm run test -w @despacho/repartidor
+```
+
+`TarjetaDespacho` (CR-16) acepta dirección y destinatario `null`, porque el contrato
+los omite fuera de `ASIGNADO`/`EN_CAMINO`, y muestra el resultado con su hora.
 
 ## Estructura y componentes
 
@@ -161,7 +240,7 @@ La fuente de requisitos, contratos, diseño y seguimiento SDD es [G2-Despacho-Sp
 - [Sistema de diseño](https://github.com/Taller-SW-Web/G2-Despacho-Specs/blob/main/disenio/SYSTEM-DESIGN.md), [componentes React](https://github.com/Taller-SW-Web/G2-Despacho-Specs/blob/main/disenio/componentes-react.md) y [stack frontend](https://github.com/Taller-SW-Web/G2-Despacho-Specs/blob/main/arquitectura/stack-frontend.md).
 - [Reglas del repositorio de especificaciones](https://github.com/Taller-SW-Web/G2-Despacho-Specs/blob/main/AGENTS.md) y [flujo de contribución](https://github.com/Taller-SW-Web/G2-Despacho-Specs/blob/main/CONTRIBUTING.md).
 
-El flujo habitual crea ramas descriptivas desde `develop`, integra por PR y promueve entregas de `develop` a `main`. Registrar cambios significativos en `Sin publicar` de [CHANGELOG.md](./CHANGELOG.md) y cerrar la sección con versión/fecha al preparar cada entrega. Revisar el corte aproximadamente cada dos semanas; no obliga a publicar sin cambios ni a adoptar Scrum.
+El flujo habitual crea ramas descriptivas desde `develop`, integra por PR y promueve entregas de `develop` a `main`. Actualizar [CHANGELOG.md](./CHANGELOG.md) únicamente al preparar y publicar una nueva línea base en `main`, consolidando los cambios de la entrega con versión y fecha. Las ramas funcionales registran su avance en commits y en el seguimiento SDD de Specs. Revisar el corte aproximadamente cada dos semanas; no obliga a publicar sin cambios ni a adoptar Scrum.
 
 Los tags se crean manualmente sobre el commit de `main` elegido para la entrega. Para esta primera línea base se recomienda el commit documental que incorpora este README, AGENTS y changelog: su código funcional sigue siendo el de `5384180`. El tag será `v0.1.0`; no se crea automáticamente ni requiere una GitHub Release. Evitar mover un tag ya publicado.
 

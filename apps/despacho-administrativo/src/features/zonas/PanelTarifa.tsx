@@ -6,16 +6,17 @@ import {
   Drawer,
   Fieldset,
   Group,
-  Loader,
+  Skeleton,
   NumberInput,
   Stack,
   Text,
 } from '@mantine/core';
-import { notifications } from '@mantine/notifications';
-import { IconAlertTriangle, IconDeviceFloppy, IconLock } from '@tabler/icons-react';
+import { EstadoVista, notificarOperacion } from '@despacho/componentes-compartidos';
+import { IconAlertTriangle, IconDeviceFloppy } from '@tabler/icons-react';
 import { useClienteApi } from '../../cliente/useClienteApi';
 import { detalleProblema, guardarTarifa, obtenerTarifaVigente, obtenerZona, problemaDe } from './api/zonasApi';
 import { BadgeEstadoZona } from './BadgeEstadoZona';
+import { PaginaZonas } from './PaginaZonas';
 import type { SolicitudTarifa, Zona } from './tipos';
 
 type ValorCampo = number | string;
@@ -145,10 +146,10 @@ export function PanelTarifa() {
     setGuardando(true);
     try {
       await guardarTarifa(cliente, zona.id, solicitud);
-      notifications.show({
-        message: `Tarifa vigente de «${zona.nombre}» actualizada.`,
-        color: 'teal',
-        title: 'Tarifa guardada',
+      notificarOperacion({
+        id: `tarifa-guardada-${zona.id}`,
+        tipo: 'exito',
+        mensaje: `Tarifa vigente de «${zona.nombre}» actualizada.`,
       });
       navegar(`/zonas${parametros.size ? `?${parametros}` : ''}`);
     } catch (error) {
@@ -173,7 +174,10 @@ export function PanelTarifa() {
     }
   };
 
-  return (
+  if (denegado) return <EstadoVista estado="sinPermiso" alAccionar={() => setRevision((valor) => valor + 1)} />;
+
+  return <>
+    <PaginaZonas />
     <Drawer
       opened
       onClose={cerrar}
@@ -185,24 +189,15 @@ export function PanelTarifa() {
       title={`Tarifas de ${zona?.nombre ?? ''}`}
       closeButtonProps={{ 'aria-label': 'Cerrar tarifas' }}
     >
-      {cargando ? (
-        <Group justify="center" py="xl">
-          <Loader />
-        </Group>
-      ) : denegado ? (
-        <Alert color="red" variant="light" icon={<IconLock size={18} />} title="Sin permisos">
-          No tienes permisos para configurar tarifas.
-        </Alert>
-      ) : errorCarga ? (
-        <Alert color="red" variant="light" icon={<IconAlertTriangle size={18} />}>
-          {errorCarga}
-          <Button mt="sm" onClick={() => setRevision((valor) => valor + 1)}>Reintentar tarifa</Button>
-        </Alert>
-      ) : (
+      <EstadoVista estado={cargando ? 'carga' : errorCarga ? 'error' : 'datos'}
+        esqueleto={<Stack aria-label="Cargando tarifa">{[0, 1, 2].map((indice) => <Skeleton key={indice} height={64} />)}</Stack>}
+        descripcion={errorCarga ?? undefined}
+        accion={errorCarga ? { id: 'reintentar', etiqueta: 'Reintentar tarifa' } : undefined}
+        alAccionar={() => setRevision((valor) => valor + 1)}>
         <Stack gap="md">
           {zona && <BadgeEstadoZona estado={zona.estado} />}
           {inactiva ? (
-            <Alert color="orange" variant="light" icon={<IconAlertTriangle size={18} />}>
+            <Alert color="yellow" variant="light" icon={<IconAlertTriangle size={18} />}>
               Activa la zona para configurar su tarifa.
             </Alert>
           ) : null}
@@ -212,7 +207,7 @@ export function PanelTarifa() {
               Esta zona aún no tiene tarifa.
             </Text>
           ) : (
-            <Alert color="orange" variant="light" title="Sustitución de tarifa">
+            <Alert color="yellow" variant="light" title="Sustitución de tarifa">
               Al guardar, esta tarifa sustituye a la vigente y la anterior se conserva como histórico.
             </Alert>
           )}
@@ -303,7 +298,7 @@ export function PanelTarifa() {
           </Group>
           {(aNumero(campos.tarifaBase) === null || aNumero(campos.pesoIncluidoKg) === null) && <Text size="sm" c="dimmed">Completa la tarifa base y el peso incluido para guardar.</Text>}
         </Stack>
-      )}
+      </EstadoVista>
     </Drawer>
-  );
+  </>;
 }

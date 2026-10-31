@@ -1,0 +1,19 @@
+{
+  "name": "Despacho · Repartidor",
+  "short_name": "Despacho",
+  "description": "Ruta, entregas y cierre de jornada del repartidor.",
+  "lang": "es-PE",
+  "id": "/repartidor/",
+  "start_url": "/repartidor/ruta",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#1B1812",
+  "theme_color": "#1B1812",
+  "categories": ["business", "productivity"],
+  "icons": [
+    { "src": "/iconos/icono-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/iconos/icono-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/iconos/icono-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
