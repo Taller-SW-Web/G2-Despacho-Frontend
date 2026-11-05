@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useSearchParams } from 'react-router-dom';
-import { Alert, Badge, Button, Group, Modal, SimpleGrid, Stack, Tabs, Text, Tooltip } from '@mantine/core';
+import { Alert, Badge, Button, Group, Modal, SimpleGrid, Stack, Tabs, Text } from '@mantine/core';
 import { IconCalendarEvent, IconCalendarTime, IconChevronDown, IconFlask, IconRefresh, IconRepeat } from '@tabler/icons-react';
 import { EncabezadoPagina, EstadoVista, notificarOperacion, TarjetaKpi, type EstadoConsulta } from '@despacho/componentes-compartidos';
 import { useClienteApi } from '../../cliente/useClienteApi';
@@ -12,6 +12,7 @@ import { TablaCola } from './TablaCola';
 import { ModalSimulacion } from './ModalSimulacion';
 import { ModalAsignacion } from './ModalAsignacion';
 import { ResumenDespacho } from './ResumenDespacho';
+import { RutasProgramacion } from './RutasProgramacion';
 import clases from './Programacion.module.css';
 
 /** Cambiar/cerrar sesión desmonta consultas, selección y formularios protegidos. */
@@ -29,6 +30,8 @@ export function PaginaProgramacion() {
 
 function PanelProgramacion() {
   const cliente = useClienteApi();
+  const [pestania, establecerPestania] = useState<string | null>('pendientes');
+  const [rutaOcupada, establecerRutaOcupada] = useState(false);
   const ubicacion = useLocation();
   const [parametros, establecerParametros] = useSearchParams();
   const clave = parametros.toString();
@@ -49,12 +52,12 @@ function PanelProgramacion() {
   // La identidad de navegación fuerza una lectura incluso al restaurar la misma URL.
   const cargar = useCallback((signal: AbortSignal) => consultarPendientes(cliente, new URLSearchParams(clave), signal), [cliente, clave, ubicacion.key]);
   const cargarZonas = useCallback((signal: AbortSignal) => consultarZonas(cliente, signal), [cliente]);
-  const consulta = useLecturaProgramacion(cargar, valida && !denegada);
-  const catalogo = useLecturaProgramacion(cargarZonas, !denegada);
+  const consulta = useLecturaProgramacion(cargar, valida && !denegada && pestania === 'pendientes');
+  const catalogo = useLecturaProgramacion(cargarZonas, !denegada && pestania === 'pendientes');
   const sinPermiso = denegada || Boolean(consulta.error?.permiso || catalogo.error?.permiso);
   const denegar = useCallback(() => { establecerDenegada(true); establecerAsignacion(null); establecerDetalle(null); establecerPersonalizada(false); }, []);
   useEffect(() => { if (sinPermiso) denegar(); }, [sinPermiso, denegar]);
-  useVigenciaProgramacion(consulta.actualizar, !sinPermiso && valida && !asignacion && !detalle && !personalizada && !generando);
+  useVigenciaProgramacion(consulta.actualizar, pestania === 'pendientes' && !sinPermiso && valida && !asignacion && !detalle && !personalizada && !generando);
   const pagina = consulta.datos;
   const zonas = catalogo.datos ?? [];
   const cambiar = (cambio: Partial<FiltrosPendientes>) => establecerParametros(parametrosFiltros({ ...filtros, pagina: 1, ...cambio }));
@@ -117,15 +120,17 @@ function PanelProgramacion() {
   return <Stack gap="lg" className={clases.pagina}>
     <EstadoVista estado={sinPermiso ? 'sinPermiso' : 'datos'}
       alAccionar={() => { establecerDenegada(false); refrescar(); }}>
+      <Tabs value={pestania} onChange={(valor) => { if (!rutaOcupada && !asignacion && !detalle && !personalizada && !generando) establecerPestania(valor); }} keepMounted={false}>
       <Stack gap="lg">
         <EncabezadoPagina titulo="Programación y asignación" subtitulo="Organiza los despachos de hoy y prepara las próximas entregas."
-          acciones={<Group gap="sm"><Button ref={generador} variant="outline" type="button" mih={44} leftSection={<IconFlask size={20} aria-hidden="true" />}
+          acciones={pestania === 'pendientes' ? <Group gap="sm"><Button ref={generador} variant="outline" type="button" mih={44} leftSection={<IconFlask size={20} aria-hidden="true" />}
             loading={generando} disabled={Boolean(errorSimulacion?.incierto)} onClick={() => { void generar({}); }}>Generar pedido de prueba</Button>
             <Button variant="outline" type="button" px="sm" mih={44} aria-label="Personalizar pedido de prueba" disabled={generando || Boolean(errorSimulacion?.incierto)}
-              onClick={() => { recordarFoco(); establecerErrorSimulacion(null); establecerPersonalizada(true); }}><IconChevronDown size={20} aria-hidden="true" /></Button></Group>}
-          pestanias={<Tabs value="pendientes"><Tabs.List><Tabs.Tab value="pendientes" rightSection={pagina && <Badge color="gray" variant="light">{pagina.indicadores.pendientesHoy + pagina.indicadores.programadosFuturo}</Badge>}>Cola de pendientes</Tabs.Tab>
-            <Tooltip label="Las rutas y el reordenamiento aún no están disponibles."><span><Tabs.Tab value="rutas" disabled>Rutas por repartidor</Tabs.Tab></span></Tooltip>
-          </Tabs.List></Tabs>} />
+              onClick={() => { recordarFoco(); establecerErrorSimulacion(null); establecerPersonalizada(true); }}><IconChevronDown size={20} aria-hidden="true" /></Button></Group> : undefined}
+          pestanias={<Tabs.List><Tabs.Tab value="pendientes" disabled={rutaOcupada} rightSection={pagina && <Badge color="gray" variant="light">{pagina.indicadores.pendientesHoy + pagina.indicadores.programadosFuturo}</Badge>}>Cola de pendientes</Tabs.Tab>
+            <Tabs.Tab value="rutas" disabled={Boolean(asignacion || detalle || personalizada || generando)}>Rutas por repartidor</Tabs.Tab>
+          </Tabs.List>} />
+        <Tabs.Panel value="pendientes"><Stack gap="lg">
         <SimpleGrid cols={{ base: 1, xs: 2, md: 3 }} className={clases.kpis}>
           <TarjetaKpi id="hoy" etiqueta="Pendientes para hoy" valor={pagina?.indicadores.pendientesHoy ?? null} icono={<IconCalendarTime size={24} aria-hidden="true" />}
             accionable cargando={consulta.cargando} disabled={!pagina || bloqueada} seleccionada={Boolean(hoy && filtros.fechaHasta === hoy && !filtros.fechaDesde)}
@@ -158,7 +163,9 @@ function PanelProgramacion() {
         {detalle && <Modal opened title={`Detalle del despacho ${detalle.codigoOperativo}`} size={880} radius="lg"
           returnFocus={false} closeButtonProps={{ 'aria-label': 'Cerrar detalle' }}
           classNames={{ content: clases.modal, title: clases.tituloModal, header: clases.cabeceraModal, body: clases.cuerpoModal }} onClose={() => { establecerDetalle(null); devolverFoco(); }}><ResumenDespacho despacho={detalle} /></Modal>}
-      </Stack>
+        </Stack></Tabs.Panel>
+        <Tabs.Panel value="rutas"><RutasProgramacion alDenegar={denegar} alOcupar={establecerRutaOcupada} /></Tabs.Panel>
+      </Stack></Tabs>
     </EstadoVista>
   </Stack>;
 }
