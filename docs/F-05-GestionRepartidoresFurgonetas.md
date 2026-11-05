@@ -99,4 +99,6 @@ Los commits se preparan en `develop` con autor y committer `KevinBohorquez <kevi
 
 ## 6. Verificación de la alineación
 
+La preparación G7 del 03/11/2026 añade al formulario de vinculación el procedimiento administrativo y la activación por el titular; admite cuentas sin roles globales y aclara que guardar el UUID no verifica activación ni permite sustituir una cuenta. No incorpora campos de contraseña ni alta remota. Resultados de esta revisión: evidencia T-G7 de [ES-F05-05](../../despacho-docs/especificaciones/ES-F05-05-VincularRepartidorConSeguridad/evidence.md); los conteos históricos que siguen no se atribuyen a esa ejecución.
+
 La revisión añade casos de precisión y extremos numéricos, URL inválida, estado heredado y edición de furgoneta inexistente. Las ejecuciones y totales de §3 corresponden al incremento anterior; la ejecución actual de `npm run test:f05` aprobó 51 pruebas en tres archivos, sin fallos. `npm run typecheck` también aprobó los tres espacios de trabajo y `npm run build` generó ambas aplicaciones. El aviso del bundle administrativo superior a 500 kB se conserva; no impide la construcción. Las pruebas de interfaz usan transporte simulado; no acreditan el recorrido con Render y Seguridad real. El origen configurado para producción es `https://taller-api-gateway.onrender.com`, sin agregar `/api/v1` en `VITE_API_BASE_URL`.

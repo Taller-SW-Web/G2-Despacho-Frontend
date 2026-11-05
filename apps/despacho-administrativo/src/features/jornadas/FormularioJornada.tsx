@@ -30,6 +30,7 @@ export function FormularioJornada({ cliente, fecha, alCerrar, alGuardar, alDeneg
       });
     }}><Stack gap="md">
       <Text>Selecciona los recursos del catálogo. El servidor confirmará que siguen disponibles.</Text>
+      <Text size="sm">La cuenta del repartidor debe estar activada en Seguridad. El vínculo del catálogo identifica a la persona y no confirma su activación global.</Text>
       {operacion.error && <Alert color="red" role="alert">{operacion.error}</Alert>}
       {recursos.error && <Alert color="red" role="alert">{recursos.error}<Button variant="subtle" onClick={recursos.actualizar}>Reintentar catálogos</Button></Alert>}
       <EstadoVista estado={recursos.cargando && !recursos.datos ? 'carga' : 'datos'} esqueleto={<Loader aria-label="Cargando recursos" />}>
