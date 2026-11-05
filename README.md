@@ -123,9 +123,7 @@ Los informes de navegador se generan en `test-results/` según el resultado. Reg
 
 ### Integración continua y protección de develop
 
-El workflow [CI frontend](.github/workflows/ci.yaml) se ejecuta en cada PR dirigido a `develop` o `main`, en los push a esas ramas y manualmente desde Actions. Usa Node.js 22 y `npm ci` con el lockfile raíz. Ejecuta por separado las suites de componentes, administrativo y repartidor, la comprobación de tipos y compilación de ambas aplicaciones, y las pruebas de navegador F-02 con Chromium y APIs simuladas. Conserva capturas y resultados de F-02 durante siete días. No necesita secretos ni despliega aplicaciones.
-
-La suite administrativa excluye temporalmente `src/features/zonas/**`: sus pruebas necesitan actualizar el mensaje de permisos esperado y las respuestas simuladas del catálogo al abrir tarifas. Esta exclusión no depende de la integración con Seguridad y debe retirarse al corregir esas pruebas; `npm run test:f01` y `npm run test:administrativo` siguen ejecutándolas manualmente. Zonas permanece incluida en tipos y compilación.
+El workflow [CI frontend](.github/workflows/ci.yaml) se ejecuta en cada PR dirigido a `develop` o `main`, en los push a esas ramas y manualmente desde Actions. Usa Node.js 22 y `npm ci` con el lockfile raíz. Ejecuta por separado las suites completas de componentes, administrativo y repartidor, la comprobación de tipos y compilación de ambas aplicaciones, y las pruebas de navegador F-02 y F-05/F-06 con Chromium y APIs simuladas. Conserva capturas y resultados de navegador durante siete días. No necesita secretos ni despliega aplicaciones.
 
 Para impedir que se integre un PR con fallos, un administrador debe configurar en GitHub una protección o ruleset para `develop`: exigir PR, activar **Require status checks to pass before merging** y **Require branches to be up to date before merging**, y seleccionar estas comprobaciones tras su primera ejecución:
 
