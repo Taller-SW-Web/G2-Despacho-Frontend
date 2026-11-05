@@ -23,7 +23,18 @@ export const esquemaPagina = z.object({
 });
 export const esquemaDisponibles = z.object({ repartidores: z.array(z.object({
   idRepartidor: identificador, idJornada: identificador, nombre: identificador, idZona: identificador,
+  idFurgoneta: identificador, placa: identificador,
+  limites: esquemaCarga.refine((c) => c.pesoKg > 0 && c.volumenM3 > 0 && c.paquetes > 0), ocupacion: esquemaCarga,
   estadoOperativo: z.enum(['DISPONIBLE', 'EN_RUTA', 'SATURADO', 'FUERA_DE_TURNO']), capacidadRemanente: esquemaCarga,
+  porcentajeOcupacion: z.object({ peso: numero, volumen: numero, paquetes: numero }),
+}).superRefine((repartidor, contexto) => {
+  for (const dimension of ['pesoKg', 'volumenM3', 'paquetes'] as const) {
+    const { limites, ocupacion, capacidadRemanente } = repartidor;
+    // Solo tolera el error de representación IEEE-754, no una carga adicional.
+    const tolerancia = Number.EPSILON * Math.max(1, limites[dimension]) * 8;
+    if (Math.abs(limites[dimension] - ocupacion[dimension] - capacidadRemanente[dimension]) > tolerancia)
+      contexto.addIssue({ code: z.ZodIssueCode.custom, path: ['capacidadRemanente', dimension], message: 'Capacidad incoherente con los límites y la ocupación publicados.' });
+  }
 })) }).superRefine(({ repartidores }, contexto) => {
   if (new Set(repartidores.map((r) => r.idRepartidor)).size !== repartidores.length)
     contexto.addIssue({ code: z.ZodIssueCode.custom, message: 'El catálogo contiene identidades repetidas.' });

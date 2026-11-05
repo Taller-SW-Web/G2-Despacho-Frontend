@@ -37,7 +37,7 @@ for (const [ancho, alto] of [[1440, 1024], [1024, 768], [390, 844]]) {
       expect(await tabla.evaluate((n) => n.scrollWidth <= n.clientWidth + 1)).toBe(true);
       await expect(page.getByRole('columnheader', { name: 'Volumen (m³)' })).toBeHidden();
     }
-    await page.screenshot({ path: `docs/evidencia/f02/cola-${ancho}.png`, fullPage: true });
+    await page.screenshot({ path: `docs/evidencia/f02/hito4/cola-${ancho}.png`, fullPage: true });
     await page.getByRole('button', { name: 'Asignar', exact: true }).first().click();
     const modal = page.getByRole('dialog');
     await expect(modal.getByRole('radio', { name: 'Juan de la zona', exact: true })).toBeVisible();
@@ -45,8 +45,11 @@ for (const [ancho, alto] of [[1440, 1024], [1024, 768], [390, 844]]) {
     await modal.getByRole('radio', { name: 'Juan de la zona', exact: true }).focus();
     await page.keyboard.press('ArrowDown');
     await expect(modal.getByRole('radio', { name: 'Ana de otra zona', exact: true })).toBeChecked();
+    const candidata = modal.getByRole('radio', { name: 'Ana de otra zona', exact: true });
+    await expect(candidata.getByRole('progressbar', { name: 'Peso', exact: true })).toHaveAttribute('aria-valuetext', /Proyección: 162 \/ 200 kg/);
+    await expect(candidata.getByText('F02-000', { exact: true })).toBeVisible();
     expect(await modal.getByRole('radio', { name: 'Ana de otra zona', exact: true }).evaluate((n) => getComputedStyle(n).outlineColor)).toBe('rgb(67, 97, 238)');
-    await page.screenshot({ path: `docs/evidencia/f02/asignacion-${ancho}.png` });
+    await page.screenshot({ path: `docs/evidencia/f02/hito4/asignacion-${ancho}.png` });
     await page.keyboard.press('Escape');
     await expect(modal).not.toBeVisible();
     await expect(page.getByRole('button', { name: 'Asignar', exact: true }).first()).toBeFocused();

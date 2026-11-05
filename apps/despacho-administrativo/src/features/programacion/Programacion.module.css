@@ -1,4 +1,6 @@
 .pagina { min-width: 0; }
+.ruta { list-style: none; margin: 0; padding: 0; }
+.parada { overflow-wrap: anywhere; min-width: 0; }
 .filtros { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--mantine-spacing-md); }
 .fecha { flex: 2; min-width: 240px; }
 .zona { flex: 1; min-width: 180px; }
@@ -18,6 +20,7 @@
 .kpis { gap: var(--mantine-spacing-lg); }
 .kpis button > div > p:first-of-type { font-family: var(--mantine-font-family-headings); font-size: 28px; line-height: 1.3; }
 .lista { max-height: 480px; overflow-y: auto; padding: 4px; }
+.candidatosRuta > * { flex-shrink: 0; }
 .capacidad { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--mantine-spacing-md); }
 .capacidad p { font-variant-numeric: tabular-nums; }
 @media (min-width: 768px) and (max-width: 1199px) {

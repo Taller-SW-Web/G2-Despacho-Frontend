@@ -80,7 +80,7 @@ La experiencia permite recorrer ruta, detalle, traslado, entrega/fallo con evide
 | Funcionalidad | Rutas principales | Alcance y límites de `v0.1.0` |
 |---|---|---|
 | F-01: zonas y tarifas | `/zonas`, `/zonas/nueva`, `/zonas/:id/editar`, `/zonas/:id/tarifas` | Catálogo, creación, edición, estado, distritos/códigos postales y tarifas; cobertura/cotización en el probador de desarrollo. |
-| F-02: programación | `/programacion` | Cola, filtros, indicadores, generación de pedidos de prueba y asignación; rutas/reasignación pendientes. Las simulaciones administrativas pueden persistir en el backend. |
+| F-02: programación | `/programacion` | Cola, filtros, indicadores, simulación y asignación; consulta de rutas, reordenamiento seguro y reasignación con recuperación idempotente. No se reordenan huecos históricos hasta aclaración. Integración real pendiente; las mutaciones administrativas pueden persistir en el backend. |
 | F-03: repartidor | `/repartidor/ruta`, `/repartidor/despachos/:id`, `/repartidor/resumen`, `/repartidor/cierre` | Demo en memoria en desarrollo; consultas por API y operaciones aún pendientes en producción, como se detalla arriba. |
 | F-04: entregas fallidas | `/entregas-fallidas`, `/entregas-fallidas/:idDespacho` | Listado, filtros, indicadores, detalle, historial, comunicaciones y visor de evidencia. Formularios de recepción, reprogramación y cierre no integrados en esta línea base. |
 | F-05: repartidores y vehículos | `/repartidores`, `/furgonetas` | Catálogos, formularios, cambios de estado y vinculación de cuenta. `/flota` redirige al catálogo de repartidores. |
