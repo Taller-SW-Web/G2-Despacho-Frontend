@@ -35,6 +35,8 @@ Las pruebas usan datos sintéticos y transporte simulado. El caso contractual co
 
 ## 5. Configuración e integración
 
+Preparación G7 del 03/11/2026: el formulario de apertura explica que la cuenta debe estar activada en Seguridad y que el vínculo local no demuestra ese estado global. Conserva las comprobaciones backend y no crea ni activa cuentas. El seguimiento y los límites de la revisión están en [ES-F06-01](../../despacho-docs/especificaciones/ES-F06-01-AbrirJornada/evidence.md).
+
 `VITE_API_BASE_URL` apunta al Gateway, sin agregar `/api/v1`; en local se usa `http://localhost:8080`. El cliente compartido envía el token de la sesión existente y el probador de desarrollo puede obtenerlo del emisor temporal local. El login administrativo real sigue pendiente de Seguridad. El modo demo sin token requiere configuración explícita tanto en frontend como en backend; esta revisión no activa ese modo en despliegues.
 
 Backend implementado: monitoreo, detalle, apertura/cierre y disponibilidad del contrato de Operación. El backend valida la zona en Gestión y conecta reservas/liberaciones/proyecciones con los clientes de F-02/F-04. La adaptación F-06 se aplicó en Supabase después de probarla en copia aislada y en una transacción revertida. El recorrido desplegado sigue requiriendo Seguridad y una sesión integrada; publicar el frontend no acredita esa aceptación.

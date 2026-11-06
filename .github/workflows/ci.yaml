@@ -29,9 +29,7 @@ jobs:
           - comprobacion: componentes
             comando: npm run test -w @despacho/componentes-compartidos -- --maxWorkers=2
           - comprobacion: administrativo
-            # Exclusión temporal de F-01: pendientes el mensaje esperado y los fixtures.
-            # Sus fallos son locales a las pruebas; no requieren integrar Seguridad.
-            comando: npm run test -w @despacho/administrativo -- --exclude 'src/features/zonas/**'
+            comando: npm run test -w @despacho/administrativo
           - comprobacion: repartidor
             comando: npm run test -w @despacho/repartidor
           - comprobacion: tipos-y-compilacion

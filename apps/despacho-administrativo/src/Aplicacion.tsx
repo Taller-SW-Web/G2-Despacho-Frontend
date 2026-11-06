@@ -9,6 +9,7 @@ import { PaginaZonas } from './features/zonas/PaginaZonas';
 import { FormularioZona } from './features/zonas/FormularioZona';
 import { PanelTarifa } from './features/zonas/PanelTarifa';
 import { useSesion } from './sesion/SesionProveedor';
+import { PaginaAcceso } from './sesion/PaginaAcceso';
 import { PaginaRepartidores } from './features/flota/PaginaRepartidores';
 import { PaginaFurgonetas } from './features/flota/PaginaFurgonetas';
 import { PaginaProgramacion } from './features/programacion/PaginaProgramacion';
@@ -43,11 +44,17 @@ export function Aplicacion() {
   const navegar = useNavigate();
   const sesion = useSesion();
 
+  if (ubicacion.pathname === '/acceso') return <PaginaAcceso />;
+  const esProbador = import.meta.env.DEV && ubicacion.pathname.startsWith('/desarrollo/');
+  if (!sesion.modoDemo && !sesion.sesion && !sesion.obtenerToken() && !esProbador) {
+    return <Navigate to="/acceso" replace state={{ desde: ubicacion.pathname + ubicacion.search }} />;
+  }
+
   return <ShellAdministrativo destinos={secciones.map(({ ruta, titulo, Icono }) => ({ id: ruta, ruta, etiqueta: titulo, icono: <Icono size={24} aria-hidden="true" /> }))}
     usuario={sesion.modoDemo
       ? { nombre: 'Demostración', etiquetaPerfil: 'Gestor de despacho' }
-      : { nombre: 'Sesión provisional', etiquetaPerfil: 'Identidad no disponible' }} logoUrl="" rutaInicio="/"
-    alCerrarSesion={() => { sesion.guardarToken(null); window.location.assign('/'); }}
+      : { nombre: sesion.sesion?.usuario.nombreCompleto ?? 'Sesión de prueba', etiquetaPerfil: 'Gestor de despacho' }} logoUrl="" rutaInicio="/"
+    alCerrarSesion={() => { sesion.guardarToken(null); void sesion.gestor.cerrar(); navegar('/acceso', { replace: true }); }}
     destinoActivo={secciones.find(({ ruta }) => ubicacion.pathname.startsWith(ruta))?.ruta ?? null} alNavegar={(_, ruta) => navegar(ruta)}>
       {import.meta.env.DEV && <Box component="aside" className={clases.herramientasDesarrollo} aria-label="Herramientas de desarrollo">
         <Text size="xs" c="dimmed">Entorno local</Text>

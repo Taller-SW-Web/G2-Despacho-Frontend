@@ -140,6 +140,8 @@ export type { DestinoRepartidor } from './layout/ShellRepartidor';
 export { TarjetaDespacho } from './dominio/TarjetaDespacho';
 export type { TarjetaDespachoProps } from './dominio/TarjetaDespacho';
 export { CapturaEvidencia } from './formularios/CapturaEvidencia';
+export { FormularioAcceso } from './formularios/FormularioAcceso';
+export type { FormularioAccesoProps } from './formularios/FormularioAcceso';
 export type {
   CapturaEvidenciaProps,
   FaseCapturaEvidencia,

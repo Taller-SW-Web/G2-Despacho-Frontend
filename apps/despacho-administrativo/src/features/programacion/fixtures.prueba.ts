@@ -16,7 +16,7 @@ export const paginaPrueba: PaginaPendientes = {
 export const zonasPrueba = { contenido: [
   { id: 'zona-centro', nombre: 'Lima Centro', estado: 'ACTIVO' }, { id: 'zona-norte', nombre: 'Lima Norte', estado: 'ACTIVO' },
 ], pagina: 1, tamanoPagina: 100, totalElementos: 2, totalPaginas: 1 };
-export const disponiblesPrueba: { repartidores: RepartidorDisponible[] } = { repartidores: [
+const candidatosPrueba = [
   { idRepartidor: 'rep-otra-zona', idJornada: 'jor-2', nombre: 'Ana de otra zona', idZona: 'zona-norte', estadoOperativo: 'EN_RUTA',
     capacidadRemanente: { pesoKg: 50, volumenM3: 0.5, paquetes: 8 } },
   { idRepartidor: 'rep-sin-peso', idJornada: 'jor-3', nombre: 'Pedro sin peso', idZona: 'zona-centro', estadoOperativo: 'DISPONIBLE',
@@ -27,5 +27,12 @@ export const disponiblesPrueba: { repartidores: RepartidorDisponible[] } = { rep
     capacidadRemanente: { pesoKg: 100, volumenM3: 0.001, paquetes: 20 } },
   { idRepartidor: 'rep-sin-paquetes', idJornada: 'jor-5', nombre: 'Luis sin paquetes', idZona: 'zona-centro', estadoOperativo: 'DISPONIBLE',
     capacidadRemanente: { pesoKg: 100, volumenM3: 1, paquetes: 0 } },
-] };
+] as const;
+export const disponiblesPrueba: { repartidores: RepartidorDisponible[] } = { repartidores: candidatosPrueba.map((r, indice) => ({
+  ...r, idFurgoneta: `fur-${indice}`, placa: `F02-${String(indice).padStart(3, '0')}`,
+  limites: { pesoKg: 200, volumenM3: 2, paquetes: 40 },
+  ocupacion: { pesoKg: 200 - r.capacidadRemanente.pesoKg, volumenM3: 2 - r.capacidadRemanente.volumenM3, paquetes: 40 - r.capacidadRemanente.paquetes },
+  porcentajeOcupacion: { peso: (200 - r.capacidadRemanente.pesoKg) / 2, volumen: (2 - r.capacidadRemanente.volumenM3) * 50,
+    paquetes: (40 - r.capacidadRemanente.paquetes) * 2.5 },
+})) };
 export const creacionPrueba = { idDespacho: 'despacho-simulado', codigoOperativo: 'DSP-SIM-0001', codigoRastreoInterno: 'TRK-SIM-0001', estado: 'PENDIENTE_ASIGNACION', esSimulacion: true };

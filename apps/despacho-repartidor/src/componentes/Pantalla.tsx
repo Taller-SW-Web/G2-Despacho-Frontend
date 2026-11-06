@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
-import { Skeleton, Stack } from '@mantine/core';
+import { ActionIcon, Group, Skeleton, Stack } from '@mantine/core';
+import { useSesion } from '../sesion/SesionProveedor';
 import { IconChartBar, IconLogout2, IconRoute } from '@tabler/icons-react';
 import { EstadoVista, FranjaEstado, ShellRepartidor, type DestinoRepartidor } from '@despacho/componentes-compartidos';
 import { useNavigate } from 'react-router-dom';
@@ -28,6 +29,7 @@ type PropiedadesPantalla = {
 export function Pantalla({ titulo, children, seccion, estadoOperativo = null, alVolver, acciones, franja, accionEncabezado }: PropiedadesPantalla) {
   const navigate = useNavigate();
   const enLinea = useConexion();
+  const { cerrar } = useSesion();
   return (
     <ShellRepartidor
       titulo={titulo}
@@ -36,7 +38,8 @@ export function Pantalla({ titulo, children, seccion, estadoOperativo = null, al
       destinoActivo={seccion ?? null}
       modoPie={seccion ? 'navegacion' : acciones ? 'acciones' : 'ninguno'}
       accionesFijas={acciones}
-      accionEncabezado={accionEncabezado}
+      accionEncabezado={<Group gap={4} wrap="nowrap">{accionEncabezado}<ActionIcon size={44} variant="transparent" color="white"
+        aria-label="Cerrar sesión" title="Cerrar sesión" onClick={() => cerrar()}><IconLogout2 size={22} aria-hidden="true" /></ActionIcon></Group>}
       franjas={<>{!enLinea && <FranjaEstado tipo="sinConexion" />}{franja}</>}
       alNavegar={(destino) => navigate(destino.ruta)}
       alVolver={alVolver}

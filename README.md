@@ -65,7 +65,7 @@ npm run dev:repartidor
 2. Abrir `http://localhost:5173/desarrollo/f01`, seleccionar **Gestor de Despacho** y pulsar **Generar sesión de prueba**.
 3. Abrir **Zonas y tarifas** o navegar a las otras funcionalidades administrativas. Renovar la sesión desde el probador cuando venza.
 
-La sesión provisional guarda el JWT en `localStorage` con la clave `despacho.token`; no sustituye el inicio de sesión definitivo de Seguridad y Usuarios. Conservar el mismo origen (`localhost` y puerto): `127.0.0.1` utiliza otro almacenamiento del navegador. Cerrar sesión retira el token y evita reutilizar el token de desarrollo hasta preparar otra sesión.
+Solo el probador de desarrollo conserva su JWT ficticio en `localStorage` con la clave `despacho.token`. El nuevo acceso con correo/contraseña usa memoria y requiere iniciar sesión después de recargar. Para revisar login y MFA usar `/acceso`, según la sección de acceso de ambas apps. El probador anterior permanece como herramienta local; no sustituye la validación real de G7.
 
 El probador `/desarrollo/f01` y su proxy al emisor temporal existen solo en desarrollo, no en preview ni producción. Permiten además probar cobertura/cotización con una identidad técnica de prueba independiente; las pantallas administrativas utilizan la identidad humana.
 
@@ -80,7 +80,7 @@ La experiencia permite recorrer ruta, detalle, traslado, entrega/fallo con evide
 | Funcionalidad | Rutas principales | Alcance y límites de `v0.1.0` |
 |---|---|---|
 | F-01: zonas y tarifas | `/zonas`, `/zonas/nueva`, `/zonas/:id/editar`, `/zonas/:id/tarifas` | Catálogo, creación, edición, estado, distritos/códigos postales y tarifas; cobertura/cotización en el probador de desarrollo. |
-| F-02: programación | `/programacion` | Cola, filtros, indicadores, generación de pedidos de prueba y asignación; rutas/reasignación pendientes. Las simulaciones administrativas pueden persistir en el backend. |
+| F-02: programación | `/programacion` | Cola, filtros, indicadores, simulación y asignación; consulta de rutas, reordenamiento seguro y reasignación con recuperación idempotente. No se reordenan huecos históricos hasta aclaración. Integración real pendiente; las mutaciones administrativas pueden persistir en el backend. |
 | F-03: repartidor | `/repartidor/ruta`, `/repartidor/despachos/:id`, `/repartidor/resumen`, `/repartidor/cierre` | Demo en memoria en desarrollo; consultas por API y operaciones aún pendientes en producción, como se detalla arriba. |
 | F-04: entregas fallidas | `/entregas-fallidas`, `/entregas-fallidas/:idDespacho` | Listado, filtros, indicadores, detalle, historial, comunicaciones y visor de evidencia. Formularios de recepción, reprogramación y cierre no integrados en esta línea base. |
 | F-05: repartidores y vehículos | `/repartidores`, `/furgonetas` | Catálogos, formularios, cambios de estado y vinculación de cuenta. `/flota` redirige al catálogo de repartidores. |
@@ -119,13 +119,13 @@ npm run test:f01:e2e
 
 F-02 intercepta las APIs con fixtures y utiliza un servidor exclusivo en `127.0.0.1:4182`. F-01 utiliza el Gateway de `localhost:8080`, el emisor temporal y persistencia real; crea/modifica datos de zonas y tarifas. Antes de ejecutarla, comprobar que los servicios apuntan a un entorno de prueba aislado y autorizado; el script heredado no prepara ni aísla la base por sí mismo. No forma parte de las comprobaciones sin servicios.
 
+Las suites F-02 y flota completan el login y MFA del gestor mediante un doble HTTP de G7 antes de entrar a las pantallas protegidas. Usan credenciales ficticias, con el modo demo y el buzón local desactivados; no requieren Compose ni cuentas de Seguridad. El JWT simulado solo sirve al cliente de pruebas: estas suites no verifican su firma ni la autorización del backend.
+
 Los informes de navegador se generan en `test-results/` según el resultado. Registrar resultados reales en la evidencia correspondiente, diferenciando datos simulados, pruebas con persistencia e integración conjunta.
 
 ### Integración continua y protección de develop
 
-El workflow [CI frontend](.github/workflows/ci.yaml) se ejecuta en cada PR dirigido a `develop` o `main`, en los push a esas ramas y manualmente desde Actions. Usa Node.js 22 y `npm ci` con el lockfile raíz. Ejecuta por separado las suites de componentes, administrativo y repartidor, la comprobación de tipos y compilación de ambas aplicaciones, y las pruebas de navegador F-02 con Chromium y APIs simuladas. Conserva capturas y resultados de F-02 durante siete días. No necesita secretos ni despliega aplicaciones.
-
-La suite administrativa excluye temporalmente `src/features/zonas/**`: sus pruebas necesitan actualizar el mensaje de permisos esperado y las respuestas simuladas del catálogo al abrir tarifas. Esta exclusión no depende de la integración con Seguridad y debe retirarse al corregir esas pruebas; `npm run test:f01` y `npm run test:administrativo` siguen ejecutándolas manualmente. Zonas permanece incluida en tipos y compilación.
+El workflow [CI frontend](.github/workflows/ci.yaml) se ejecuta en cada PR dirigido a `develop` o `main`, en los push a esas ramas y manualmente desde Actions. Usa Node.js 22 y `npm ci` con el lockfile raíz. Ejecuta por separado las suites completas de componentes, administrativo y repartidor, la comprobación de tipos y compilación de ambas aplicaciones, y las pruebas de navegador F-02 y F-05/F-06 con Chromium y APIs simuladas. Conserva capturas y resultados de navegador durante siete días. No necesita secretos ni despliega aplicaciones.
 
 Para impedir que se integre un PR con fallos, un administrador debe configurar en GitHub una protección o ruleset para `develop`: exigir PR, activar **Require status checks to pass before merging** y **Require branches to be up to date before merging**, y seleccionar estas comprobaciones tras su primera ejecución:
 
@@ -172,14 +172,12 @@ Las pruebas del detalle utilizan fixtures y APIs simuladas; ejecutar `npm run te
 `apps/despacho-repartidor` es una PWA instalable en Android que implementa las
 12 pantallas del Figma de F-03: acceso, mi ruta, detalle, inicio de traslado,
 entrega y fallo con foto, fallo registrado, cierre de jornada y resumen. Consume
-el contrato de Operación §3 y el login propuesto a Seguridad (contrato externo §8.6).
+el contrato de Operación §3 y el acceso humano de Seguridad (contrato externo §8.6).
 
 - **Variables:** `VITE_API_BASE_URL` (Gateway), `VITE_SEGURIDAD_URL` (origen del
   login; vacío usa el Gateway) y `VITE_MODO_DEMO=true` para revisar la interfaz con
   datos en memoria, sin backend. Ver `apps/despacho-repartidor/.env.example`.
-- **Login:** `src/sesion/servicioAcceso.ts` es el único adaptador hacia Seguridad;
-  si su contrato definitivo difiere, solo cambia ese archivo. En local:
-  `mrojas@despacho.pe` / `Ruta2026!`.
+- **Login:** ambas apps usan `packages/cliente-api/src/sesion.ts`, preparado contra el kit G7 §7 y OpenAPI v1.1.0. Cuentas y comportamiento del ambiente publicado pendientes de verificación. En local: `gerardo@despacho.pe` o `kevin@despacho.pe`, clave `Ruta2026!`.
 - **Fotos:** se reducen en el navegador (lado mayor 1600 px, JPEG) para cumplir el
   límite de 2 MiB, se suben con la URL firmada y luego se confirma el comando. La
   re-codificación descarta EXIF. Sin bucket configurado en Operación, entrega y fallo
@@ -229,7 +227,25 @@ Después de `npm run build`, se puede inspeccionar cada construcción con `npm r
 
 Para Vercel, crear un proyecto por aplicación. Usar su directorio como raíz (`apps/despacho-administrativo` o `apps/despacho-repartidor`), habilitar acceso a los archivos del monorepositorio para instalar workspaces, construir con `npm run build` en esa aplicación y publicar `dist`. Ambas conservan `vercel.json` con la reescritura SPA a `index.html`.
 
-Configurar `VITE_API_BASE_URL` en cada proyecto antes de construir, usar HTTPS en el Gateway si el sitio es HTTPS y autorizar el origen publicado en CORS. Este repositorio no contiene una integración definitiva de inicio de sesión ni credenciales de despliegue.
+Configurar `VITE_API_BASE_URL` en cada proyecto antes de construir, usar HTTPS en el Gateway si el sitio es HTTPS y autorizar el origen publicado en CORS. El adaptador humano está preparado contra el contrato recibido de G7; no se ha verificado contra sus cuentas reales ni contiene credenciales de despliegue.
+
+## Acceso, MFA y sesión de ambas apps
+
+La app administrativa ofrece `/acceso`; el repartidor conserva `/repartidor/acceso`. Ambas envían JSON a Seguridad. El gestor completa un desafío OTP antes de entrar y necesita `GESTOR_DESPACHO`; el repartidor no necesita rol global, pero Operación exige su perfil activo vinculado. Las sesiones nuevas mantienen los tokens solo en memoria: recargar pide login. La renovación rotativa se serializa y el cierre limpia la sesión aunque falle la conexión. Solo se reintenta una vez una petición rechazada explícitamente por el filtro JWT; los demás errores de negocio/red conservan su tratamiento habitual.
+
+Para revisar el flujo local, en una fase de ejecución posterior:
+
+1. Reconstruir y arrancar el Compose del backend (`docker compose up -d --build`).
+2. Usar `VITE_API_BASE_URL=http://localhost:8080`, `VITE_SEGURIDAD_URL=` y `VITE_SEGURIDAD_LOCAL=true` en ambas apps; mantener los modos demo desactivados.
+3. Iniciar los servidores Vite habituales. Entrar como `gestor@despacho.pe`, `gerardo@despacho.pe` o `kevin@despacho.pe`, con clave ficticia `Ruta2026!`.
+4. El gestor ve el código generado en un buzón local dentro de la pantalla. Los códigos tienen seis dígitos, tres intentos y vencimiento; reenviar reemplaza el anterior sin extender el desafío. No se envían correos reales.
+5. Los repartidores siguen necesitando registro/vínculo F-05 y jornada. El emisor no crea esos datos. La carga de fotos sigue requiriendo el almacenamiento configurado en Operación.
+
+El buzón usa `/__sesion-local/codigo-otp` del proxy Vite contra el emisor en `127.0.0.1:8090`; esa ruta no existe en builds ni previews. El probador administrativo anterior se conserva solo para desarrollo. La demo F-03 en memoria también queda restringida a desarrollo.
+
+Para G7, desactivar `VITE_SEGURIDAD_LOCAL`. Se puede mantener el origen del Gateway y configurar su `SEGURIDAD_URL`, o configurar `VITE_SEGURIDAD_URL` con el origen de G7 sin `/api/v1` y acordar CORS. Confirmar primero ambiente, revisión contractual desplegada, cuentas activadas, envío de OTP y UUID de los repartidores. El kit recibido identifica el OpenAPI como revisión local no publicada; configurar una URL no acredita integración real. Contrato canónico: [acceso humano §8.6](../G2-Despacho-Specs/integraciones/api-contract.md#86-acceso-humano-de-ambas-aplicaciones).
+
+La fase de código se preparó sin ejecuciones; posteriormente el usuario autorizó la verificación local. Se comprobaron ambos accesos en navegador, errores/OTP/permisos/cierre, tipos, builds y regresiones. Los resultados, las correcciones y los límites de integración se registran en [ES-F03-01](../G2-Despacho-Specs/especificaciones/ES-F03-01-AccesoHabilitacionRepartidor/evidence.md).
 
 ## Especificaciones, contribuciones y versiones
 

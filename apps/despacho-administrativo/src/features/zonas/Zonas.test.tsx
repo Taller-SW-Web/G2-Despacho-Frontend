@@ -108,7 +108,7 @@ it('retira configuración y filtros si el catálogo revoca el permiso', async ()
     return new Promise(() => {});
   });
   await usuario.click(screen.getByRole('button', { name: 'Actualizar zonas' }));
-  await screen.findByText('No tienes permisos para ver la configuración de zonas');
+  await screen.findByText('No tienes permisos para ver esta información');
   expect(screen.queryByText('Comas: 15311')).not.toBeInTheDocument();
   expect(screen.queryByLabelText('Buscar por nombre')).not.toBeInTheDocument();
 });
@@ -137,9 +137,13 @@ it('distingue tarifa ausente de zona inexistente', async () => {
 
 it('precarga factor nulo y bloquea una tarifa con peso cero', async () => {
   const usuario = userEvent.setup();
-  cliente.get.mockImplementation(async (ruta: string) => ({ data: ruta.endsWith('/tarifa') ? {
-    tarifaBase: 10, pesoIncluidoKg: 3, recargoKgAdicional: 2, factorVolumetrico: null, moneda: 'PEN', plazoEstimadoDiasHabiles: 2,
-  } : zona }));
+  cliente.get.mockImplementation(async (ruta: string) => {
+    if (ruta === '/api/v1/distritos') return { data: structuredClone(catalogo) };
+    if (ruta.endsWith('/tarifa')) return { data: {
+      tarifaBase: 10, pesoIncluidoKg: 3, recargoKgAdicional: 2, factorVolumetrico: null, moneda: 'PEN', plazoEstimadoDiasHabiles: 2,
+    } };
+    return { data: structuredClone(zona) };
+  });
   montar('/zonas/zona-1/tarifas');
   const peso = await screen.findByRole('textbox', { name: 'Peso incluido hasta (kg)' });
   expect(screen.getByLabelText('Factor volumétrico')).toHaveValue('');

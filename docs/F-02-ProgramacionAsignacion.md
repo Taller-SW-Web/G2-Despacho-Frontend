@@ -4,7 +4,7 @@
 
 **Rama:** `feature/f02-completar-frontend`, creada desde `develop`.
 
-**Estado:** cola, simulación y asignación implementadas y verificadas con APIs simuladas. Integración entre servicios reales y barras de ocupación absoluta pendientes.
+**Estado:** cola, simulación y asignación implementadas y verificadas con APIs simuladas. El incremento del 05/11/2026 añade barras de ocupación absoluta y proyección con el contrato F-06 vigente. Integración real y aceptación humana pendientes.
 
 ## 1. Alcance y fuentes
 
@@ -88,9 +88,13 @@ La prueba de navegador confirma ausencia de desbordamiento de página en 1440 ×
 
 ## 6. Dependencias para completar F-02
 
-**Ocupación absoluta — ES-F02-04, CUI-03:** Operación §4.2 devuelve remanente, pero no límite total, ocupación, placa ni cantidad de despachos en ruta. No se puede derivar un porcentaje de ocupación ni buscar por placa desde esa respuesta. La interfaz presenta remanente y carga propuesta con sus unidades, y permite confirmar si las tres dimensiones alcanzan; la validación final permanece en Operación/Gestión. Se requiere completar la respuesta canónica del proveedor antes de integrar las barras absolutas y sus proyecciones. Este criterio visual no se registra como aprobado.
+**Ocupación absoluta — ES-F02-04, CUI-03:** la limitación anterior corresponde a la revisión del 17/10. Al contrastar el 05/11 el contrato vigente de Operación §4.2 y su captura sintética `contratos/f06-respuestas-backend.json`, ya se publican placa, límites y ocupación. `ModalAsignacion` ahora conserva esos datos, permite buscar por placa y reutiliza CR-20/CR-11 para las tres barras y la proyección del candidato seleccionado. La respuesta incompleta o con remanente incoherente bloquea la asignación; no hay fallback de límites inventados. Pruebas y límites actuales se registran en la [evidencia canónica de ES-F02-04](../../despacho-docs/especificaciones/ES-F02-04-AsignarDespachoRepartidor/evidence.md), EV-04. No acredita servicios reales.
 
-**Rutas y reasignación — ES-F02-05/06:** la segunda pestaña permanece identificada y deshabilitada. Son el siguiente incremento de backend y frontend, con consulta de jornadas/rutas, secuencia y reasignación; la entrega de las primeras cuatro especificaciones no acredita esos comandos.
+Las capturas nuevas de navegador con API simulada se guardan separadas de las históricas: [escritorio](./evidencia/f02/hito4/asignacion-1440.png), [tableta](./evidencia/f02/hito4/asignacion-1024.png) y [móvil](./evidencia/f02/hito4/asignacion-390.png).
+
+**Rutas y reasignación — ES-F02-05/06:** la pestaña ya está habilitada para consulta de jornadas/rutas por las APIs existentes. Permite reordenar con arrastre nativo o botones de teclado en fotografías continuas, guardando con versión de ruta y UUID; los huecos históricos se muestran sin renumerar y bloquean ese guardado hasta aclaración. El modal de reasignación excluye al conductor actual, exige motivo y capacidad suficiente y utiliza la versión numérica de la parada, distinta del ETag de ruta. Ante resultado incierto se conserva y recupera el mismo comando; no se crea otro automáticamente. La consulta se renueva al guardar o cambiar de jornada, sin caché de rutas destino. Los comandos requieren los proveedores y las credenciales vigentes, sin omitir seguridad.
+
+El perfil `render` del Gateway ahora conserva la precedencia de ruta/secuencia hacia Gestión frente al resto de jornadas de Operación. Se precisaron los transportes en los contratos canónicos de Gestión §3.2.1/2 y Operación §5.5, sin cambiar la identidad interna pendiente ni la regla de huecos. El incremento está verificado localmente con APIs simuladas; sus resultados actuales se registran en EV-04 de ES-F02-05 y ES-F02-06 en Specs. Capturas de [ruta móvil](./evidencia/f02/hito4/ruta-390.png) y [reasignación móvil](./evidencia/f02/hito4/reasignacion-390.png), exclusivamente sintéticas.
 
 **Integración real:** los tests verifican el consumidor con respuestas simuladas; aún corresponde ejecutar el recorrido con Gateway, Gestión, Seguridad y Operación reales. La verificación de teclado y responsive descrita no equivale a una auditoría integral con lector de pantalla.
 

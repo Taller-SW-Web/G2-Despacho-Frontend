@@ -43,7 +43,8 @@ export function interpretarError(error: unknown, mutacion = false) {
       if (typeof campo?.campo === 'string') campos[campo.campo] = 'Revisa este valor; el servidor no lo aceptó.';
     }
   }
-  return { estado, campos, permiso: estado === 401 || estado === 403, incierto: mutacion && (!estado || estado >= 500),
+  return { estado, codigo, campos, permiso: estado === 401 || estado === 403,
+    incierto: mutacion && (!estado || estado >= 500),
     mensaje: estado === 401 ? 'Tu sesión ha vencido o no está disponible. Inicia sesión para continuar.'
       : estado === 403 ? 'Tu sesión no tiene permiso para acceder a la programación de despachos.'
       : estado === 409 ? codigo === 'DESP_ERROR_RESERVA_ANTERIOR_ACTIVA'

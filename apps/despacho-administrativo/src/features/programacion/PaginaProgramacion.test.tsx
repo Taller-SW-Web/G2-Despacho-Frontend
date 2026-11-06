@@ -98,9 +98,13 @@ it('prioriza la zona, bloquea las tres dimensiones y confirma con las identidade
   await usuario.click(screen.getAllByRole('button', { name: 'Asignar' })[0]);
   await screen.findByRole('radio', { name: 'Juan de la zona' });
   for (const nombre of ['Pedro sin peso', 'María sin volumen', 'Luis sin paquetes']) expect(screen.getByRole('radio', { name: nombre })).toBeDisabled();
+  expect(within(screen.getByRole('radio', { name: 'Pedro sin peso' })).getByRole('progressbar', { name: 'Peso' }))
+    .toHaveAttribute('aria-valuetext', expect.stringContaining('Excede en 11 kg'));
   expect(within(screen.getByRole('radiogroup', { name: 'Repartidor' })).getAllByRole('radio').at(-1)).toHaveAccessibleName('Ana de otra zona');
-  expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+  expect(screen.getAllByRole('progressbar')).toHaveLength(15);
   await usuario.click(screen.getByRole('radio', { name: 'Juan de la zona' }));
+  expect(within(screen.getByRole('radio', { name: 'Juan de la zona' })).getByRole('progressbar', { name: 'Peso' }))
+    .toHaveAttribute('aria-valuetext', expect.stringContaining('Proyección: 112 / 200 kg'));
   await usuario.type(screen.getByRole('textbox', { name: 'Observaciones o instrucciones de entrega' }), 'Prioridad');
   let resolver!: (respuesta: unknown) => void;
   publicar.mockImplementation(() => new Promise((r) => { resolver = r; }));
@@ -151,12 +155,44 @@ it('reconsulta capacidad tras un rechazo y exige una selección nueva sin repeti
   await usuario.click(screen.getAllByRole('button', { name: 'Asignar' })[0]);
   await usuario.click(await screen.findByRole('radio', { name: 'Juan de la zona' }));
   const nuevaCapacidad = structuredClone(disponiblesPrueba);
-  nuevaCapacidad.repartidores.find((r) => r.idRepartidor === 'rep-centro')!.capacidadRemanente.paquetes = 0;
+  const candidato = nuevaCapacidad.repartidores.find((r) => r.idRepartidor === 'rep-centro')!;
+  candidato.capacidadRemanente.paquetes = 0;
+  candidato.ocupacion.paquetes = candidato.limites.paquetes;
+  candidato.porcentajeOcupacion.paquetes = 100;
   obtener.mockImplementation(async (ruta: string) => ({ data: ruta.endsWith('/disponibles') ? nuevaCapacidad : ruta === '/api/v1/zonas' ? zonasPrueba : pagina }));
   await usuario.click(screen.getByRole('button', { name: 'Confirmar asignación' }));
   await waitFor(() => expect(screen.getByRole('radio', { name: 'Juan de la zona' })).toBeDisabled());
   expect(screen.getByRole('button', { name: 'Confirmar asignación' })).toBeDisabled();
   expect(publicar).toHaveBeenCalledTimes(1);
+});
+
+it('busca por la placa publicada y proyecta ocupación solo en el candidato seleccionado', async () => {
+  const usuario = userEvent.setup();
+  montar();
+  await screen.findByText('TRK-78900');
+  await usuario.click(screen.getAllByRole('button', { name: 'Asignar' })[0]);
+  await screen.findByRole('radio', { name: 'Juan de la zona' });
+  await usuario.type(screen.getByRole('textbox', { name: 'Buscar repartidor' }), 'F02-002');
+  const tarjeta = screen.getByRole('radio', { name: 'Juan de la zona' });
+  expect(within(screen.getByRole('dialog')).getAllByRole('radio')).toHaveLength(1);
+  expect(within(tarjeta).getByRole('progressbar', { name: 'Peso' })).toHaveAttribute('aria-valuenow', '50');
+  expect(within(tarjeta).getByRole('progressbar', { name: 'Peso' })).not.toHaveAttribute('aria-valuetext', expect.stringContaining('Proyección'));
+  await usuario.click(tarjeta);
+  expect(within(tarjeta).getByRole('progressbar', { name: 'Peso' })).toHaveAttribute('aria-valuetext', expect.stringContaining('Proyección: 112 / 200 kg'));
+});
+
+it('no fabrica métricas ni permite asignar si la respuesta omite límites o contiene remanente incoherente', async () => {
+  const usuario = userEvent.setup();
+  const invalida = structuredClone(disponiblesPrueba);
+  invalida.repartidores[0].capacidadRemanente.pesoKg = 999;
+  obtener.mockImplementation(async (ruta: string) => ({ data: ruta.endsWith('/disponibles') ? invalida : ruta === '/api/v1/zonas' ? zonasPrueba : pagina }));
+  montar();
+  await screen.findByText('TRK-78900');
+  await usuario.click(screen.getAllByRole('button', { name: 'Asignar' })[0]);
+  await screen.findByRole('button', { name: 'Reintentar repartidores' });
+  expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Confirmar asignación' })).toBeDisabled();
+  expect(publicar).not.toHaveBeenCalled();
 });
 
 it('ignora respuestas viejas cuando cambian filtros aunque HTTP ignore la cancelación', async () => {
