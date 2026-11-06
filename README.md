@@ -119,6 +119,8 @@ npm run test:f01:e2e
 
 F-02 intercepta las APIs con fixtures y utiliza un servidor exclusivo en `127.0.0.1:4182`. F-01 utiliza el Gateway de `localhost:8080`, el emisor temporal y persistencia real; crea/modifica datos de zonas y tarifas. Antes de ejecutarla, comprobar que los servicios apuntan a un entorno de prueba aislado y autorizado; el script heredado no prepara ni aísla la base por sí mismo. No forma parte de las comprobaciones sin servicios.
 
+Las suites F-02 y flota completan el login y MFA del gestor mediante un doble HTTP de G7 antes de entrar a las pantallas protegidas. Usan credenciales ficticias, con el modo demo y el buzón local desactivados; no requieren Compose ni cuentas de Seguridad. El JWT simulado solo sirve al cliente de pruebas: estas suites no verifican su firma ni la autorización del backend.
+
 Los informes de navegador se generan en `test-results/` según el resultado. Registrar resultados reales en la evidencia correspondiente, diferenciando datos simulados, pruebas con persistencia e integración conjunta.
 
 ### Integración continua y protección de develop

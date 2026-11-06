@@ -6,7 +6,7 @@ export default defineConfig({
   use: { baseURL: 'http://127.0.0.1:4182', viewport: { width: 1440, height: 1024 }, trace: 'off', screenshot: 'only-on-failure' },
   webServer: {
     command: 'npm run dev -w @despacho/administrativo -- --host 127.0.0.1 --port 4182 --strictPort',
-    env: { VITE_API_BASE_URL: 'http://127.0.0.1:4182' },
+    env: { VITE_API_BASE_URL: 'http://127.0.0.1:4182', VITE_SEGURIDAD_URL: '', VITE_SEGURIDAD_LOCAL: 'false', VITE_DEV_TOKEN: '', VITE_DEMO_SIN_AUTENTICACION: 'false' },
     url: 'http://127.0.0.1:4182', reuseExistingServer: false,
   },
 });

@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { iniciarSesionGestor } from '../soporte/sesionGestor';
 import { paginaPrueba, zonasPrueba } from '../../apps/despacho-administrativo/src/features/programacion/fixtures.prueba';
 import { rutaPrueba, monitoreoRutasPrueba, candidatosRutaPrueba, reasignacionPrueba } from '../../apps/despacho-administrativo/src/features/programacion/rutas.fixtures.prueba';
 
@@ -50,7 +51,7 @@ for (const [ancho, alto] of [[1440, 1024], [1024, 768], [390, 844]]) {
       } else return interceptada.fulfill({ status: 404, json: { status: 404 } });
       await interceptada.fulfill({ status: 200, json: data });
     });
-    await page.goto('/programacion');
+    await iniciarSesionGestor(page, '/programacion');
     await page.getByRole('tab', { name: 'Rutas por repartidor' }).click();
     const selector = page.getByRole('combobox', { name: 'Jornada / repartidor' });
     await selector.click();

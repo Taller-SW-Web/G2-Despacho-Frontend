@@ -1,4 +1,5 @@
 import { expect, test, type Page, type Locator } from '@playwright/test';
+import { iniciarSesionGestor } from '../soporte/sesionGestor';
 import { repartidorPrueba, furgonetaPrueba } from '../../apps/despacho-administrativo/src/features/flota/fixtures.prueba';
 import { idsPrueba, jornadaPrueba } from '../../apps/despacho-administrativo/src/features/jornadas/fixtures.prueba';
 
@@ -70,7 +71,7 @@ async function seleccionar(page: Page, dialogo: Locator, nombre: string, opcion:
 for (const ancho of [1440, 390]) {
   test(`F-05: alta, edición, vinculación local y baja de repartidor a ${ancho}px`, async ({ page }) => {
     await page.setViewportSize({ width: ancho, height: 900 });
-    await page.goto('/repartidores');
+    await iniciarSesionGestor(page, '/repartidores');
     await page.getByRole('button', { name: 'Nuevo repartidor', exact: true }).click();
     const dialogo = page.getByRole('dialog');
     for (const [campo, valor] of [['Nombres', 'Nuevo'], ['Apellidos', 'Operador'], ['DNI', '87654321'],
@@ -101,7 +102,7 @@ for (const ancho of [1440, 390]) {
 
   test(`F-05: registrar, editar y rehabilitar furgoneta a ${ancho}px`, async ({ page }) => {
     await page.setViewportSize({ width: ancho, height: 900 });
-    await page.goto('/furgonetas');
+    await iniciarSesionGestor(page, '/furgonetas');
     await page.getByRole('button', { name: 'Nueva furgoneta', exact: true }).click();
     const dialogo = page.getByRole('dialog');
     for (const [campo, valor] of [['Placa', 'NUEVA-01'], ['Límite de peso (kg)', '100'], ['Límite de volumen (m³)', '2'], ['Máximo de paquetes', '10']]) {
@@ -126,7 +127,7 @@ for (const ancho of [1440, 390]) {
 
   test(`F-06: apertura, detalle, cierre y sesión entre pestañas a ${ancho}px`, async ({ page }) => {
     await page.setViewportSize({ width: ancho, height: 900 });
-    await page.goto('/jornadas');
+    await iniciarSesionGestor(page, '/jornadas');
     await page.getByRole('button', { name: 'Abrir jornada', exact: true }).click();
     const dialogo = page.getByRole('dialog');
     await seleccionar(page, dialogo, 'Repartidor', 'Ana Prueba');
