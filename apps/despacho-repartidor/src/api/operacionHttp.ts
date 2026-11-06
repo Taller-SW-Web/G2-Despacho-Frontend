@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { crearClienteApi } from '@despacho/cliente-api';
+import type { GestorSesion } from '@despacho/cliente-api/sesion';
 import { aErrorOperacion, ErrorOperacion } from './errores';
 import {
   esquemaAutorizacionCarga, esquemaDetalle, esquemaMotivos, esquemaResumen, esquemaRuta,
@@ -7,8 +8,9 @@ import {
 } from './tipos';
 
 /** Contrato de Operación §3 a través del Gateway. Los errores salen siempre como ErrorOperacion. */
-export function crearOperacionHttp(urlBase: string, obtenerToken: () => string | null): PuertoOperacion {
-  const cliente = crearClienteApi(urlBase, obtenerToken);
+export function crearOperacionHttp(urlBase: string, obtenerToken: () => string | null | Promise<string | null>,
+  sesion?: Pick<GestorSesion, 'invalidar' | 'recuperarToken'>): PuertoOperacion {
+  const cliente = crearClienteApi(urlBase, obtenerToken, sesion?.invalidar, sesion?.recuperarToken);
   const conClave = (clave: string) => ({ headers: { 'Idempotency-Key': clave } });
   const detalle = (idDespacho: string, datos: unknown): DetalleDespacho => {
     const resultado = esquemaDetalle.parse(datos);
