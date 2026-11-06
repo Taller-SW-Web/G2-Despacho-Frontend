@@ -1,4 +1,5 @@
 import { MantineProvider } from '@mantine/core';
+import { useEffect, useState, type ReactNode } from 'react';
 import { Notifications } from '@mantine/notifications';
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -9,15 +10,29 @@ import { Aplicacion } from './Aplicacion';
 import { ErrorOperacion } from './api/errores';
 import { crearOperacionDemo } from './api/operacionDemo';
 import type { PuertoOperacion } from './api/tipos';
-import { SesionProveedor } from './sesion/SesionProveedor';
+import { SesionProveedor, useSesion } from './sesion/SesionProveedor';
 
 vi.mock('./evidencia/optimizarFoto', () => ({ optimizarFoto: async (archivo: File) => archivo }));
-vi.mock('./sesion/servicioAcceso', () => ({
-  iniciarSesionSeguridad: vi.fn(async (_origen: string, usuario: string, clave: string) => {
-    if (clave !== 'correcta') throw new ErrorOperacion('validacion', 'Usuario o contraseña incorrectos.');
-    return { token: 'jwt', expiraEn: Date.now() + 900_000, usuario };
-  }),
-}));
+vi.mock('@despacho/cliente-api/sesion', async importar => {
+  const real = await importar<typeof import('@despacho/cliente-api/sesion')>();
+  return { ...real, crearAccesoSeguridad: () => ({
+    iniciar: vi.fn(async (correo: string, clave: string) => {
+      if (clave !== 'correcta') throw new real.ErrorSesion('CREDENCIALES_INVALIDAS', 'El correo o la contraseña no son correctos.', 401);
+      return { accessToken: 'jwt', refreshToken: 'refresco', tokenType: 'Bearer', expiresIn: 900, expiraEn: Date.now() + 900_000,
+        usuario: { id: 'persona', nombreCompleto: correo, correo, roles: [] } };
+    }),
+    cerrar: vi.fn(async () => {}),
+  }) };
+});
+let prepararSesion = false;
+function SesionInicial({ children }: { children: ReactNode }) {
+  const { gestor } = useSesion();
+  const [lista, setLista] = useState(!prepararSesion);
+  useEffect(() => {
+    if (prepararSesion) void gestor.iniciar('mrojas@despacho.pe', 'correcta').then(() => setLista(true));
+  }, [gestor]);
+  return lista ? <>{children}</> : null;
+}
 
 const UUID_V4 = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
 const ASIGNADO = '00000000-0000-4000-8000-000000000002';
@@ -33,18 +48,18 @@ function montar(ruta: string, puerto: PuertoOperacion) {
     <MantineProvider theme={tema}>
       <Notifications />
       <MemoryRouter initialEntries={[ruta]}>
-        <SesionProveedor><Aplicacion puerto={puerto} /></SesionProveedor>
+        <SesionProveedor><SesionInicial><Aplicacion puerto={puerto} /></SesionInicial></SesionProveedor>
       </MemoryRouter>
     </MantineProvider>,
   );
 }
 
 function iniciarSesionGuardada() {
-  localStorage.setItem('despacho.token', 'jwt');
-  localStorage.setItem('despacho.repartidor.expiraEn', String(Date.now() + 900_000));
+  prepararSesion = true;
 }
 
 beforeEach(() => {
+  prepararSesion = false;
   localStorage.clear(); sessionStorage.clear();
   // JSDOM no implementa URLs de objetos; la previsualización solo necesita una cadena.
   URL.createObjectURL = vi.fn(() => 'blob:prueba');
@@ -59,10 +74,10 @@ describe('acceso', () => {
   it('sin sesión lleva al ingreso y, con credenciales válidas, abre la ruta', async () => {
     const usuario = userEvent.setup();
     montar('/repartidor/ruta', espiar(crearOperacionDemo()));
-    await usuario.type(await screen.findByLabelText('Usuario o correo'), 'mrojas@despacho.pe');
+    await usuario.type(await screen.findByLabelText('Correo electrónico'), 'mrojas@despacho.pe');
     await usuario.type(screen.getByLabelText('Contraseña'), 'incorrecta');
     await usuario.click(screen.getByRole('button', { name: 'Ingresar' }));
-    expect(await screen.findByRole('alert')).toHaveTextContent('Usuario o contraseña incorrectos.');
+    expect(await screen.findByRole('alert')).toHaveTextContent('El correo o la contraseña no son correctos.');
     await usuario.clear(screen.getByLabelText('Contraseña'));
     await usuario.type(screen.getByLabelText('Contraseña'), 'correcta');
     await usuario.click(screen.getByRole('button', { name: 'Ingresar' }));
@@ -74,7 +89,7 @@ describe('acceso', () => {
     const puerto = espiar(crearOperacionDemo());
     vi.mocked(puerto.consultarRuta).mockRejectedValue(new ErrorOperacion('sesion', 'Tu sesión expiró.'));
     montar('/repartidor/ruta', puerto);
-    expect(await screen.findByText('Sesión expirada')).toBeInTheDocument();
+    expect(await screen.findByText('Tu sesión terminó. Inicia sesión de nuevo.')).toBeInTheDocument();
     expect(localStorage.getItem('despacho.token')).toBeNull();
   });
 });

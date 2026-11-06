@@ -1,6 +1,6 @@
 import { ErrorOperacion } from './errores';
 import type { DespachoRuta, DetalleDespacho, Hitos, MotivoFallo, PuertoOperacion, ResumenJornada, RutaRepartidor } from './tipos';
-import type { SesionIniciada } from '../sesion/servicioAcceso';
+type SesionIniciada = { token: string; expiraEn: number; usuario: string };
 import { generarUuidV4 } from '../utilidades/claves';
 
 /**

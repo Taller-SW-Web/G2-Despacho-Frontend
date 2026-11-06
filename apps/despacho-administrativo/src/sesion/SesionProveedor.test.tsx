@@ -5,12 +5,12 @@ import { useClienteApi } from '../cliente/useClienteApi';
 
 afterEach(() => { localStorage.clear(); vi.unstubAllEnvs(); });
 
-it('el modo demo publicado ignora tokens guardados y no envía Authorization', async () => {
+it('un build publicado ignora tanto el modo demo como los tokens antiguos del navegador', async () => {
   vi.stubEnv('DEV', false);
   vi.stubEnv('VITE_DEMO_SIN_AUTENTICACION', 'true');
   localStorage.setItem('despacho.token', 'token-antiguo');
   const { result } = renderHook(() => ({ sesion: useSesion(), cliente: useClienteApi() }), { wrapper: SesionProveedor });
-  expect(result.current.sesion.modoDemo).toBe(true);
+  expect(result.current.sesion.modoDemo).toBe(false);
   expect(result.current.sesion.obtenerToken()).toBeNull();
   let autorizacion: unknown;
   result.current.cliente.defaults.adapter = async (configuracion) => {
@@ -20,16 +20,16 @@ it('el modo demo publicado ignora tokens guardados y no envía Authorization', a
   await result.current.cliente.get('/api/v1/zonas');
   expect(autorizacion).toBeUndefined();
   act(() => result.current.sesion.guardarToken(null));
-  expect(localStorage.getItem('despacho.token')).toBe('token-antiguo');
+  expect(localStorage.getItem('despacho.token')).toBeNull();
 });
 
-it('al desactivar el modo demo conserva el uso normal de la sesión', () => {
+it('un token guardado antes de recargar no restaura una sesión publicada', () => {
   vi.stubEnv('DEV', false);
   vi.stubEnv('VITE_DEMO_SIN_AUTENTICACION', 'false');
   localStorage.setItem('despacho.token', 'token-real-de-prueba');
   const { result } = renderHook(useSesion, { wrapper: SesionProveedor });
   expect(result.current.modoDemo).toBe(false);
-  expect(result.current.obtenerToken()).toBe('token-real-de-prueba');
+  expect(result.current.obtenerToken()).toBeNull();
 });
 
 it('al cerrar sesión no recupera el token de desarrollo; admite una nueva sesión explícita', () => {

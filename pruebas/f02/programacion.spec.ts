@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { iniciarSesionGestor } from '../soporte/sesionGestor';
 import { creacionPrueba, disponiblesPrueba, paginaPrueba, zonasPrueba } from '../../apps/despacho-administrativo/src/features/programacion/fixtures.prueba';
 
 // Navegador real y API simulada explícita: no acredita las reglas de los servicios.
@@ -28,7 +29,7 @@ test.beforeEach(async ({ page }) => {
 for (const [ancho, alto] of [[1440, 1024], [1024, 768], [390, 844]]) {
   test(`cola y modal sin desbordamiento de página a ${ancho} px`, async ({ page }) => {
     await page.setViewportSize({ width: ancho, height: alto });
-    await page.goto('/programacion');
+    await iniciarSesionGestor(page, '/programacion');
     await expect(page.getByText('TRK-78900', { exact: true })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Programación y asignación', exact: true })).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
@@ -57,7 +58,7 @@ for (const [ancho, alto] of [[1440, 1024], [1024, 768], [390, 844]]) {
 }
 
 test('genera, muestra la nueva fila y asigna usando exclusivamente las rutas públicas', async ({ page }) => {
-  await page.goto('/programacion');
+  await iniciarSesionGestor(page, '/programacion');
   await expect(page.getByText('TRK-78900', { exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Generar pedido de prueba', exact: true }).click();
   await expect(page.getByText('TRK-SIM-0001', { exact: true })).toBeVisible();
