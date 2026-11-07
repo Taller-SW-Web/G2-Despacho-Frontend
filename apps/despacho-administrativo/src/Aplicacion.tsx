@@ -1,6 +1,6 @@
 import { lazy, Suspense } from 'react';
 import { Anchor, Box, Loader, Stack, Text, Title } from '@mantine/core';
-import { IconMapPin, IconCalendarTime, IconChartBar, IconPackageOff, IconTruck, IconUsers } from '@tabler/icons-react';
+import { IconArrowBackUp, IconMapPin, IconCalendarTime, IconChartBar, IconPackageOff, IconTruck, IconUsers } from '@tabler/icons-react';
 import { Link, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { ShellAdministrativo } from '@despacho/componentes-compartidos';
 import { PaginaEntregasFallidas } from './features/entregas-fallidas/PaginaEntregasFallidas';
@@ -14,6 +14,7 @@ import { PaginaRepartidores } from './features/flota/PaginaRepartidores';
 import { PaginaFurgonetas } from './features/flota/PaginaFurgonetas';
 import { PaginaProgramacion } from './features/programacion/PaginaProgramacion';
 import { PaginaJornadas } from './features/jornadas/PaginaJornadas';
+import { PaginaRecojos } from './features/recojos/PaginaRecojos';
 import clases from './Aplicacion.module.css';
 
 const ProbadorF01 = import.meta.env.DEV ? lazy(() => import('./features/zonas/desarrollo/ProbadorF01')) : null;
@@ -22,6 +23,7 @@ const secciones = [
   { ruta: '/programacion', titulo: 'Programación', descripcion: 'Cola de despachos y asignación · F-02', endpoint: 'GET /api/v1/despachos/pendientes', Icono: IconCalendarTime },
   { ruta: '/jornadas', titulo: 'Monitoreo de flota', descripcion: 'Disponibilidad y capacidad diaria · F-06', endpoint: 'GET /api/v1/flota/monitoreo', Icono: IconChartBar },
   { ruta: '/entregas-fallidas', titulo: 'Entregas fallidas', descripcion: 'Incidencias y reprogramación · F-04', endpoint: 'GET /api/v1/despachos/fallidos', Icono: IconPackageOff },
+  { ruta: '/recojos', titulo: 'Recojos', descripcion: 'Devoluciones en el domicilio · F-02 y F-04', endpoint: 'GET /api/v1/recojos', Icono: IconArrowBackUp },
   { ruta: '/repartidores', titulo: 'Repartidores', descripcion: 'Catálogo de repartidores · F-05', endpoint: 'GET /api/v1/repartidores', Icono: IconUsers },
   { ruta: '/furgonetas', titulo: 'Vehículos', descripcion: 'Catálogo de furgonetas · F-05', endpoint: 'GET /api/v1/furgonetas', Icono: IconTruck },
   { ruta: '/zonas', titulo: 'Zonas y tarifas', descripcion: 'Gestión de cobertura y tarifas · F-01', endpoint: 'GET /api/v1/zonas', Icono: IconMapPin },
@@ -73,6 +75,7 @@ export function Aplicacion() {
           navegar(`/entregas-fallidas/${encodeURIComponent(entrega.idDespacho)}?${parametros}`);
         }} />} />
         <Route path="/entregas-fallidas/:idDespacho" element={<PaginaDetalleIncidencia />} />
+        <Route path="/recojos" element={<PaginaRecojos />} />
         <Route path="/repartidores" element={<PaginaRepartidores />} />
         <Route path="/furgonetas" element={<PaginaFurgonetas />} />
         <Route path="/jornadas" element={<PaginaJornadas />} />

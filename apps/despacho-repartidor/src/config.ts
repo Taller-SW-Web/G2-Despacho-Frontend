@@ -10,6 +10,9 @@ export const URL_SEGURIDAD = import.meta.env.VITE_SEGURIDAD_URL || URL_API;
 /** Demostración sin backend: datos y operaciones en memoria, nunca contra servicios reales. */
 export const MODO_DEMO = import.meta.env.DEV && import.meta.env.VITE_MODO_DEMO === 'true';
 
+/** Tipo de la jornada de demostración; en un entorno real lo decide el Gestor al abrirla. */
+export const TIPO_JORNADA_DEMO = import.meta.env.VITE_DEMO_TIPO_JORNADA === 'RECOJOS' ? 'RECOJOS' : 'ENTREGAS';
+
 /** Política de evidencia del contrato de Operación §3.2. */
 export const POLITICA_EVIDENCIA = {
   tiposPermitidos: ['image/jpeg', 'image/png', 'image/webp'],

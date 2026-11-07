@@ -6,6 +6,7 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useOperacion } from '../api/ContextoOperacion';
 import { aErrorOperacion } from '../api/errores';
 import type { DetalleDespacho } from '../api/tipos';
+import { trabajoDe, type TipoTrabajo } from '../api/trabajo';
 import { CargandoTarjetas, ErrorConsulta, Pantalla } from '../componentes/Pantalla';
 import { useConsulta } from '../componentes/useConsulta';
 import { claveDeIntencion, liberarClave } from '../utilidades/claves';
@@ -36,6 +37,7 @@ function hitoActual(detalle: DetalleDespacho): { etiqueta: string; valor: string
     ASIGNADO: ['Asignado a las', h?.asignadoEn],
     EN_CAMINO: ['En camino desde', h?.enCaminoEn],
     ENTREGADO: ['Entregado a las', h?.entregadoEn],
+    RECOGIDO: ['Recogido a las', h?.recogidoEn],
     FALLIDO: ['Registrado a las', h?.fallidoEn],
   };
   const [etiqueta, instante] = pares[detalle.estado] ?? ['Actualizado', null];
@@ -43,12 +45,14 @@ function hitoActual(detalle: DetalleDespacho): { etiqueta: string; valor: string
 }
 
 /** 03 · Detalle asignado y 04 · Detalle en camino. Abrir no cambia el estado; solo los botones lo hacen. */
-export function PaginaDetalle() {
+export function PaginaDetalle({ tipo = 'ENTREGA' }: { tipo?: TipoTrabajo }) {
   const { id = '' } = useParams();
   const operacion = useOperacion();
   const navigate = useNavigate();
+  const trabajo = trabajoDe(operacion, tipo);
+  const esRecojo = tipo === 'RECOJO';
   const totalRuta = (useLocation().state as EstadoNavegacionDetalle | null)?.totalRuta;
-  const cargar = useCallback((signal: AbortSignal) => operacion.consultarDetalle(id, signal), [operacion, id]);
+  const cargar = useCallback((signal: AbortSignal) => trabajoDe(operacion, tipo).consultar(id, signal), [operacion, id, tipo]);
   const { consulta, recargar } = useConsulta(cargar);
   const [actualizado, setActualizado] = useState<DetalleDespacho | null>(null);
   const [procesando, setProcesando] = useState(false);
@@ -56,11 +60,11 @@ export function PaginaDetalle() {
   const detalle = actualizado ?? (consulta.estado === 'lista' ? consulta.datos : null);
 
   async function iniciarTraslado() {
-    const alcance = `inicio:${id}`;
+    const alcance = `${esRecojo ? 'inicio-recojo' : 'inicio'}:${id}`;
     setProcesando(true);
     setError(null);
     try {
-      const resultado = await operacion.iniciarTraslado(id, claveDeIntencion(alcance));
+      const resultado = await trabajo.iniciar(id, claveDeIntencion(alcance));
       liberarClave(alcance);
       setActualizado(resultado);
       notificarOperacion({ id: `inicio-${id}`, tipo: 'exito', mensaje: `${resultado.codigoRastreoInterno} va en camino.` });
@@ -77,23 +81,23 @@ export function PaginaDetalle() {
 
   const acciones = detalle?.estado === 'ASIGNADO' ? (
     <Button fullWidth size="lg" leftSection={<IconTruck size={20} />} loading={procesando} onClick={iniciarTraslado}>
-      Iniciar traslado
+      {esRecojo ? 'En camino' : 'Iniciar traslado'}
     </Button>
   ) : detalle?.estado === 'EN_CAMINO' ? (
     <Stack gap="sm">
-      <Button fullWidth size="lg" leftSection={<IconCamera size={20} />} onClick={() => navigate(`/repartidor/despachos/${id}/entrega`)}>
-        Confirmar entrega
+      <Button fullWidth size="lg" leftSection={<IconCamera size={20} />} onClick={() => navigate(esRecojo ? `${trabajo.base}/${id}/recogido` : `${trabajo.base}/${id}/entrega`)}>
+        {esRecojo ? 'Registrar recojo' : 'Confirmar entrega'}
       </Button>
       <Button fullWidth size="lg" variant="outline" color="red" leftSection={<IconX size={20} />}
-        onClick={() => navigate(`/repartidor/despachos/${id}/fallo`)}>
-        Marcar como fallido
+        onClick={() => navigate(`${trabajo.base}/${id}/fallo`)}>
+        {esRecojo ? 'No se pudo recoger' : 'Marcar como fallido'}
       </Button>
     </Stack>
   ) : undefined;
 
   return (
     <Pantalla
-      titulo={detalle?.codigoRastreoInterno ?? 'Despacho'}
+      titulo={detalle?.codigoRastreoInterno ?? (esRecojo ? 'Recojo' : 'Despacho')}
       alVolver={() => navigate('/repartidor/ruta')}
       accionEncabezado={detalle && <BadgeEstado contexto="despacho" valor={detalle.estado} size="sm" />}
       acciones={acciones}
@@ -104,7 +108,7 @@ export function PaginaDetalle() {
         <Stack gap="md">
           {error && <Alert color="red" icon={<IconAlertCircle size={18} />} title="No se registró el cambio" role="alert">{error}</Alert>}
           {detalle.destino && (
-            <Seccion icono={<IconMapPin size={20} />} titulo="Destino">
+            <Seccion icono={<IconMapPin size={20} />} titulo={esRecojo ? 'Domicilio' : 'Destino'}>
               <Text fw={700} size="lg">{detalle.destino.direccion}, {detalle.destino.distrito}</Text>
               {detalle.destino.referencia && <Text c="var(--ia-color-text-secondary)">Ref.: {detalle.destino.referencia}</Text>}
               <Button component="a" variant="outline" size="lg" fullWidth target="_blank" rel="noopener noreferrer"
@@ -115,7 +119,7 @@ export function PaginaDetalle() {
             </Seccion>
           )}
           {detalle.destinatario && (
-            <Seccion icono={<IconUserCheck size={20} />} titulo="Destinatario">
+            <Seccion icono={<IconUserCheck size={20} />} titulo={esRecojo ? 'Contacto' : 'Destinatario'}>
               <Group justify="space-between" wrap="nowrap" align="center">
                 <Stack gap={2} style={{ minWidth: 0 }}>
                   <Text fw={700} size="lg">{detalle.destinatario.nombre}</Text>
@@ -129,11 +133,18 @@ export function PaginaDetalle() {
             </Seccion>
           )}
           {!detalle.destino && (
-            <Alert color="gray" title={complementoResultado(detalle) ?? 'Despacho resuelto'}>
-              Los datos del destinatario ya no se muestran para un despacho resuelto.
+            <Alert color="gray" title={complementoResultado(detalle, tipo) ?? (esRecojo ? 'Recojo resuelto' : 'Despacho resuelto')}>
+              {esRecojo ? 'Los datos del contacto ya no se muestran para un recojo resuelto.' : 'Los datos del destinatario ya no se muestran para un despacho resuelto.'}
             </Alert>
           )}
-          <Seccion icono={<IconPackage size={20} />} titulo="Despacho">
+          {esRecojo && detalle.lineas && (
+            <Seccion icono={<IconPackage size={20} />} titulo="Productos a recoger">
+              <Stack gap={4}>
+                {detalle.lineas.map((linea) => <Text key={linea.sku} fw={700}>{linea.cantidad} × {linea.sku}</Text>)}
+              </Stack>
+            </Seccion>
+          )}
+          <Seccion icono={<IconPackage size={20} />} titulo={esRecojo ? 'Recojo' : 'Despacho'}>
             <SimpleGrid cols={2} spacing="md" verticalSpacing="sm">
               <Dato etiqueta="Posición en ruta" valor={`${detalle.secuenciaRuta ?? '—'}${totalRuta ? ` de ${totalRuta}` : ''}`} />
               <Dato etiqueta="Intento" valor={etiquetaIntento(detalle.numeroIntentos, detalle.maximoIntentos, detalle.estado).replace('Intento ', '')} />
@@ -142,10 +153,10 @@ export function PaginaDetalle() {
             </SimpleGrid>
           </Seccion>
           {detalle.estado === 'EN_CAMINO' && (
-            <Alert color="blue" icon={<IconCamera size={18} />}>Para cerrar la entrega necesitas una foto del paquete.</Alert>
+            <Alert color="blue" icon={<IconCamera size={18} />}>{esRecojo ? 'Para registrar el recojo necesitas una foto del producto.' : 'Para cerrar la entrega necesitas una foto del paquete.'}</Alert>
           )}
           {detalle.estado === 'ASIGNADO' && (
-            <Text size="sm" c="var(--ia-color-text-secondary)">Pulsa «Iniciar traslado» cuando recojas el paquete y salgas del centro.</Text>
+            <Text size="sm" c="var(--ia-color-text-secondary)">{esRecojo ? 'Pulsa «En camino» cuando salgas hacia el domicilio.' : 'Pulsa «Iniciar traslado» cuando recojas el paquete y salgas del centro.'}</Text>
           )}
           {!detalle.destino && <Anchor component="button" type="button" onClick={() => navigate('/repartidor/ruta')}>Volver a mi ruta</Anchor>}
         </Stack>

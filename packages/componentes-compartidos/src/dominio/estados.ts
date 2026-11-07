@@ -16,6 +16,9 @@ export const estadosDespacho = {
   EN_CAMINO: { etiqueta: 'En camino', semantica: 'info', Icono: IconTruckDelivery },
   ENTREGADO: { etiqueta: 'Entregado', semantica: 'success', Icono: IconCircleCheck },
   FALLIDO: { etiqueta: 'Fallido', semantica: 'error', Icono: IconAlertCircle },
+  RECOGIDO: { etiqueta: 'Recogido', semantica: 'success', Icono: IconCircleCheck },
+  RECIBIDO_EN_CENTRO: { etiqueta: 'Recibido en centro', semantica: 'success', Icono: IconCircleCheck },
+  CERRADO_SIN_RECOJO: { etiqueta: 'Cerrado sin recojo', semantica: 'neutral', Icono: IconCircleOff, textoSecundario: true },
   DEVUELTO_A_ORIGEN: { etiqueta: 'Devuelto a origen', semantica: 'warning', Icono: IconArrowBackUp },
   CANCELADO: { etiqueta: 'Cancelado', semantica: 'neutral', Icono: IconBan, textoSecundario: true },
 } as const satisfies Record<string, ConfiguracionEstado>;

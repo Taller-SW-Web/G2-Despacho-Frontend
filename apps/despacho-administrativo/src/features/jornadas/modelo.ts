@@ -13,6 +13,7 @@ export const jornadaRecibida = z.object({
   ocupacion: capacidad,
   capacidadRemanente: z.object({ pesoKg: numero, volumenM3: numero, paquetes: numero.int() }),
   porcentajeOcupacion: z.object({ peso: cantidad, volumen: cantidad, paquetes: cantidad }),
+  tipoOperacion: z.enum(['ENTREGAS', 'RECOJOS']).default('ENTREGAS'),
 });
 export const filaMonitoreo = z.object({ idRepartidor: uuid, nombre: z.string(), estadoOperativo: z.string(), jornada: jornadaRecibida.nullable() })
   .refine((fila) => !fila.jornada || fila.jornada.idRepartidor === fila.idRepartidor, 'Jornada de otro perfil.');
@@ -23,7 +24,8 @@ export const monitoreoRecibido = esquemaPagina(filaMonitoreo).and(z.object({
 export const detalleRecibido = jornadaRecibida.and(z.object({ despachos: z.array(z.object({
   idDespacho: uuid, estado: z.string(), secuenciaRuta: z.number().int().nullable(),
 })) }));
-export const apertura = z.object({ idRepartidor: uuid, idFurgoneta: uuid, idZona: uuid, fecha: z.string().date() });
+export const tiposJornada = [{ value: 'ENTREGAS', label: 'Entregas' }, { value: 'RECOJOS', label: 'Recojos' }];
+export const apertura = z.object({ idRepartidor: uuid, idFurgoneta: uuid, idZona: uuid, fecha: z.string().date(), tipoOperacion: z.enum(['ENTREGAS', 'RECOJOS']) });
 export const disponibilidadRecibida = z.object({ repartidores: z.array(z.object({
   idRepartidor: uuid, idJornada: uuid, nombre: z.string(), idZona: uuid, idFurgoneta: uuid, placa: z.string(),
   estadoOperativo: z.enum(['DISPONIBLE', 'EN_RUTA']), limites: capacidad, ocupacion: capacidad,

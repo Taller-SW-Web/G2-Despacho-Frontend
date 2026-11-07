@@ -33,6 +33,10 @@ export function Aplicacion({ puerto }: { puerto?: PuertoOperacion }) {
         <Route path="/repartidor/despachos/:id/entrega" element={protegida(<PaginaEntrega />)} />
         <Route path="/repartidor/despachos/:id/fallo" element={protegida(<PaginaFallo />)} />
         <Route path="/repartidor/despachos/:id/fallo-registrado" element={protegida(<PaginaFalloRegistrado />)} />
+        <Route path="/repartidor/recojos/:id" element={protegida(<PaginaDetalle tipo="RECOJO" />)} />
+        <Route path="/repartidor/recojos/:id/recogido" element={protegida(<PaginaEntrega tipo="RECOJO" />)} />
+        <Route path="/repartidor/recojos/:id/fallo" element={protegida(<PaginaFallo tipo="RECOJO" />)} />
+        <Route path="/repartidor/recojos/:id/fallo-registrado" element={protegida(<PaginaFalloRegistrado tipo="RECOJO" />)} />
         <Route path="/repartidor/resumen" element={protegida(<PaginaResumen />)} />
         <Route path="/repartidor/cierre" element={protegida(<PaginaCierre />)} />
         <Route path="*" element={<Navigate to="/repartidor/ruta" replace />} />

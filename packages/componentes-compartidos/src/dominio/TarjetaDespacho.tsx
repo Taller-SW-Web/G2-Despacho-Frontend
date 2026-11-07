@@ -15,6 +15,8 @@ export type TarjetaDespachoProps = {
   complementoEstado?: string;
   etiquetaIntento: string;
   variante?: 'normal' | 'siguiente' | 'resuelto';
+  /** La tarjeta representa un recojo de devolución, no una entrega. */
+  recojo?: boolean;
   alAbrir: (idDespacho: string) => void;
 };
 
@@ -29,6 +31,7 @@ export function TarjetaDespacho({
   complementoEstado,
   etiquetaIntento,
   variante = 'normal',
+  recojo = false,
   alAbrir,
 }: TarjetaDespachoProps) {
   const siguiente = variante === 'siguiente';
@@ -38,7 +41,7 @@ export function TarjetaDespacho({
     <UnstyledButton
       type="button"
       onClick={() => alAbrir(idDespacho)}
-      aria-label={`Abrir despacho ${codigo}${direccion ? `, ${direccion}` : ''}`}
+      aria-label={`Abrir ${recojo ? 'recojo' : 'despacho'} ${codigo}${direccion ? `, ${direccion}` : ''}`}
       w="100%"
       className={clases.raiz}
     >
@@ -55,6 +58,7 @@ export function TarjetaDespacho({
             {destinatario && <Text size="md" c="var(--ia-color-text-secondary)">{destinatario}</Text>}
             {complementoEstado && <Text size="sm" fw={600}>{complementoEstado}</Text>}
             <Group gap="xs" wrap="wrap">
+              {recojo && <Badge color="blue" variant="light" tt="none">Recojo</Badge>}
               <BadgeEstado contexto="despacho" valor={estado} size="sm" />
               <Badge color="gray" variant="light" tt="none" className="ia-num">{etiquetaIntento}</Badge>
             </Group>

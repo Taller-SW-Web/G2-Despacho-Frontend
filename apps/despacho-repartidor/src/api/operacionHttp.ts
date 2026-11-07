@@ -3,7 +3,7 @@ import { crearClienteApi } from '@despacho/cliente-api';
 import type { GestorSesion } from '@despacho/cliente-api/sesion';
 import { aErrorOperacion, ErrorOperacion } from './errores';
 import {
-  esquemaAutorizacionCarga, esquemaDetalle, esquemaMotivos, esquemaResumen, esquemaRuta,
+  esquemaAutorizacionCarga, esquemaDetalle, esquemaDetalleRecojo, esquemaMotivos, esquemaResumen, esquemaRuta,
   type DetalleDespacho, type PuertoOperacion,
 } from './tipos';
 
@@ -18,6 +18,12 @@ export function crearOperacionHttp(urlBase: string, obtenerToken: () => string |
     if (resultado.idDespacho !== idDespacho) throw new ErrorOperacion('conflicto', 'La respuesta corresponde a otro despacho.');
     return resultado;
   };
+  const rutaRecojo = (idRecojo: string, accion = '') => `/api/v1/repartidor/recojos/${encodeURIComponent(idRecojo)}${accion}`;
+  const detalleRecojo = (idRecojo: string, datos: unknown): DetalleDespacho => {
+    const resultado = esquemaDetalleRecojo.parse(datos);
+    if (resultado.idRecojo !== idRecojo) throw new ErrorOperacion('conflicto', 'La respuesta corresponde a otro recojo.');
+    return { ...resultado, idDespacho: resultado.idRecojo, maximoIntentos: null };
+  };
   const ruta = (idDespacho: string, accion = '') => `/api/v1/repartidor/despachos/${encodeURIComponent(idDespacho)}${accion}`;
   async function ejecutar<T>(operacion: () => Promise<T>): Promise<T> {
     try { return await operacion(); } catch (error) { throw aErrorOperacion(error); }
@@ -30,13 +36,13 @@ export function crearOperacionHttp(urlBase: string, obtenerToken: () => string |
       detalle(idDespacho, (await cliente.get(ruta(idDespacho), { signal })).data)),
     consultarResumen: (signal) => ejecutar(async () =>
       esquemaResumen.parse((await cliente.get('/api/v1/repartidor/jornada/resumen', { signal })).data)),
-    consultarMotivos: (signal) => ejecutar(async () =>
-      esquemaMotivos.parse((await cliente.get('/api/v1/repartidor/motivos-fallo', { signal })).data).motivos),
+    consultarMotivos: (signal, ambito) => ejecutar(async () =>
+      esquemaMotivos.parse((await cliente.get('/api/v1/repartidor/motivos-fallo', { signal, ...(ambito ? { params: { ambito } } : {}) })).data).motivos),
     iniciarTraslado: (idDespacho, clave) => ejecutar(async () =>
       detalle(idDespacho, (await cliente.post(ruta(idDespacho, '/inicio-traslado'), undefined, conClave(clave))).data)),
     subirEvidencia: (idDespacho, tipo, foto, alProgreso) => ejecutar(async () => {
       const autorizacion = esquemaAutorizacionCarga.parse((await cliente.post('/api/v1/repartidor/evidencias/autorizaciones', {
-        idDespacho, tipo, contentType: foto.type, tamanioBytes: foto.size,
+        ...(tipo === 'RECOJO' || tipo === 'FALLO_RECOJO' ? { idRecojo: idDespacho } : { idDespacho }), tipo, contentType: foto.type, tamanioBytes: foto.size,
       })).data);
       // La foto va directo al bucket privado con la URL firmada; la API nunca recibe la imagen.
       await axios.put(autorizacion.urlCarga, foto, {
@@ -50,6 +56,14 @@ export function crearOperacionHttp(urlBase: string, obtenerToken: () => string |
       detalle(idDespacho, (await cliente.post(ruta(idDespacho, '/entrega'), datos, conClave(clave))).data)),
     registrarFallo: (idDespacho, clave, datos) => ejecutar(async () =>
       detalle(idDespacho, (await cliente.post(ruta(idDespacho, '/fallo'), datos, conClave(clave))).data)),
+    consultarRecojo: (idRecojo, signal) => ejecutar(async () =>
+      detalleRecojo(idRecojo, (await cliente.get(rutaRecojo(idRecojo), { signal })).data)),
+    iniciarTrasladoRecojo: (idRecojo, clave) => ejecutar(async () =>
+      detalleRecojo(idRecojo, (await cliente.post(rutaRecojo(idRecojo, '/inicio-traslado'), undefined, conClave(clave))).data)),
+    registrarRecogido: (idRecojo, clave, datos) => ejecutar(async () =>
+      detalleRecojo(idRecojo, (await cliente.post(rutaRecojo(idRecojo, '/recogido'), datos, conClave(clave))).data)),
+    registrarFalloRecojo: (idRecojo, clave, datos) => ejecutar(async () =>
+      detalleRecojo(idRecojo, (await cliente.post(rutaRecojo(idRecojo, '/fallo'), datos, conClave(clave))).data)),
     cerrarJornada: (idJornada, clave) => ejecutar(async () => {
       await cliente.post('/api/v1/repartidor/jornada/cierre', { idJornada }, conClave(clave));
     }),

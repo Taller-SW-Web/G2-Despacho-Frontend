@@ -187,6 +187,111 @@ describe('entrega y fallo', () => {
   });
 });
 
+describe('jornada de recojos', () => {
+  const PENDIENTE = '00000000-0000-4000-8000-000000000002';
+  const puertoRecojos = () => espiar(crearOperacionDemo('RECOJOS'));
+
+  it('muestra solo recojos, con su etiqueta y sin datos personales del ya recogido', async () => {
+    iniciarSesionGuardada();
+    montar('/repartidor/ruta', puertoRecojos());
+    expect(await screen.findByText('1 de 4 recojos resueltos')).toBeInTheDocument();
+    const tarjetas = screen.getAllByRole('button', { name: /Abrir recojo/ });
+    expect(tarjetas).toHaveLength(4);
+    expect(screen.queryByRole('button', { name: /Abrir despacho/ })).not.toBeInTheDocument();
+    expect(within(tarjetas[0]).getByText(/Recogido a las \d{2}:\d{2}, llévalo al centro de despacho/)).toBeInTheDocument();
+    expect(within(tarjetas[0]).queryByText(/Arequipa/)).not.toBeInTheDocument();
+    expect(within(tarjetas[1]).getByText('Recojo')).toBeInTheDocument();
+    expect(within(tarjetas[1]).getByText('Siguiente')).toBeInTheDocument();
+  });
+
+  it('el detalle lista los productos y las acciones cambian según el estado', async () => {
+    iniciarSesionGuardada();
+    const usuario = userEvent.setup();
+    const puerto = puertoRecojos();
+    montar(`/repartidor/recojos/${PENDIENTE}`, puerto);
+    expect(await screen.findByText('Productos a recoger')).toBeInTheDocument();
+    expect(screen.getByText('1 × SKU-904')).toBeInTheDocument();
+    expect(screen.getByText('Contacto')).toBeInTheDocument();
+    await usuario.click(screen.getByRole('button', { name: 'En camino' }));
+    expect(await screen.findByRole('button', { name: 'Registrar recojo' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'No se pudo recoger' })).toBeInTheDocument();
+    expect(vi.mocked(puerto.iniciarTrasladoRecojo).mock.calls[0][1]).toMatch(UUID_V4);
+    expect(puerto.iniciarTraslado).not.toHaveBeenCalled();
+  });
+
+  it('el recojo exige foto, usa su evidencia y vuelve a la ruta', async () => {
+    iniciarSesionGuardada();
+    const usuario = userEvent.setup();
+    const puerto = puertoRecojos();
+    await puerto.iniciarTrasladoRecojo(PENDIENTE, 'clave');
+    montar(`/repartidor/recojos/${PENDIENTE}/recogido`, puerto);
+    expect(await screen.findByRole('button', { name: 'Confirmar recojo' })).toBeDisabled();
+    expect(screen.getByText('Agrega una foto para continuar.')).toBeInTheDocument();
+    await usuario.upload(document.querySelector('input[type="file"]') as HTMLInputElement, foto());
+    await screen.findByText(/Foto optimizada/);
+    await usuario.click(screen.getByRole('button', { name: 'Confirmar recojo' }));
+    expect(await screen.findByRole('heading', { name: 'Mi ruta' })).toBeInTheDocument();
+    expect(vi.mocked(puerto.subirEvidencia).mock.calls[0][1]).toBe('RECOJO');
+    expect(puerto.registrarRecogido).toHaveBeenCalledTimes(1);
+    expect(puerto.registrarEntrega).not.toHaveBeenCalled();
+  });
+
+  it('sin señal conserva la foto y el reintento usa la misma clave', async () => {
+    iniciarSesionGuardada();
+    const usuario = userEvent.setup();
+    const puerto = puertoRecojos();
+    await puerto.iniciarTrasladoRecojo(PENDIENTE, 'clave');
+    vi.mocked(puerto.registrarRecogido).mockRejectedValueOnce(new ErrorOperacion('sinConexion', 'Sin conexión. El cambio no se registró.'));
+    montar(`/repartidor/recojos/${PENDIENTE}/recogido`, puerto);
+    await screen.findByRole('button', { name: 'Confirmar recojo' });
+    await usuario.upload(document.querySelector('input[type="file"]') as HTMLInputElement, foto());
+    await screen.findByText(/Foto optimizada/);
+    await usuario.click(screen.getByRole('button', { name: 'Confirmar recojo' }));
+    expect(await screen.findByText('No se registró el recojo')).toBeInTheDocument();
+    expect(screen.getByText(/Foto optimizada/)).toBeInTheDocument();
+    await usuario.click(screen.getByRole('button', { name: 'Confirmar recojo' }));
+    expect(await screen.findByRole('heading', { name: 'Mi ruta' })).toBeInTheDocument();
+    const [primera, segunda] = vi.mocked(puerto.registrarRecogido).mock.calls;
+    expect(segunda[1]).toBe(primera[1]);
+    expect(puerto.subirEvidencia).toHaveBeenCalledTimes(1);
+  });
+
+  it('el no recojo pide los motivos de su ámbito y no recuerda devolver un paquete', async () => {
+    iniciarSesionGuardada();
+    const usuario = userEvent.setup();
+    const puerto = puertoRecojos();
+    await puerto.iniciarTrasladoRecojo(PENDIENTE, 'clave');
+    montar(`/repartidor/recojos/${PENDIENTE}/fallo`, puerto);
+    expect(await screen.findByText('El cliente no entrega el producto')).toBeInTheDocument();
+    expect(vi.mocked(puerto.consultarMotivos).mock.calls[0][1]).toBe('RECOJO');
+    expect(screen.queryByText('Paquete dañado antes de la entrega')).not.toBeInTheDocument();
+    await usuario.click(screen.getByRole('button', { name: 'Confirmar' }));
+    expect(screen.getByText('Selecciona el motivo.')).toBeInTheDocument();
+    expect(puerto.registrarFalloRecojo).not.toHaveBeenCalled();
+    await usuario.click(screen.getByText('El cliente no entrega el producto'));
+    await usuario.upload(document.querySelector('input[type="file"]') as HTMLInputElement, foto());
+    await screen.findByText('Foto del domicilio lista');
+    await usuario.click(screen.getByRole('button', { name: 'Confirmar' }));
+    expect(await screen.findByText('TRK-78904: el Gestor decidirá el siguiente paso.')).toBeInTheDocument();
+    expect(screen.queryByText(/Devuelve el paquete/)).not.toBeInTheDocument();
+    expect(vi.mocked(puerto.subirEvidencia).mock.calls[0][1]).toBe('FALLO_RECOJO');
+  });
+
+  it('el cierre deja pendientes como No intentado y el resumen lista lo que falta entregar', async () => {
+    iniciarSesionGuardada();
+    const usuario = userEvent.setup();
+    montar('/repartidor/cierre', puertoRecojos());
+    expect(await screen.findByText('3 recojos siguen pendientes')).toBeInTheDocument();
+    expect(screen.getByText('1 producto por entregar en el centro')).toBeInTheDocument();
+    await usuario.click(within(screen.getByRole('main')).getByRole('button', { name: 'Cerrar jornada' }));
+    await usuario.click(await screen.findByRole('button', { name: 'Sí, cerrar jornada' }));
+    expect(await screen.findByText('Productos por entregar en el centro')).toBeInTheDocument();
+    expect(screen.getByText('Recojos asignados')).toBeInTheDocument();
+    expect(screen.getByText('1 × SKU-901')).toBeInTheDocument();
+    expect(screen.queryByText('Paquetes a devolver al centro')).not.toBeInTheDocument();
+  });
+});
+
 describe('cierre y resumen', () => {
   it('lista pendientes, confirma el cierre y muestra los paquetes a devolver', async () => {
     iniciarSesionGuardada();

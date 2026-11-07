@@ -6,7 +6,7 @@ export const idsPrueba = {
   furgoneta: '00000000-0000-4000-8000-000000000003', zona: '00000000-0000-4000-8000-000000000004',
 };
 export const jornadaPrueba: Jornada = {
-  idJornada: idsPrueba.jornada, idRepartidor: idsPrueba.repartidor, idFurgoneta: idsPrueba.furgoneta, idZona: idsPrueba.zona,
+  tipoOperacion: 'ENTREGAS', idJornada: idsPrueba.jornada, idRepartidor: idsPrueba.repartidor, idFurgoneta: idsPrueba.furgoneta, idZona: idsPrueba.zona,
   placa: 'TEST-01', fecha: '2026-10-17', estado: 'ACTIVA', cerradaEn: null,
   limites: { pesoKg: 500, volumenM3: 4, paquetes: 80 }, ocupacion: { pesoKg: 100, volumenM3: 1, paquetes: 20 },
   capacidadRemanente: { pesoKg: 400, volumenM3: 3, paquetes: 60 }, porcentajeOcupacion: { peso: 20, volumen: 25, paquetes: 25 },

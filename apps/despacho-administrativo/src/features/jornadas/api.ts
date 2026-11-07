@@ -12,7 +12,7 @@ export const consultarMonitoreo = async (cliente: ClienteApi, params: URLSearchP
 export const abrirJornada = async (cliente: ClienteApi, datos: Apertura) => {
   const respuesta = jornadaRecibida.parse((await cliente.post('/api/v1/jornadas', apertura.parse(datos))).data);
   if (respuesta.idRepartidor !== datos.idRepartidor || respuesta.idFurgoneta !== datos.idFurgoneta
-      || respuesta.idZona !== datos.idZona || respuesta.fecha !== datos.fecha || respuesta.estado !== 'ACTIVA') throw new Error('Resultado no correspondiente');
+      || respuesta.idZona !== datos.idZona || respuesta.fecha !== datos.fecha || respuesta.estado !== 'ACTIVA' || respuesta.tipoOperacion !== datos.tipoOperacion) throw new Error('Resultado no correspondiente');
   return respuesta;
 };
 export const cerrarJornada = async (cliente: ClienteApi, id: string) => {

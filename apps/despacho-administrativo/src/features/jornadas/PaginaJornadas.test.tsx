@@ -59,14 +59,14 @@ it('abre jornada usando catálogos reales del contrato y conserva el resultado i
   await usuario.click(screen.getByRole('button', { name: 'Abrir jornada' }));
   const dialogo = await screen.findByRole('dialog', { name: 'Abrir jornada' });
   await waitFor(() => expect(within(dialogo).getByRole('combobox', { name: /^Repartidor/ })).toBeEnabled(), { timeout: 5000 });
-  for (const [nombre, etiqueta] of [['Repartidor', `${repartidorPrueba.nombres} ${repartidorPrueba.apellidos}`], ['Furgoneta', furgonetaPrueba.placa], ['Zona', 'Zona Prueba']]) {
+  for (const [nombre, etiqueta] of [['Repartidor', `${repartidorPrueba.nombres} ${repartidorPrueba.apellidos}`], ['Furgoneta', furgonetaPrueba.placa], ['Zona', 'Zona Prueba'], ['Tipo de jornada', 'Recojos']]) {
     await usuario.click(within(dialogo).getByRole('combobox', { name: new RegExp(`^${nombre}`) }));
     await usuario.click(screen.getByRole('option', { name: etiqueta }));
   }
   crear.mockRejectedValueOnce(falloPrueba(503));
   await usuario.click(within(dialogo).getByRole('button', { name: 'Abrir jornada' }));
   expect(await within(dialogo).findByText(/No pudimos confirmar el resultado/)).toBeVisible();
-  expect(crear).toHaveBeenCalledExactlyOnceWith('/api/v1/jornadas', { idRepartidor: idsPrueba.repartidor, idFurgoneta: idsPrueba.furgoneta, idZona: idsPrueba.zona, fecha: '2026-10-17' });
+  expect(crear).toHaveBeenCalledExactlyOnceWith('/api/v1/jornadas', { idRepartidor: idsPrueba.repartidor, idFurgoneta: idsPrueba.furgoneta, idZona: idsPrueba.zona, fecha: '2026-10-17', tipoOperacion: 'RECOJOS' });
   expect(within(dialogo).getByRole('button', { name: 'Abrir jornada' })).toBeDisabled();
 });
 it('un cierre rechazado conserva jornada y muestra el conflicto sin inventar éxito', async () => {

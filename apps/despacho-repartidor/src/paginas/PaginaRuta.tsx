@@ -11,8 +11,20 @@ import { etiquetaIntento, formatearHora } from '../utilidades/formato';
 import clases from './PaginaRuta.module.css';
 
 /** Texto del resultado con su hora; los datos personales ya no llegan para estos estados. */
-export function complementoResultado(despacho: Pick<DespachoRuta, 'estado' | 'motivoFallo' | 'hitos'>): string | undefined {
+export function complementoResultado(despacho: Pick<DespachoRuta, 'estado' | 'motivoFallo' | 'hitos'>, tipo: 'ENTREGA' | 'RECOJO' = 'ENTREGA'): string | undefined {
   const hitos = despacho.hitos;
+  if (tipo === 'RECOJO') {
+    if (despacho.estado === 'RECOGIDO') {
+      const hora = formatearHora(hitos?.recogidoEn);
+      return `Recogido${hora ? ` a las ${hora}` : ''}, llévalo al centro de despacho`;
+    }
+    if (despacho.estado === 'RECIBIDO_EN_CENTRO') return 'Recibido en el centro';
+    if (esNoIntentado(despacho.estado, despacho.motivoFallo)) return 'No intentado';
+    if (despacho.estado === 'FALLIDO') {
+      const hora = formatearHora(hitos?.fallidoEn);
+      return `No recogido${hora ? ` a las ${hora}` : ''}`;
+    }
+  }
   if (despacho.estado === 'ENTREGADO') {
     const hora = formatearHora(hitos?.entregadoEn);
     return hora ? `Entregado a las ${hora}` : 'Entregado';
@@ -44,9 +56,12 @@ export function PaginaRuta() {
   }, [recargar]);
 
   const ruta = consulta.estado === 'lista' ? consulta.datos : null;
-  const total = ruta?.despachos.length ?? 0;
-  const resueltos = ruta?.despachos.filter((despacho) => !esPendiente(despacho.estado)).length ?? 0;
-  const siguiente = ruta?.despachos.find((despacho) => esPendiente(despacho.estado));
+  const deRecojos = ruta?.tipoOperacion === 'RECOJOS';
+  const paradas = deRecojos ? ruta?.recojos ?? [] : ruta?.despachos ?? [];
+  const total = paradas.length;
+  const resueltos = paradas.filter((parada) => !esPendiente(parada.estado)).length;
+  const siguiente = paradas.find((parada) => esPendiente(parada.estado));
+  const nombre = deRecojos ? 'recojos' : 'despachos';
 
   return (
     <Pantalla
@@ -58,7 +73,7 @@ export function PaginaRuta() {
       </ActionIcon>}
       franja={ruta?.idJornada && total > 0 ? (
         <Box className={clases.progreso} role="status" aria-live="polite">
-          <Text fw={700} size="md" className="ia-num">{resueltos} de {total} despachos resueltos</Text>
+          <Text fw={700} size="md" className="ia-num">{resueltos} de {total} {nombre} resueltos</Text>
           <Progress value={(resueltos / total) * 100} color="orange" size="md" radius="xl" aria-hidden="true" mt="xs" />
         </Box>
       ) : undefined}
@@ -71,27 +86,32 @@ export function PaginaRuta() {
         </Stack>
       )}
       {ruta?.idJornada && total === 0 && (
-        <EstadoVista estado="vacio" titulo="Ruta vacía" descripcion="Todavía no tienes despachos asignados a esta jornada."
+        <EstadoVista estado="vacio" titulo="Ruta vacía" descripcion={`Todavía no tienes ${nombre} asignados a esta jornada.`}
           accion={{ id: 'actualizar', etiqueta: 'Actualizar' }} alAccionar={recargar} />
       )}
       {ruta?.idJornada && total > 0 && (
-        <Stack gap="md" component="ol" className={clases.lista} aria-label="Despachos de la ruta">
-          {ruta.despachos.map((despacho, indice) => (
-            <li key={despacho.idDespacho}>
-              <TarjetaDespacho
-                idDespacho={despacho.idDespacho}
-                codigo={despacho.codigoRastreoInterno}
-                posicion={despacho.secuenciaRuta ?? indice + 1}
-                direccion={despacho.direccion && despacho.distrito ? `${despacho.direccion}, ${despacho.distrito}` : despacho.direccion}
-                destinatario={despacho.destinatario}
-                estado={despacho.estado}
-                complementoEstado={complementoResultado(despacho)}
-                etiquetaIntento={etiquetaIntento(despacho.numeroIntentos, despacho.maximoIntentos, despacho.estado)}
-                variante={despacho === siguiente ? 'siguiente' : esPendiente(despacho.estado) ? 'normal' : 'resuelto'}
-                alAbrir={(id) => navigate(`/repartidor/despachos/${encodeURIComponent(id)}`, { state: { totalRuta: total } })}
-              />
-            </li>
-          ))}
+        <Stack gap="md" component="ol" className={clases.lista} aria-label={deRecojos ? 'Recojos de la ruta' : 'Despachos de la ruta'}>
+          {paradas.map((parada, indice) => {
+            const id = 'idRecojo' in parada ? parada.idRecojo : parada.idDespacho;
+            const maximo = 'maximoIntentos' in parada ? parada.maximoIntentos : null;
+            return (
+              <li key={id}>
+                <TarjetaDespacho
+                  idDespacho={id}
+                  codigo={parada.codigoRastreoInterno}
+                  posicion={parada.secuenciaRuta ?? indice + 1}
+                  direccion={parada.direccion && parada.distrito ? `${parada.direccion}, ${parada.distrito}` : parada.direccion}
+                  destinatario={parada.destinatario}
+                  estado={parada.estado}
+                  recojo={deRecojos}
+                  complementoEstado={complementoResultado(parada, deRecojos ? 'RECOJO' : 'ENTREGA')}
+                  etiquetaIntento={etiquetaIntento(parada.numeroIntentos, maximo, parada.estado)}
+                  variante={parada === siguiente ? 'siguiente' : esPendiente(parada.estado) ? 'normal' : 'resuelto'}
+                  alAbrir={(valor) => navigate(`${deRecojos ? '/repartidor/recojos' : '/repartidor/despachos'}/${encodeURIComponent(valor)}`, { state: { totalRuta: total } })}
+                />
+              </li>
+            );
+          })}
         </Stack>
       )}
     </Pantalla>

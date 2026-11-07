@@ -1,5 +1,5 @@
 import { ErrorOperacion } from './errores';
-import type { DespachoRuta, DetalleDespacho, Hitos, MotivoFallo, PuertoOperacion, ResumenJornada, RutaRepartidor } from './tipos';
+import type { DespachoRuta, DetalleDespacho, Hitos, MotivoFallo, PuertoOperacion, RecojoRuta, ResumenJornada, RutaRepartidor } from './tipos';
 type SesionIniciada = { token: string; expiraEn: number; usuario: string };
 import { generarUuidV4 } from '../utilidades/claves';
 
@@ -18,6 +18,10 @@ const motivos: MotivoFallo[] = [
   ['CLIENTE_AUSENTE', 'Cliente ausente'], ['DIRECCION_NO_UBICADA', 'Dirección no localizada'],
   ['RECHAZO_DEL_PAQUETE', 'Cliente rechaza el paquete'], ['DATOS_DE_CONTACTO_ERRONEOS', 'Datos de contacto incorrectos'],
   ['ZONA_INACCESIBLE', 'Zona inaccesible o insegura'], ['PAQUETE_DANADO', 'Paquete dañado antes de la entrega'],
+].map(([codigo, etiqueta]) => ({ codigo, etiqueta, seleccionableEnCampo: true, consumeIntento: true, activo: true }));
+const motivosRecojo: MotivoFallo[] = [
+  ['CLIENTE_AUSENTE', 'Cliente ausente'], ['CLIENTE_NO_ENTREGA_PRODUCTO', 'El cliente no entrega el producto'],
+  ['PRODUCTO_NO_CORRESPONDE', 'El producto no corresponde'], ['DIRECCION_NO_UBICADA', 'Dirección no localizada'],
 ].map(([codigo, etiqueta]) => ({ codigo, etiqueta, seleccionableEnCampo: true, consumeIntento: true, activo: true }));
 
 const hoy = () => new Date().toLocaleDateString('en-CA', { timeZone: 'America/Lima' });
@@ -48,9 +52,11 @@ export async function iniciarSesionDemo(usuario: string, clave: string): Promise
   return { token: 'demo', expiraEn: Date.now() + 8 * 3_600_000, usuario: usuario.trim() };
 }
 
-export function crearOperacionDemo(): PuertoOperacion {
+export function crearOperacionDemo(tipoOperacion: 'ENTREGAS' | 'RECOJOS' = 'ENTREGAS'): PuertoOperacion {
   const idJornada = '00000000-0000-4000-8000-0000000000aa';
-  let despachos = despachosIniciales();
+  // Una jornada de recojos usa los mismos domicilios de ejemplo; el primero ya fue recogido.
+  let despachos = tipoOperacion === 'RECOJOS' ? despachosIniciales().map((d) => d.estado === 'ENTREGADO'
+    ? { ...d, estado: 'RECOGIDO', intentos: 0, hitos: { ...d.hitos, recogidoEn: d.hitos.entregadoEn, entregadoEn: null } } : { ...d, intentos: 0 }) : despachosIniciales();
   let cerradaEn: string | null = null;
   const evidencias = new Map<string, { idDespacho: string; tipo: string }>();
   const visibles = (estado: string) => estado === 'ASIGNADO' || estado === 'EN_CAMINO';
@@ -69,10 +75,16 @@ export function crearOperacionDemo(): PuertoOperacion {
     destinatario: visibles(d.estado) ? d.nombre : null, direccion: visibles(d.estado) ? d.direccion : null,
     distrito: visibles(d.estado) ? d.distrito : null,
   });
+  const lineas = (d: DespachoDemo) => [{ sku: `SKU-${d.codigo.slice(-3)}`, cantidad: 1 }];
+  const filaRecojo = (d: DespachoDemo): RecojoRuta => ({
+    idRecojo: d.id, idDespacho: d.id, codigoRastreoInterno: d.codigo, estado: d.estado, secuenciaRuta: d.secuencia, fechaProgramada: hoy(),
+    numeroIntentos: d.intentos, destinatario: visibles(d.estado) ? d.nombre : null, direccion: visibles(d.estado) ? d.direccion : null,
+    distrito: visibles(d.estado) ? d.distrito : null, lineas: lineas(d), motivoFallo: d.motivo, hitos: d.hitos,
+  });
   const detalle = (id: string): DetalleDespacho => {
     const d = buscar(id);
     return {
-      ...filaRuta(d), idJornada,
+      ...filaRuta(d), idJornada, ...(tipoOperacion === 'RECOJOS' ? { lineas: lineas(d), maximoIntentos: null } : {}),
       destinatario: visibles(d.estado) ? { nombre: d.nombre, telefono: d.telefono } : null,
       destino: visibles(d.estado) ? { direccion: d.direccion, referencia: d.referencia, departamento: 'Lima', provincia: 'Lima', distrito: d.distrito, codigoPostal: null } : null,
     };
@@ -81,8 +93,11 @@ export function crearOperacionDemo(): PuertoOperacion {
   return {
     async consultarRuta(): Promise<RutaRepartidor> {
       await esperar();
-      if (cerradaEn) return { idJornada: null, fecha: hoy(), estadoOperativo: 'FUERA_DE_TURNO', despachos: [] };
-      return { idJornada, fecha: hoy(), estadoOperativo: despachos.some((d) => d.estado === 'EN_CAMINO') ? 'EN_RUTA' : 'DISPONIBLE', despachos: despachos.map(filaRuta) };
+      if (cerradaEn) return { idJornada: null, fecha: hoy(), estadoOperativo: 'FUERA_DE_TURNO', despachos: [], tipoOperacion: null, recojos: [] };
+      const estadoOperativo = despachos.some((d) => d.estado === 'EN_CAMINO') ? 'EN_RUTA' : 'DISPONIBLE';
+      return tipoOperacion === 'RECOJOS'
+        ? { idJornada, fecha: hoy(), estadoOperativo, despachos: [], tipoOperacion, recojos: despachos.map(filaRecojo) }
+        : { idJornada, fecha: hoy(), estadoOperativo, despachos: despachos.map(filaRuta), tipoOperacion, recojos: [] };
     },
     async consultarDetalle(id) { await esperar(); return detalle(id); },
     async consultarResumen(): Promise<ResumenJornada> {
@@ -94,10 +109,14 @@ export function crearOperacionDemo(): PuertoOperacion {
         fallidosConIntento: fallidos.filter((d) => d.motivo !== 'NO_INTENTADO').length,
         noIntentados: fallidos.filter((d) => d.motivo === 'NO_INTENTADO').length,
         pendientes: despachos.filter((d) => visibles(d.estado)).length,
-        paquetesPorDevolver: fallidos.map((d) => ({ idDespacho: d.id, codigoRastreoInterno: d.codigo, direccion: d.direccion, distrito: d.distrito, motivoFallo: d.motivo })),
+        paquetesPorDevolver: tipoOperacion === 'RECOJOS' ? [] : fallidos.map((d) => ({ idDespacho: d.id, codigoRastreoInterno: d.codigo, direccion: d.direccion, distrito: d.distrito, motivoFallo: d.motivo })),
+        tipoOperacion,
+        recojosRealizados: despachos.filter((d) => d.estado === 'RECOGIDO').length,
+        recojosNoRealizados: tipoOperacion === 'RECOJOS' ? fallidos.filter((d) => d.motivo !== 'NO_INTENTADO').length : 0,
+        productosPorEntregar: despachos.filter((d) => d.estado === 'RECOGIDO').map((d) => ({ idRecojo: d.id, codigoRastreoInterno: d.codigo, lineas: lineas(d) })),
       };
     },
-    async consultarMotivos() { await esperar(200); return motivos; },
+    async consultarMotivos(_signal, ambito) { await esperar(200); return ambito === 'RECOJO' ? motivosRecojo : motivos; },
     async iniciarTraslado(id) {
       await esperar();
       const d = buscar(id);
@@ -128,6 +147,33 @@ export function crearOperacionDemo(): PuertoOperacion {
       if (d.estado === 'FALLIDO') return detalle(id);
       exigir(d, 'EN_CAMINO');
       if (evidencias.get(datos.idEvidencia)?.idDespacho !== id) throw new ErrorOperacion('validacion', 'La fotografía no corresponde a este despacho.');
+      actualizar(id, { estado: 'FALLIDO', motivo: datos.motivo, intentos: d.intentos + 1, hitos: { ...d.hitos, fallidoEn: new Date().toISOString() } });
+      return detalle(id);
+    },
+    async consultarRecojo(id) { await esperar(); return detalle(id); },
+    async iniciarTrasladoRecojo(id) {
+      await esperar();
+      const d = buscar(id);
+      if (d.estado === 'EN_CAMINO') return detalle(id);
+      exigir(d, 'ASIGNADO');
+      actualizar(id, { estado: 'EN_CAMINO', hitos: { ...d.hitos, enCaminoEn: new Date().toISOString() } });
+      return detalle(id);
+    },
+    async registrarRecogido(id, _clave, datos) {
+      await esperar();
+      const d = buscar(id);
+      if (d.estado === 'RECOGIDO') return detalle(id);
+      exigir(d, 'EN_CAMINO');
+      if (evidencias.get(datos.idEvidencia)?.idDespacho !== id) throw new ErrorOperacion('validacion', 'La fotografía no corresponde a este recojo.');
+      actualizar(id, { estado: 'RECOGIDO', hitos: { ...d.hitos, recogidoEn: new Date().toISOString() } });
+      return detalle(id);
+    },
+    async registrarFalloRecojo(id, _clave, datos) {
+      await esperar();
+      const d = buscar(id);
+      if (d.estado === 'FALLIDO') return detalle(id);
+      exigir(d, 'EN_CAMINO');
+      if (evidencias.get(datos.idEvidencia)?.idDespacho !== id) throw new ErrorOperacion('validacion', 'La fotografía no corresponde a este recojo.');
       actualizar(id, { estado: 'FALLIDO', motivo: datos.motivo, intentos: d.intentos + 1, hitos: { ...d.hitos, fallidoEn: new Date().toISOString() } });
       return detalle(id);
     },

@@ -58,6 +58,7 @@ function PanelJornadas() {
     { id: 'nombre', encabezado: 'Repartidor', celda: (fila) => fila.nombre },
     { id: 'estado', encabezado: 'Estado operativo', celda: (fila) => <BadgeEstado contexto="operacionRepartidor" valor={fila.estadoOperativo} /> },
     { id: 'vehiculo', encabezado: 'Furgoneta / zona', celda: (fila) => fila.jornada ? <Stack gap="xs"><Text>{fila.jornada.placa}</Text><Text size="xs">{fila.jornada.idZona}</Text></Stack> : 'Sin jornada' },
+    { id: 'tipo', encabezado: 'Tipo de jornada', celda: (fila) => fila.jornada ? (fila.jornada.tipoOperacion === 'RECOJOS' ? 'Recojos' : 'Entregas') : '—' },
     { id: 'ocupacion', encabezado: 'Ocupación confirmada', celda: (fila) => fila.jornada ? <MetricasJornada jornada={fila.jornada} compacta /> : 'Sin jornada activa' },
     { id: 'acciones', encabezado: 'Acciones', celda: (fila) => fila.jornada && <Group gap="xs">
       <Button variant="subtle" size="sm" disabled={!habilitada} onClick={() => seleccionar({ tipo: 'detalle', id: fila.jornada!.idJornada })} aria-label={`Ver jornada de ${fila.nombre}`}>Ver detalle</Button>

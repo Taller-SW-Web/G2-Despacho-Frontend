@@ -29,6 +29,7 @@ export function PaginaResumen() {
   const { consulta, recargar } = useConsulta(cargar);
   const resumen = consulta.estado === 'lista' ? consulta.datos : null;
   const cerrada = resumen?.estadoJornada === 'CERRADA';
+  const deRecojos = resumen?.tipoOperacion === 'RECOJOS';
 
   return (
     <Pantalla titulo="Resumen de jornada" seccion="resumen" estadoOperativo={resumen ? (cerrada || !resumen.idJornada ? 'FUERA_DE_TURNO' : null) : null}>
@@ -42,7 +43,7 @@ export function PaginaResumen() {
           <Card bg="var(--ia-color-surface-cloud-subtle)" withBorder={false}>
             <Group justify="space-between" align="flex-start">
               <Stack gap={4}>
-                <Text fw={600}>Despachos asignados</Text>
+                <Text fw={600}>{deRecojos ? 'Recojos asignados' : 'Despachos asignados'}</Text>
                 <Text className={`ia-num ${clases.cifra}`}>{resumen.asignados}</Text>
               </Stack>
               {cerrada && (
@@ -54,11 +55,27 @@ export function PaginaResumen() {
             </Group>
           </Card>
           <SimpleGrid cols={2} spacing="md">
-            <Indicador icono={<IconCircleCheck size={20} color="var(--ia-color-success-default)" />} etiqueta="Entregados" valor={resumen.entregados} />
-            <Indicador icono={<IconAlertTriangle size={20} color="var(--ia-color-error-default)" />} etiqueta="Fallidos con intento" valor={resumen.fallidosConIntento} />
+            <Indicador icono={<IconCircleCheck size={20} color="var(--ia-color-success-default)" />} etiqueta={deRecojos ? 'Recogidos' : 'Entregados'} valor={deRecojos ? resumen.recojosRealizados : resumen.entregados} />
+            <Indicador icono={<IconAlertTriangle size={20} color="var(--ia-color-error-default)" />} etiqueta={deRecojos ? 'No realizados' : 'Fallidos con intento'} valor={deRecojos ? resumen.recojosNoRealizados : resumen.fallidosConIntento} />
             <Indicador icono={<IconArrowBackUp size={20} color="var(--ia-color-warning-default)" />} etiqueta="No intentados" valor={resumen.noIntentados} />
             <Indicador icono={<IconClock size={20} />} etiqueta="Pendientes" valor={resumen.pendientes} />
           </SimpleGrid>
+          {resumen.productosPorEntregar.length > 0 && (
+            <Stack gap="sm">
+              <Text fw={700} c="var(--ia-color-text-secondary)">Productos por entregar en el centro</Text>
+              {resumen.productosPorEntregar.map((producto) => (
+                <Card key={producto.idRecojo} padding="sm">
+                  <Group wrap="nowrap" gap="md">
+                    <IconPackage size={24} aria-hidden="true" />
+                    <Stack gap={0} style={{ flex: 1, minWidth: 0 }}>
+                      <Text size="sm" c="var(--ia-color-text-secondary)">{producto.codigoRastreoInterno}</Text>
+                      <Text fw={700}>{producto.lineas.map((linea) => `${linea.cantidad} × ${linea.sku}`).join(', ')}</Text>
+                    </Stack>
+                  </Group>
+                </Card>
+              ))}
+            </Stack>
+          )}
           {resumen.paquetesPorDevolver.length > 0 && (
             <Stack gap="sm">
               <Text fw={700} c="var(--ia-color-text-secondary)">Paquetes a devolver al centro</Text>

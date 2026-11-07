@@ -6,16 +6,17 @@ import { Pantalla } from '../componentes/Pantalla';
 export type EstadoFalloRegistrado = { codigo: string; motivo: string; intento: number; maximo: number | null };
 
 /** 09 · Fallo registrado. RN-07: se presenta como «No entregado» y recuerda devolver el paquete al centro. */
-export function PaginaFalloRegistrado() {
+export function PaginaFalloRegistrado({ tipo = 'ENTREGA' }: { tipo?: 'ENTREGA' | 'RECOJO' }) {
+  const esRecojo = tipo === 'RECOJO';
   const { id = '' } = useParams();
   const navigate = useNavigate();
   const estado = useLocation().state as EstadoFalloRegistrado | null;
   // Sin el resultado recién confirmado (p. ej. al recargar) se vuelve al detalle, que consulta el estado real.
-  if (!estado) return <Navigate to={`/repartidor/despachos/${id}`} replace />;
+  if (!estado) return <Navigate to={`${esRecojo ? '/repartidor/recojos' : '/repartidor/despachos'}/${id}`} replace />;
 
   return (
     <Pantalla
-      titulo="Fallo registrado"
+      titulo={esRecojo ? 'Recojo no realizado' : 'Fallo registrado'}
       acciones={<Button fullWidth size="lg" leftSection={<IconArrowRight size={20} />} onClick={() => navigate('/repartidor/ruta', { replace: true })}>
         Volver a mi ruta
       </Button>}
@@ -24,9 +25,10 @@ export function PaginaFalloRegistrado() {
         <ThemeIcon size={96} radius="50%" color="orange" variant="light" aria-hidden="true">
           <IconArrowBackUp size={48} color="var(--ia-color-action-primary-hover)" />
         </ThemeIcon>
-        <Title order={2} ta="center">Fallo registrado</Title>
+        <Title order={2} ta="center">{esRecojo ? 'Recojo no realizado' : 'Fallo registrado'}</Title>
         <Text ta="center" size="lg" c="var(--ia-color-text-secondary)">
-          {estado.codigo} quedó como No entregado. Este intento contó como {estado.intento}{estado.maximo ? ` de ${estado.maximo}` : ''}.
+          {esRecojo ? `${estado.codigo}: el Gestor decidirá el siguiente paso.`
+            : `${estado.codigo} quedó como No entregado. Este intento contó como ${estado.intento}${estado.maximo ? ` de ${estado.maximo}` : ''}.`}
         </Text>
         <Card w="100%">
           <Stack gap="md">
@@ -40,9 +42,9 @@ export function PaginaFalloRegistrado() {
             </Group>
           </Stack>
         </Card>
-        <Alert w="100%" color="yellow" icon={<IconHome size={20} />}>
+        {!esRecojo && <Alert w="100%" color="yellow" icon={<IconHome size={20} />}>
           <Text fw={600}>Devuelve el paquete al centro de despacho al terminar tu jornada.</Text>
-        </Alert>
+        </Alert>}
       </Stack>
     </Pantalla>
   );

@@ -1,5 +1,5 @@
 import { createContext, useContext, useMemo, useRef, type ReactNode } from 'react';
-import { MODO_DEMO, URL_API } from '../config';
+import { MODO_DEMO, TIPO_JORNADA_DEMO, URL_API } from '../config';
 import { useSesion } from '../sesion/SesionProveedor';
 import { ErrorOperacion } from './errores';
 import { crearOperacionDemo } from './operacionDemo';
@@ -14,7 +14,7 @@ export function OperacionProveedor({ children, puerto }: { children: ReactNode; 
   const token = useRef(prepararToken);
   token.current = prepararToken;
   const valor = useMemo<PuertoOperacion>(() => {
-    const base = puerto ?? (MODO_DEMO ? crearOperacionDemo() : crearOperacionHttp(URL_API, () => token.current(), gestor));
+    const base = puerto ?? (MODO_DEMO ? crearOperacionDemo(TIPO_JORNADA_DEMO) : crearOperacionHttp(URL_API, () => token.current(), gestor));
     return new Proxy(base, {
       get(objetivo, propiedad, receptor) {
         const original = Reflect.get(objetivo, propiedad, receptor);

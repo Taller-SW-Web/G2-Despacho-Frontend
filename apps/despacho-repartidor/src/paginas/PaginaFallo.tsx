@@ -6,6 +6,7 @@ import { Navigate, useNavigate, useParams } from 'react-router-dom';
 import { POLITICA_EVIDENCIA } from '../config';
 import { useOperacion } from '../api/ContextoOperacion';
 import { aErrorOperacion } from '../api/errores';
+import { trabajoDe, type TipoTrabajo } from '../api/trabajo';
 import { CargandoTarjetas, ErrorConsulta, Pantalla } from '../componentes/Pantalla';
 import { useConsulta } from '../componentes/useConsulta';
 import { useEvidencia } from '../evidencia/useEvidencia';
@@ -18,27 +19,30 @@ import clases from './PaginaFallo.module.css';
 const MAXIMO_COMENTARIO = 200;
 
 /** 08 · Marcar como fallido. Motivo del catálogo de Gestión, foto obligatoria y comentario opcional (ES-F03-06). */
-export function PaginaFallo() {
+export function PaginaFallo({ tipo = 'ENTREGA' }: { tipo?: TipoTrabajo }) {
   const { id = '' } = useParams();
   const operacion = useOperacion();
   const navigate = useNavigate();
+  const esRecojo = tipo === 'RECOJO';
+  const trabajo = trabajoDe(operacion, tipo);
   const cargar = useCallback(async (signal: AbortSignal) => {
-    const [detalle, motivos] = await Promise.all([operacion.consultarDetalle(id, signal), operacion.consultarMotivos(signal)]);
+    const acciones = trabajoDe(operacion, tipo);
+    const [detalle, motivos] = await Promise.all([acciones.consultar(id, signal), acciones.motivos(signal)]);
     // RN-02: solo motivos activos y seleccionables en campo; nunca NO_INTENTADO.
     return { detalle, motivos: motivos.filter((m) => m.activo && m.seleccionableEnCampo && m.codigo !== 'NO_INTENTADO') };
-  }, [operacion, id]);
+  }, [operacion, id, tipo]);
   const { consulta, recargar } = useConsulta(cargar);
-  const evidencia = useEvidencia(id, 'FALLO');
+  const evidencia = useEvidencia(id, trabajo.evidenciaFallo);
   const miniatura = useObjetoUrl(evidencia.foto);
   const [motivo, setMotivo] = useState<string | null>(null);
   const [comentario, setComentario] = useState('');
   const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [intentoEnvio, setIntentoEnvio] = useState(false);
-  const alcance = `fallo:${id}`;
+  const alcance = `${esRecojo ? 'fallo-recojo' : 'fallo'}:${id}`;
   const datos = consulta.estado === 'lista' ? consulta.datos : null;
 
-  if (datos && datos.detalle.estado !== 'EN_CAMINO') return <Navigate to={`/repartidor/despachos/${id}`} replace />;
+  if (datos && datos.detalle.estado !== 'EN_CAMINO') return <Navigate to={`${trabajo.base}/${id}`} replace />;
 
   async function registrar() {
     setIntentoEnvio(true);
@@ -47,7 +51,7 @@ export function PaginaFallo() {
     setError(null);
     try {
       const idEvidencia = await evidencia.asegurarCarga();
-      const resultado = await operacion.registrarFallo(id, claveDeIntencion(alcance), {
+      const resultado = await trabajo.registrarFallo(id, claveDeIntencion(alcance), {
         motivo, idEvidencia, comentario: comentario.trim() || null,
       });
       liberarClave(alcance);
@@ -57,13 +61,13 @@ export function PaginaFallo() {
         intento: resultado.numeroIntentos,
         maximo: resultado.maximoIntentos,
       };
-      navigate(`/repartidor/despachos/${id}/fallo-registrado`, { replace: true, state: estado });
+      navigate(`${trabajo.base}/${id}/fallo-registrado`, { replace: true, state: estado });
     } catch (fallo) {
       const traducido = aErrorOperacion(fallo);
       if (!traducido.reintentable) liberarClave(alcance);
       if (traducido.tipo === 'conflicto' && traducido.codigo !== 'DESP_ERROR_EVIDENCIA_NO_CARGADA') {
         notificarOperacion({ id: `conflicto-${id}`, tipo: 'informacion', mensaje: traducido.message });
-        navigate(`/repartidor/despachos/${id}`, { replace: true });
+        navigate(`${trabajo.base}/${id}`, { replace: true });
         return;
       }
       setError(traducido.message);
@@ -82,12 +86,12 @@ export function PaginaFallo() {
 
   return (
     <Pantalla
-      titulo="Marcar como fallido"
-      alVolver={() => navigate(`/repartidor/despachos/${id}`)}
+      titulo={esRecojo ? 'No se pudo recoger' : 'Marcar como fallido'}
+      alVolver={() => navigate(`${trabajo.base}/${id}`)}
       acciones={datos && (
         <Button fullWidth size="lg" color="red" variant="filled" leftSection={<IconX size={20} />} loading={enviando}
           disabled={procesandoFoto} onClick={registrar}>
-          Registrar fallo
+          {esRecojo ? 'Confirmar' : 'Registrar fallo'}
         </Button>
       )}
     >
@@ -148,7 +152,7 @@ export function PaginaFallo() {
             Este intento contará como Intento {intentoEnCurso(datos.detalle.numeroIntentos, datos.detalle.estado)}
             {datos.detalle.maximoIntentos ? ` de ${datos.detalle.maximoIntentos}` : ''}.
           </Text>
-          {error && <Alert color="red" icon={<IconAlertCircle size={18} />} title="No se registró el fallo" role="alert">{error}</Alert>}
+          {error && <Alert color="red" icon={<IconAlertCircle size={18} />} title={esRecojo ? 'No se registró el resultado' : 'No se registró el fallo'} role="alert">{error}</Alert>}
         </Stack>
       )}
     </Pantalla>
