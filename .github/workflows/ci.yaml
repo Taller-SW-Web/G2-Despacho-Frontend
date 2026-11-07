@@ -1,5 +1,7 @@
-name: CI frontend
+name: CI/CD frontend
 
+# Cadena: instalar y probar -> construir artefactos -> compuerta -> desplegar (Vercel) -> verificar.
+# Vercel solo promueve a producción un commit de main cuando la compuerta "CI frontend verde" pasó.
 on:
   pull_request:
     branches: [develop, main]
@@ -12,12 +14,16 @@ permissions:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
+  # Solo se cancelan ejecuciones obsoletas de PR; un push a develop/main termina siempre.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
   CI: 'true'
 
 jobs:
+  # ---------------------------------------------------------------------------
+  # 1. COMPILAR Y PROBAR
+  # ---------------------------------------------------------------------------
   comprobaciones:
     name: Frontend (${{ matrix.comprobacion }})
     runs-on: ubuntu-24.04
@@ -63,7 +69,7 @@ jobs:
         run: ${{ matrix.comando }}
 
       - name: Conservar las capturas y resultados de navegador
-        if: ${{ always() && startsWith(matrix.comprobacion, 'e2e-') }}
+        if: ${{ !cancelled() && startsWith(matrix.comprobacion, 'e2e-') }}
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: pruebas-${{ matrix.comprobacion }}
@@ -72,3 +78,155 @@ jobs:
             docs/evidencia/f02/
           if-no-files-found: ignore
           retention-days: 7
+
+  # ---------------------------------------------------------------------------
+  # 2. CONSTRUIR los paquetes estáticos de cada aplicación (build de producción)
+  #    y conservarlos como artefacto versionado por ejecución.
+  # ---------------------------------------------------------------------------
+  construccion:
+    name: Construir (${{ matrix.app }})
+    needs: [comprobaciones]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - app: administrativo
+            paquete: '@despacho/administrativo'
+            directorio: apps/despacho-administrativo
+          - app: repartidor
+            paquete: '@despacho/repartidor'
+            directorio: apps/despacho-repartidor
+    env:
+      # Mismo valor que usa Vercel; si no hay variable del repositorio, se usa el Gateway publicado.
+      VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL || 'https://taller-api-gateway.onrender.com' }}
+    steps:
+      - name: Obtener el código
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      - name: Preparar Node.js 22 y la caché de npm
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Instalar las dependencias del monorepositorio
+        run: npm ci
+
+      - name: Compilar la aplicación para producción
+        env:
+          PAQUETE: ${{ matrix.paquete }}
+        run: npm run build -w "$PAQUETE"
+
+      - name: Comprobar el paquete generado
+        env:
+          DIRECTORIO: ${{ matrix.directorio }}
+        run: |
+          set -euo pipefail
+          test -s "${DIRECTORIO}/dist/index.html" || { echo "::error::No se generó ${DIRECTORIO}/dist/index.html"; exit 1; }
+          grep -q 'id="root"' "${DIRECTORIO}/dist/index.html" || { echo "::error::index.html no contiene el contenedor raíz"; exit 1; }
+          du -sh "${DIRECTORIO}/dist"
+
+      - name: Conservar el paquete de producción
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: dist-${{ matrix.app }}
+          path: ${{ matrix.directorio }}/dist/
+          if-no-files-found: error
+          retention-days: 14
+
+  # ---------------------------------------------------------------------------
+  # 3. COMPUERTA: un único check que resume todo lo anterior.
+  #    Es el que conviene exigir en la protección de ramas (no depende de la matriz).
+  # ---------------------------------------------------------------------------
+  ci-ok:
+    name: CI frontend verde
+    if: ${{ always() }}
+    needs: [comprobaciones, construccion]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 2
+    steps:
+      - name: Exigir que todas las etapas hayan salido bien
+        env:
+          RESULTADOS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          echo "Resultados de las etapas: ${RESULTADOS}"
+          for resultado in ${RESULTADOS}; do
+            if [ "${resultado}" != "success" ]; then
+              echo "::error::Alguna etapa no terminó en success (${RESULTADOS}). No se debe integrar ni desplegar."
+              exit 1
+            fi
+          done
+
+  # ---------------------------------------------------------------------------
+  # 4. DESPLEGAR: lo hace Vercel con su integración de Git, gobernado por
+  #    Deployment Checks. Vercel construye cada push a main, pero solo lo promueve
+  #    a producción cuando el check "CI frontend verde" de este workflow pasa.
+  #    Si falla, producción conserva la versión anterior.
+  # 5. VERIFICAR: tras la compuerta, se comprueba que ambas aplicaciones publicadas
+  #    respondan y entreguen la SPA. Requiere las variables URL_* (ver README).
+  # ---------------------------------------------------------------------------
+  verificar-produccion:
+    name: Verificar producción (Vercel)
+    if: ${{ (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main' }}
+    needs: [ci-ok]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    concurrency:
+      group: verificacion-frontend-produccion
+      cancel-in-progress: false
+    steps:
+      # Vercel promueve el despliegue al ver la compuerta en verde: se espera antes de consultar.
+      - name: Verificar las aplicaciones publicadas
+        env:
+          URL_ADMINISTRATIVO: ${{ vars.URL_ADMINISTRATIVO }}
+          URL_REPARTIDOR: ${{ vars.URL_REPARTIDOR }}
+        run: |
+          set -uo pipefail
+          faltan=0
+          for nombre in ADMINISTRATIVO REPARTIDOR; do
+            var="URL_${nombre}"
+            if [ -z "${!var}" ]; then
+              echo "::error::Falta la variable URL_${nombre} (Settings > Secrets and variables > Actions > Variables)."
+              faltan=1
+            fi
+          done
+          [ "${faltan}" -eq 0 ] || exit 1
+
+          # Devuelve 0 si la URL responde 200 y entrega el index de la SPA.
+          comprobar() {
+            local url="$1" cuerpo codigo
+            cuerpo="$(mktemp)"
+            codigo="$(curl --silent --location --max-time 20 --output "${cuerpo}" --write-out '%{http_code}' "${url}" || echo 000)"
+            if [ "${codigo}" = "200" ] && grep -q 'id="root"' "${cuerpo}"; then
+              return 0
+            fi
+            echo "  ${url} -> HTTP ${codigo}"
+            return 1
+          }
+
+          sleep 60
+          for intento in $(seq 1 15); do
+            echo "Intento ${intento} de 15"
+            correcto=1
+            for base in "${URL_ADMINISTRATIVO%/}" "${URL_REPARTIDOR%/}"; do
+              # La raíz y una ruta profunda comprueban la reescritura SPA de vercel.json.
+              comprobar "${base}/" || correcto=0
+              comprobar "${base}/ruta-profunda-ci" || correcto=0
+            done
+            if [ "${correcto}" -eq 1 ]; then
+              {
+                echo "### Producción verificada"
+                echo "Commit \`${GITHUB_SHA}\`: ambas aplicaciones responden 200 y entregan la SPA."
+                echo "Vercel lo promueve a producción por Deployment Checks al pasar \`CI frontend verde\`."
+              } | tee -a "$GITHUB_STEP_SUMMARY"
+              exit 0
+            fi
+            sleep 30
+          done
+          echo "::error::Las aplicaciones no respondieron correctamente. Revisar el panel de Vercel."
+          exit 1

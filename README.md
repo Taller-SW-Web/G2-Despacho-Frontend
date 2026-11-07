@@ -125,9 +125,9 @@ Los informes de navegador se generan en `test-results/` según el resultado. Reg
 
 ### Integración continua y protección de develop
 
-El workflow [CI frontend](.github/workflows/ci.yaml) se ejecuta en cada PR dirigido a `develop` o `main`, en los push a esas ramas y manualmente desde Actions. Usa Node.js 22 y `npm ci` con el lockfile raíz. Ejecuta por separado las suites completas de componentes, administrativo y repartidor, la comprobación de tipos y compilación de ambas aplicaciones, y las pruebas de navegador F-02 y F-05/F-06 con Chromium y APIs simuladas. Conserva capturas y resultados de navegador durante siete días. No necesita secretos ni despliega aplicaciones.
+El workflow [CI/CD frontend](.github/workflows/ci.yaml) se ejecuta en cada PR dirigido a `develop` o `main`, en los push a esas ramas y manualmente desde Actions. Usa Node.js 22 y `npm ci` con el lockfile raíz. Ejecuta por separado las suites completas de componentes, administrativo y repartidor, la comprobación de tipos y compilación de ambas aplicaciones, y las pruebas de navegador F-02 y F-05/F-06 con Chromium y APIs simuladas. Conserva capturas y resultados de navegador durante siete días. Las etapas de construcción, compuerta y despliegue se describen en [Pipeline CI/CD](#pipeline-cicd); el pipeline no necesita secretos.
 
-Para impedir que se integre un PR con fallos, un administrador debe configurar en GitHub una protección o ruleset para `develop`: exigir PR, activar **Require status checks to pass before merging** y **Require branches to be up to date before merging**, y seleccionar estas comprobaciones tras su primera ejecución:
+Para impedir que se integre un PR con fallos, un administrador debe configurar en GitHub una protección o ruleset para `develop`: exigir PR, activar **Require status checks to pass before merging** y **Require branches to be up to date before merging**, y seleccionar la compuerta `CI frontend verde` tras su primera ejecución (resume las comprobaciones y las construcciones y no depende de los nombres de la matriz). Si se prefiere exigirlas por separado:
 
 - `Frontend (componentes)`
 - `Frontend (administrativo)`
@@ -137,6 +137,36 @@ Para impedir que se integre un PR con fallos, un administrador debe configurar e
 - `Frontend (e2e-flota)`
 
 Aplicar los requisitos también a administradores y evitar excepciones de bypass si se quiere exigirlos a todo el equipo. La misma configuración puede aplicarse a `main` para la promoción de entregas. Añadir el YAML no configura por sí solo la protección remota. Consultar la [documentación de GitHub sobre ramas protegidas](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/about-protected-branches).
+
+### Pipeline CI/CD
+
+```
+PR / push a develop o main
+  1. Instalar y probar   componentes · administrativo · repartidor · tipos-y-compilacion · e2e-f02 · e2e-flota
+  2. Construir           Construir (administrativo | repartidor)  ->  artefactos dist-*
+  3. Compuerta           CI frontend verde
+  4. Desplegar           Vercel construye cada push a main y lo promueve a producción solo si pasa la compuerta
+  5. Verificar           ambas URLs responden 200 y entregan la SPA (raíz y ruta profunda)
+```
+
+- **Construir:** compila cada aplicación con `VITE_API_BASE_URL` (variable del repositorio, o el Gateway publicado si no existe), comprueba que `dist/index.html` existe y contiene el contenedor raíz, y conserva `dist/` 14 días como artefacto `dist-administrativo` y `dist-repartidor`.
+- **Compuerta:** `CI frontend verde` falla si cualquier etapa anterior no terminó en `success`; el despliegue depende solo de ella.
+- **Desplegar:** lo hace Vercel con su integración de Git, gobernado por **Deployment Checks**. Vercel construye cada push a `main`, pero no lo asigna al dominio de producción hasta que el check `CI frontend verde` de este workflow termina en verde. Si falla, producción conserva la versión anterior; solo se publicaría con *Force Promote* manual desde Vercel. Los previews de PR no cambian.
+- **Verificar:** en `main`, tras la compuerta, el job `Verificar producción (Vercel)` consulta la raíz y una ruta profunda de cada aplicación hasta obtener `200` con `id="root"` (la ruta profunda comprueba la reescritura SPA de `vercel.json`), con reintentos de hasta unos 10 minutos. Acredita que la aplicación está publicada y sirve la SPA; no identifica la versión desplegada.
+
+#### Despliegue continuo: configuración necesaria
+
+1. En **cada** proyecto de Vercel (administrativo y repartidor): Settings > Build and Deployment > **Deployment Checks** > *Add Checks* > **GitHub** > seleccionar `CI frontend verde`. El check aparece en la lista solo después de que el workflow haya corrido al menos una vez. Vercel identifica los checks por el nombre del job: no elegir los de la matriz uno por uno, y actualizar la regla si se renombra la compuerta.
+2. Mantener activo el despliegue automático de Vercel para `main` y la asignación automática del dominio de producción: Deployment Checks retiene la promoción, no la construcción.
+3. En GitHub (Settings > Secrets and variables > Actions > Variables), crear:
+
+| Variable | Valor |
+|---|---|
+| `URL_ADMINISTRATIVO` | URL pública de producción, por ejemplo `https://<proyecto>.vercel.app` |
+| `URL_REPARTIDOR` | URL pública de producción de la app del repartidor |
+| `VITE_API_BASE_URL` (opcional) | Origen del Gateway para el build del CI; por defecto `https://taller-api-gateway.onrender.com` |
+
+Mientras falten las variables `URL_*`, el job de verificación falla en `main` indicando cuál falta. No se necesitan secretos: el CI no despliega ni guarda credenciales de Vercel.
 
 F-01 E2E y F-04 E2E (reprogramación y cierre) quedan fuera de este workflow: necesitan preparar los servicios, identidades y bases desechables descritos arriba y en el README del backend. Por tanto, este CI no acredita todos los recorridos con servicios reales. No ejecutar esas suites contra bases compartidas ni sustituir sus resultados por las pruebas con APIs simuladas.
 
@@ -227,7 +257,7 @@ Después de `npm run build`, se puede inspeccionar cada construcción con `npm r
 
 Para Vercel, crear un proyecto por aplicación. Usar su directorio como raíz (`apps/despacho-administrativo` o `apps/despacho-repartidor`), habilitar acceso a los archivos del monorepositorio para instalar workspaces, construir con `npm run build` en esa aplicación y publicar `dist`. Ambas conservan `vercel.json` con la reescritura SPA a `index.html`.
 
-Configurar `VITE_API_BASE_URL` en cada proyecto antes de construir, usar HTTPS en el Gateway si el sitio es HTTPS y autorizar el origen publicado en CORS. El adaptador humano está preparado contra el contrato recibido de G7; no se ha verificado contra sus cuentas reales ni contiene credenciales de despliegue.
+Configurar `VITE_API_BASE_URL` en cada proyecto antes de construir, usar HTTPS en el Gateway si el sitio es HTTPS y autorizar el origen publicado en CORS. El adaptador humano está preparado contra el contrato recibido de G7; no se ha verificado contra sus cuentas reales ni contiene credenciales de despliegue. Desde `main`, Vercel solo promueve a producción los commits que pasan la compuerta del CI (ver [Pipeline CI/CD](#pipeline-cicd)).
 
 ## Acceso, MFA y sesión de ambas apps
 
