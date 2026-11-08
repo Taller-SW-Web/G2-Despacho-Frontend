@@ -14,8 +14,13 @@ export function useConsulta<T>(cargar: (signal: AbortSignal) => Promise<T>) {
   useEffect(() => {
     const controlador = new AbortController();
     cargar(controlador.signal).then(
-      (datos) => { if (!controlador.signal.aborted) setConsulta({ estado: 'lista', datos }); },
-      (error: unknown) => { if (!controlador.signal.aborted) setConsulta({ estado: 'error', error: aErrorOperacion(error) }); },
+      (datos) => {
+        if (!controlador.signal.aborted) setConsulta({ estado: 'lista', datos });
+      },
+      (error: unknown) => {
+        if (!controlador.signal.aborted)
+          setConsulta({ estado: 'error', error: aErrorOperacion(error) });
+      },
     );
     return () => controlador.abort();
   }, [cargar, revision]);
@@ -26,12 +31,17 @@ export function useConsulta<T>(cargar: (signal: AbortSignal) => Promise<T>) {
 
 /** navigator.onLine con sus eventos: base del aviso «Sin conexión». */
 export function useConexion() {
-  const [enLinea, setEnLinea] = useState(() => typeof navigator === 'undefined' || navigator.onLine !== false);
+  const [enLinea, setEnLinea] = useState(
+    () => typeof navigator === 'undefined' || navigator.onLine !== false,
+  );
   useEffect(() => {
     const actualizar = () => setEnLinea(navigator.onLine !== false);
     window.addEventListener('online', actualizar);
     window.addEventListener('offline', actualizar);
-    return () => { window.removeEventListener('online', actualizar); window.removeEventListener('offline', actualizar); };
+    return () => {
+      window.removeEventListener('online', actualizar);
+      window.removeEventListener('offline', actualizar);
+    };
   }, []);
   return enLinea;
 }

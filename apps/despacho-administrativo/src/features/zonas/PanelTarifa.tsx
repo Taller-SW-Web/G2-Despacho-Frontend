@@ -14,7 +14,13 @@ import {
 import { EstadoVista, notificarOperacion } from '@despacho/componentes-compartidos';
 import { IconAlertTriangle, IconDeviceFloppy } from '@tabler/icons-react';
 import { useClienteApi } from '../../cliente/useClienteApi';
-import { detalleProblema, guardarTarifa, obtenerTarifaVigente, obtenerZona, problemaDe } from './api/zonasApi';
+import {
+  detalleProblema,
+  guardarTarifa,
+  obtenerTarifaVigente,
+  obtenerZona,
+  problemaDe,
+} from './api/zonasApi';
 import { BadgeEstadoZona } from './BadgeEstadoZona';
 import { PaginaZonas } from './PaginaZonas';
 import type { SolicitudTarifa, Zona } from './tipos';
@@ -94,7 +100,11 @@ export function PanelTarifa() {
           setZona(null);
           return;
         }
-        setErrorCarga(problema?.status === 404 ? 'La zona solicitada no existe.' : 'No se pudo cargar la tarifa. Revisa tu conexión e inténtalo de nuevo.');
+        setErrorCarga(
+          problema?.status === 404
+            ? 'La zona solicitada no existe.'
+            : 'No se pudo cargar la tarifa. Revisa tu conexión e inténtalo de nuevo.',
+        );
       })
       .finally(() => {
         if (activo) setCargando(false);
@@ -104,7 +114,9 @@ export function PanelTarifa() {
     };
   }, [cliente, id, revision]);
 
-  const cerrar = () => { if (!guardando) navegar(`/zonas${parametros.size ? `?${parametros}` : ''}`); };
+  const cerrar = () => {
+    if (!guardando) navegar(`/zonas${parametros.size ? `?${parametros}` : ''}`);
+  };
   const inactiva = zona?.estado === 'INACTIVO';
 
   const actualizar = (campo: keyof Campos) => (valor: ValorCampo) =>
@@ -119,11 +131,16 @@ export function PanelTarifa() {
     const plazo = aNumero(campos.plazoEstimadoDiasHabiles);
 
     if (base === null || base < 0) errores.tarifaBase = 'La tarifa base no puede ser negativa';
-    if (peso === null || peso <= 0) errores.pesoIncluidoKg = 'El peso incluido debe ser mayor que cero';
-    if (recargo === null || recargo < 0) errores.recargoKgAdicional = 'El recargo no puede ser negativo';
-    if (factor !== null && factor <= 0) errores.factorVolumetrico = 'El factor debe ser mayor que cero';
-    if (plazo === null || plazo < 0) errores.plazoEstimadoDiasHabiles = 'Informa un plazo en días hábiles';
-    else if (!Number.isInteger(plazo)) errores.plazoEstimadoDiasHabiles = 'El plazo debe ser un entero';
+    if (peso === null || peso <= 0)
+      errores.pesoIncluidoKg = 'El peso incluido debe ser mayor que cero';
+    if (recargo === null || recargo < 0)
+      errores.recargoKgAdicional = 'El recargo no puede ser negativo';
+    if (factor !== null && factor <= 0)
+      errores.factorVolumetrico = 'El factor debe ser mayor que cero';
+    if (plazo === null || plazo < 0)
+      errores.plazoEstimadoDiasHabiles = 'Informa un plazo en días hábiles';
+    else if (!Number.isInteger(plazo))
+      errores.plazoEstimadoDiasHabiles = 'El plazo debe ser un entero';
     return errores;
   };
 
@@ -174,131 +191,153 @@ export function PanelTarifa() {
     }
   };
 
-  if (denegado) return <EstadoVista estado="sinPermiso" alAccionar={() => setRevision((valor) => valor + 1)} />;
+  if (denegado)
+    return <EstadoVista estado="sinPermiso" alAccionar={() => setRevision((valor) => valor + 1)} />;
 
-  return <>
-    <PaginaZonas />
-    <Drawer
-      opened
-      onClose={cerrar}
-      position="right"
-      size={560}
-      closeOnEscape={!guardando}
-      closeOnClickOutside={!guardando}
-      withCloseButton={!guardando}
-      title={`Tarifas de ${zona?.nombre ?? ''}`}
-      closeButtonProps={{ 'aria-label': 'Cerrar tarifas' }}
-    >
-      <EstadoVista estado={cargando ? 'carga' : errorCarga ? 'error' : 'datos'}
-        esqueleto={<Stack aria-label="Cargando tarifa">{[0, 1, 2].map((indice) => <Skeleton key={indice} height={64} />)}</Stack>}
-        descripcion={errorCarga ?? undefined}
-        accion={errorCarga ? { id: 'reintentar', etiqueta: 'Reintentar tarifa' } : undefined}
-        alAccionar={() => setRevision((valor) => valor + 1)}>
-        <Stack gap="md">
-          {zona && <BadgeEstadoZona estado={zona.estado} />}
-          {inactiva ? (
-            <Alert color="yellow" variant="light" icon={<IconAlertTriangle size={18} />}>
-              Activa la zona para configurar su tarifa.
+  return (
+    <>
+      <PaginaZonas />
+      <Drawer
+        opened
+        onClose={cerrar}
+        position="right"
+        size={560}
+        closeOnEscape={!guardando}
+        closeOnClickOutside={!guardando}
+        withCloseButton={!guardando}
+        title={`Tarifas de ${zona?.nombre ?? ''}`}
+        closeButtonProps={{ 'aria-label': 'Cerrar tarifas' }}
+      >
+        <EstadoVista
+          estado={cargando ? 'carga' : errorCarga ? 'error' : 'datos'}
+          esqueleto={
+            <Stack aria-label="Cargando tarifa">
+              {[0, 1, 2].map((indice) => (
+                <Skeleton key={indice} height={64} />
+              ))}
+            </Stack>
+          }
+          descripcion={errorCarga ?? undefined}
+          accion={errorCarga ? { id: 'reintentar', etiqueta: 'Reintentar tarifa' } : undefined}
+          alAccionar={() => setRevision((valor) => valor + 1)}
+        >
+          <Stack gap="md">
+            {zona && <BadgeEstadoZona estado={zona.estado} />}
+            {inactiva ? (
+              <Alert color="yellow" variant="light" icon={<IconAlertTriangle size={18} />}>
+                Activa la zona para configurar su tarifa.
+              </Alert>
+            ) : null}
+
+            {!tieneTarifa ? (
+              <Text size="sm" c="dimmed">
+                Esta zona aún no tiene tarifa.
+              </Text>
+            ) : (
+              <Alert color="yellow" variant="light" title="Sustitución de tarifa">
+                Al guardar, esta tarifa sustituye a la vigente y la anterior se conserva como
+                histórico.
+              </Alert>
+            )}
+
+            {errorGeneral ? (
+              <Alert color="red" variant="light" icon={<IconAlertTriangle size={18} />}>
+                {errorGeneral}
+              </Alert>
+            ) : null}
+
+            <Fieldset variant="unstyled" disabled={guardando || inactiva}>
+              <Stack gap="md">
+                <NumberInput
+                  label="Tarifa base"
+                  prefix={`${MONEDA} `}
+                  min={0}
+                  decimalScale={2}
+                  allowNegative={false}
+                  withAsterisk
+                  value={campos.tarifaBase}
+                  onChange={actualizar('tarifaBase')}
+                  error={erroresCampos.tarifaBase}
+                />
+                <NumberInput
+                  label="Peso incluido hasta (kg)"
+                  suffix=" kg"
+                  min={0}
+                  decimalScale={2}
+                  allowNegative={false}
+                  withAsterisk
+                  value={campos.pesoIncluidoKg}
+                  onChange={actualizar('pesoIncluidoKg')}
+                  error={erroresCampos.pesoIncluidoKg}
+                />
+                <NumberInput
+                  label="Recargo por kg adicional"
+                  prefix={`${MONEDA} `}
+                  min={0}
+                  decimalScale={2}
+                  allowNegative={false}
+                  withAsterisk
+                  value={campos.recargoKgAdicional}
+                  onChange={actualizar('recargoKgAdicional')}
+                  error={erroresCampos.recargoKgAdicional}
+                />
+                <NumberInput
+                  label="Factor volumétrico"
+                  description="Kilogramos equivalentes por cada metro cúbico."
+                  min={0}
+                  decimalScale={3}
+                  allowNegative={false}
+                  value={campos.factorVolumetrico}
+                  onChange={actualizar('factorVolumetrico')}
+                  error={erroresCampos.factorVolumetrico}
+                />
+                <NumberInput
+                  label="Plazo estimado de entrega (días hábiles)"
+                  min={0}
+                  decimalScale={0}
+                  allowNegative={false}
+                  withAsterisk
+                  value={campos.plazoEstimadoDiasHabiles}
+                  onChange={actualizar('plazoEstimadoDiasHabiles')}
+                  error={erroresCampos.plazoEstimadoDiasHabiles}
+                />
+
+                <Text size="sm" c="dimmed">
+                  Moneda fija: {MONEDA}. Las tarifas se expresan en soles.
+                </Text>
+              </Stack>
+            </Fieldset>
+
+            <Alert variant="light" color="gray" title="Cómo se calcula">
+              Peso cotizable = peso total + (volumen total × factor volumétrico). Costo = tarifa
+              base + recargo por kg × máximo(0, peso cotizable − peso incluido).
             </Alert>
-          ) : null}
 
-          {!tieneTarifa ? (
-            <Text size="sm" c="dimmed">
-              Esta zona aún no tiene tarifa.
-            </Text>
-          ) : (
-            <Alert color="yellow" variant="light" title="Sustitución de tarifa">
-              Al guardar, esta tarifa sustituye a la vigente y la anterior se conserva como histórico.
-            </Alert>
-          )}
-
-          {errorGeneral ? (
-            <Alert color="red" variant="light" icon={<IconAlertTriangle size={18} />}>
-              {errorGeneral}
-            </Alert>
-          ) : null}
-
-          <Fieldset variant="unstyled" disabled={guardando || inactiva}><Stack gap="md">
-          <NumberInput
-            label="Tarifa base"
-            prefix={`${MONEDA} `}
-            min={0}
-            decimalScale={2}
-            allowNegative={false}
-            withAsterisk
-            value={campos.tarifaBase}
-            onChange={actualizar('tarifaBase')}
-            error={erroresCampos.tarifaBase}
-          />
-          <NumberInput
-            label="Peso incluido hasta (kg)"
-            suffix=" kg"
-            min={0}
-            decimalScale={2}
-            allowNegative={false}
-            withAsterisk
-            value={campos.pesoIncluidoKg}
-            onChange={actualizar('pesoIncluidoKg')}
-            error={erroresCampos.pesoIncluidoKg}
-          />
-          <NumberInput
-            label="Recargo por kg adicional"
-            prefix={`${MONEDA} `}
-            min={0}
-            decimalScale={2}
-            allowNegative={false}
-            withAsterisk
-            value={campos.recargoKgAdicional}
-            onChange={actualizar('recargoKgAdicional')}
-            error={erroresCampos.recargoKgAdicional}
-          />
-          <NumberInput
-            label="Factor volumétrico"
-            description="Kilogramos equivalentes por cada metro cúbico."
-            min={0}
-            decimalScale={3}
-            allowNegative={false}
-            value={campos.factorVolumetrico}
-            onChange={actualizar('factorVolumetrico')}
-            error={erroresCampos.factorVolumetrico}
-          />
-          <NumberInput
-            label="Plazo estimado de entrega (días hábiles)"
-            min={0}
-            decimalScale={0}
-            allowNegative={false}
-            withAsterisk
-            value={campos.plazoEstimadoDiasHabiles}
-            onChange={actualizar('plazoEstimadoDiasHabiles')}
-            error={erroresCampos.plazoEstimadoDiasHabiles}
-          />
-
-          <Text size="sm" c="dimmed">
-            Moneda fija: {MONEDA}. Las tarifas se expresan en soles.
-          </Text>
-          </Stack></Fieldset>
-
-          <Alert variant="light" color="gray" title="Cómo se calcula">
-            Peso cotizable = peso total + (volumen total × factor volumétrico). Costo = tarifa base +
-            recargo por kg × máximo(0, peso cotizable − peso incluido).
-          </Alert>
-
-          <Group justify="flex-end" gap="sm">
-            <Button variant="default" onClick={cerrar} disabled={guardando}>
-              Cancelar
-            </Button>
-            <Button
-              leftSection={<IconDeviceFloppy size={18} />}
-              loading={guardando}
-              disabled={inactiva || aNumero(campos.tarifaBase) === null || aNumero(campos.pesoIncluidoKg) === null}
-              onClick={() => void guardar()}
-            >
-              Guardar tarifa
-            </Button>
-          </Group>
-          {(aNumero(campos.tarifaBase) === null || aNumero(campos.pesoIncluidoKg) === null) && <Text size="sm" c="dimmed">Completa la tarifa base y el peso incluido para guardar.</Text>}
-        </Stack>
-      </EstadoVista>
-    </Drawer>
-  </>;
+            <Group justify="flex-end" gap="sm">
+              <Button variant="default" onClick={cerrar} disabled={guardando}>
+                Cancelar
+              </Button>
+              <Button
+                leftSection={<IconDeviceFloppy size={18} />}
+                loading={guardando}
+                disabled={
+                  inactiva ||
+                  aNumero(campos.tarifaBase) === null ||
+                  aNumero(campos.pesoIncluidoKg) === null
+                }
+                onClick={() => void guardar()}
+              >
+                Guardar tarifa
+              </Button>
+            </Group>
+            {(aNumero(campos.tarifaBase) === null || aNumero(campos.pesoIncluidoKg) === null) && (
+              <Text size="sm" c="dimmed">
+                Completa la tarifa base y el peso incluido para guardar.
+              </Text>
+            )}
+          </Stack>
+        </EstadoVista>
+      </Drawer>
+    </>
+  );
 }

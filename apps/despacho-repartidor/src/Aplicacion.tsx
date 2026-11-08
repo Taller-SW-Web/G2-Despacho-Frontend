@@ -16,7 +16,8 @@ import { useSesion } from './sesion/SesionProveedor';
 function ConSesion({ children }: { children: ReactNode }) {
   const { sesion } = useSesion();
   const ubicacion = useLocation();
-  if (!sesion) return <Navigate to="/repartidor/acceso" replace state={{ desde: ubicacion.pathname }} />;
+  if (!sesion)
+    return <Navigate to="/repartidor/acceso" replace state={{ desde: ubicacion.pathname }} />;
   return <>{children}</>;
 }
 
@@ -32,7 +33,10 @@ export function Aplicacion({ puerto }: { puerto?: PuertoOperacion }) {
         <Route path="/repartidor/despachos/:id" element={protegida(<PaginaDetalle />)} />
         <Route path="/repartidor/despachos/:id/entrega" element={protegida(<PaginaEntrega />)} />
         <Route path="/repartidor/despachos/:id/fallo" element={protegida(<PaginaFallo />)} />
-        <Route path="/repartidor/despachos/:id/fallo-registrado" element={protegida(<PaginaFalloRegistrado />)} />
+        <Route
+          path="/repartidor/despachos/:id/fallo-registrado"
+          element={protegida(<PaginaFalloRegistrado />)}
+        />
         <Route path="/repartidor/resumen" element={protegida(<PaginaResumen />)} />
         <Route path="/repartidor/cierre" element={protegida(<PaginaCierre />)} />
         <Route path="*" element={<Navigate to="/repartidor/ruta" replace />} />

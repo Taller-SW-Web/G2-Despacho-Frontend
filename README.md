@@ -88,6 +88,15 @@ La experiencia permite recorrer ruta, detalle, traslado, entrega/fallo con evide
 
 Las fotografías reales requieren el servicio de evidencias/Storage de Operación. La existencia de una pantalla o demo no acredita la aceptación conjunta con Seguridad, Ventas, Productos y los servicios de Despacho. Los resultados y pendientes de cada comportamiento se mantienen en Specs.
 
+## Formato del código
+
+TypeScript y TSX usan Prettier con 2 espacios por nivel y un ancho de 100 columnas; la configuración está en `.prettierrc.json` y `.editorconfig`. Desde la raíz:
+
+```powershell
+npm run format        # Aplica el formato
+npm run format:check  # Comprueba el formato sin modificar archivos
+```
+
 ## Pruebas y construcción
 
 Desde la raíz, las comprobaciones locales sin servicios reales son:

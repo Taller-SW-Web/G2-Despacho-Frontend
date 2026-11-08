@@ -18,22 +18,38 @@ export type EstadoEvidencia = {
  */
 export function useEvidencia(idDespacho: string, tipo: TipoEvidencia, optimizar = optimizarFoto) {
   const operacion = useOperacion();
-  const [estado, setEstado] = useState<EstadoEvidencia>({ foto: null, fase: 'vacia', progreso: null, error: undefined });
+  const [estado, setEstado] = useState<EstadoEvidencia>({
+    foto: null,
+    fase: 'vacia',
+    progreso: null,
+    error: undefined,
+  });
   const idEvidencia = useRef<{ foto: File; id: string } | null>(null);
   const generacion = useRef(0);
 
-  const seleccionar = useCallback(async (archivo: File) => {
-    const actual = ++generacion.current;
-    idEvidencia.current = null;
-    setEstado({ foto: null, fase: 'procesando', progreso: null, error: undefined });
-    try {
-      const foto = await optimizar(archivo);
-      if (actual === generacion.current) setEstado({ foto, fase: 'lista', progreso: null, error: undefined });
-    } catch (error) {
-      if (actual === generacion.current) setEstado({ foto: null, fase: 'error', progreso: null,
-        error: error instanceof Error ? error.message : 'No se pudo procesar la foto. Toma otra.' });
-    }
-  }, [optimizar]);
+  const seleccionar = useCallback(
+    async (archivo: File) => {
+      // Cada selección abre una generación; un procesamiento anterior que termine tarde se descarta.
+      const actual = ++generacion.current;
+      idEvidencia.current = null;
+      setEstado({ foto: null, fase: 'procesando', progreso: null, error: undefined });
+      try {
+        const foto = await optimizar(archivo);
+        if (actual === generacion.current)
+          setEstado({ foto, fase: 'lista', progreso: null, error: undefined });
+      } catch (error) {
+        if (actual === generacion.current)
+          setEstado({
+            foto: null,
+            fase: 'error',
+            progreso: null,
+            error:
+              error instanceof Error ? error.message : 'No se pudo procesar la foto. Toma otra.',
+          });
+      }
+    },
+    [optimizar],
+  );
 
   const descartar = useCallback(() => {
     generacion.current++;
@@ -48,8 +64,9 @@ export function useEvidencia(idDespacho: string, tipo: TipoEvidencia, optimizar 
     if (idEvidencia.current?.foto === foto) return idEvidencia.current.id;
     setEstado((previo) => ({ ...previo, fase: 'subiendo', progreso: 0, error: undefined }));
     try {
-      const id = await operacion.subirEvidencia(idDespacho, tipo, foto,
-        (progreso) => setEstado((previo) => ({ ...previo, progreso })));
+      const id = await operacion.subirEvidencia(idDespacho, tipo, foto, (progreso) =>
+        setEstado((previo) => ({ ...previo, progreso })),
+      );
       idEvidencia.current = { foto, id };
       setEstado((previo) => ({ ...previo, fase: 'cargada', progreso: null }));
       return id;

@@ -39,14 +39,17 @@ export const esquemaDetalle = z.object({
   ...camposComunes,
   idJornada: z.string().uuid(),
   destinatario: z.object({ nombre: z.string(), telefono: z.string() }).nullable(),
-  destino: z.object({
-    direccion: z.string(),
-    referencia: z.string().nullable(),
-    departamento: z.string().nullable(),
-    provincia: z.string().nullable(),
-    distrito: z.string(),
-    codigoPostal: z.string().nullable(),
-  }).passthrough().nullable(),
+  destino: z
+    .object({
+      direccion: z.string(),
+      referencia: z.string().nullable(),
+      departamento: z.string().nullable(),
+      provincia: z.string().nullable(),
+      distrito: z.string(),
+      codigoPostal: z.string().nullable(),
+    })
+    .passthrough()
+    .nullable(),
 });
 
 export const esquemaResumen = z.object({
@@ -59,23 +62,29 @@ export const esquemaResumen = z.object({
   fallidosConIntento: z.number().int().nonnegative(),
   noIntentados: z.number().int().nonnegative(),
   pendientes: z.number().int().nonnegative(),
-  paquetesPorDevolver: z.array(z.object({
-    idDespacho: z.string().uuid(),
-    codigoRastreoInterno: z.string(),
-    direccion: z.string().nullable(),
-    distrito: z.string().nullable(),
-    motivoFallo: z.string().nullable(),
-  })).default([]),
+  paquetesPorDevolver: z
+    .array(
+      z.object({
+        idDespacho: z.string().uuid(),
+        codigoRastreoInterno: z.string(),
+        direccion: z.string().nullable(),
+        distrito: z.string().nullable(),
+        motivoFallo: z.string().nullable(),
+      }),
+    )
+    .default([]),
 });
 
 export const esquemaMotivos = z.object({
-  motivos: z.array(z.object({
-    codigo: z.string(),
-    etiqueta: z.string(),
-    seleccionableEnCampo: z.boolean(),
-    consumeIntento: z.boolean(),
-    activo: z.boolean(),
-  })),
+  motivos: z.array(
+    z.object({
+      codigo: z.string(),
+      etiqueta: z.string(),
+      seleccionableEnCampo: z.boolean(),
+      consumeIntento: z.boolean(),
+      activo: z.boolean(),
+    }),
+  ),
 });
 
 export const esquemaAutorizacionCarga = z.object({
@@ -100,9 +109,22 @@ export interface PuertoOperacion {
   consultarMotivos(signal?: AbortSignal): Promise<MotivoFallo[]>;
   iniciarTraslado(idDespacho: string, clave: string): Promise<DetalleDespacho>;
   /** Autoriza y sube la foto al bucket privado; devuelve el identificador de evidencia. */
-  subirEvidencia(idDespacho: string, tipo: TipoEvidencia, foto: File, alProgreso?: (porcentaje: number) => void): Promise<string>;
-  registrarEntrega(idDespacho: string, clave: string, datos: { idEvidencia: string; recibidoPor: string | null }): Promise<DetalleDespacho>;
-  registrarFallo(idDespacho: string, clave: string, datos: { motivo: string; idEvidencia: string; comentario: string | null }): Promise<DetalleDespacho>;
+  subirEvidencia(
+    idDespacho: string,
+    tipo: TipoEvidencia,
+    foto: File,
+    alProgreso?: (porcentaje: number) => void,
+  ): Promise<string>;
+  registrarEntrega(
+    idDespacho: string,
+    clave: string,
+    datos: { idEvidencia: string; recibidoPor: string | null },
+  ): Promise<DetalleDespacho>;
+  registrarFallo(
+    idDespacho: string,
+    clave: string,
+    datos: { motivo: string; idEvidencia: string; comentario: string | null },
+  ): Promise<DetalleDespacho>;
   cerrarJornada(idJornada: string, clave: string): Promise<void>;
 }
 

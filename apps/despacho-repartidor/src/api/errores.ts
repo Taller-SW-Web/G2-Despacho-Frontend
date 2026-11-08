@@ -1,15 +1,28 @@
 import { obtenerProblemaApi } from '@despacho/cliente-api';
 import axios from 'axios';
 
-export type TipoError = 'sinConexion' | 'sesion' | 'permiso' | 'noEncontrado' | 'conflicto' | 'validacion' | 'noDisponible';
+export type TipoError =
+  | 'sinConexion'
+  | 'sesion'
+  | 'permiso'
+  | 'noEncontrado'
+  | 'conflicto'
+  | 'validacion'
+  | 'noDisponible';
 
 /** Error presentable. `reintentable` indica que la misma clave de idempotencia debe conservarse. */
 export class ErrorOperacion extends Error {
-  constructor(readonly tipo: TipoError, mensaje: string, readonly codigo?: string) {
+  constructor(
+    readonly tipo: TipoError,
+    mensaje: string,
+    readonly codigo?: string,
+  ) {
     super(mensaje);
     this.name = 'ErrorOperacion';
   }
-  get reintentable() { return this.tipo === 'sinConexion' || this.tipo === 'noDisponible'; }
+  get reintentable() {
+    return this.tipo === 'sinConexion' || this.tipo === 'noDisponible';
+  }
 }
 
 const mensajes: Record<TipoError, string> = {
@@ -29,12 +42,26 @@ export function aErrorOperacion(error: unknown): ErrorOperacion {
     if (!error.response) return new ErrorOperacion('sinConexion', mensajes.sinConexion);
     const estado = error.response.status;
     const problema = obtenerProblemaApi(error);
-    const tipo: TipoError = estado === 401 ? 'sesion' : estado === 403 ? 'permiso' : estado === 404 ? 'noEncontrado'
-      : estado === 409 ? 'conflicto' : estado === 400 || estado === 422 ? 'validacion' : 'noDisponible';
-    const mensaje = tipo === 'sesion' || tipo === 'permiso' ? mensajes[tipo] : problema?.detail ?? mensajes[tipo];
+    const tipo: TipoError =
+      estado === 401
+        ? 'sesion'
+        : estado === 403
+          ? 'permiso'
+          : estado === 404
+            ? 'noEncontrado'
+            : estado === 409
+              ? 'conflicto'
+              : estado === 400 || estado === 422
+                ? 'validacion'
+                : 'noDisponible';
+    const mensaje =
+      tipo === 'sesion' || tipo === 'permiso'
+        ? mensajes[tipo]
+        : (problema?.detail ?? mensajes[tipo]);
     return new ErrorOperacion(tipo, mensaje, (problema as { code?: string } | null)?.code);
   }
-  if (typeof navigator !== 'undefined' && navigator.onLine === false) return new ErrorOperacion('sinConexion', mensajes.sinConexion);
+  if (typeof navigator !== 'undefined' && navigator.onLine === false)
+    return new ErrorOperacion('sinConexion', mensajes.sinConexion);
   return new ErrorOperacion('noDisponible', mensajes.noDisponible);
 }
 

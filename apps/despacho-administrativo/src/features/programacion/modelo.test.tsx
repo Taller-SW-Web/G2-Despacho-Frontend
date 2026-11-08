@@ -10,17 +10,23 @@ it('conserva placa, límites y ocupación del proveedor sin inventar totales des
   expect(candidato.capacidadRemanente.pesoKg).toBe(50);
 });
 
-it.each(['limites', 'ocupacion', 'placa', 'idFurgoneta', 'porcentajeOcupacion'])('rechaza un catálogo sin %s', (campo) => {
-  const respuesta = structuredClone(disponiblesPrueba);
-  Reflect.deleteProperty(respuesta.repartidores[0], campo);
-  expect(esquemaDisponibles.safeParse(respuesta).success).toBe(false);
-});
+it.each(['limites', 'ocupacion', 'placa', 'idFurgoneta', 'porcentajeOcupacion'])(
+  'rechaza un catálogo sin %s',
+  (campo) => {
+    const respuesta = structuredClone(disponiblesPrueba);
+    Reflect.deleteProperty(respuesta.repartidores[0], campo);
+    expect(esquemaDisponibles.safeParse(respuesta).success).toBe(false);
+  },
+);
 
-it.each(['pesoKg', 'volumenM3', 'paquetes'] as const)('rechaza capacidad incoherente en %s', (dimension) => {
-  const respuesta = structuredClone(disponiblesPrueba);
-  respuesta.repartidores[0].capacidadRemanente[dimension] += 1;
-  expect(esquemaDisponibles.safeParse(respuesta).success).toBe(false);
-});
+it.each(['pesoKg', 'volumenM3', 'paquetes'] as const)(
+  'rechaza capacidad incoherente en %s',
+  (dimension) => {
+    const respuesta = structuredClone(disponiblesPrueba);
+    respuesta.repartidores[0].capacidadRemanente[dimension] += 1;
+    expect(esquemaDisponibles.safeParse(respuesta).success).toBe(false);
+  },
+);
 
 it('no duplica perfiles y tolera únicamente el error de representación decimal', () => {
   const respuesta = structuredClone(disponiblesPrueba);

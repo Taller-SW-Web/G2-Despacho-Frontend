@@ -20,14 +20,24 @@ export type PropiedadesModalConfirmacion = {
 
 /** CR-12: el consumidor ejecuta la operación y controla apertura, carga y error. */
 export function ModalConfirmacion({
-  abierto, titulo, descripcion, etiquetaConfirmar,
-  intencion = 'principal', procesando = false, confirmacionDeshabilitada = false,
-  error, children, alConfirmar, alCancelar,
+  abierto,
+  titulo,
+  descripcion,
+  etiquetaConfirmar,
+  intencion = 'principal',
+  procesando = false,
+  confirmacionDeshabilitada = false,
+  error,
+  children,
+  alConfirmar,
+  alCancelar,
 }: PropiedadesModalConfirmacion) {
   const destructiva = intencion === 'destructiva';
   const contenido = useRef<HTMLDivElement>(null);
   const Icono = destructiva ? IconAlertTriangle : IconInfoCircle;
-  const cancelar = () => { if (!procesando) alCancelar(); };
+  const cancelar = () => {
+    if (!procesando) alCancelar();
+  };
 
   // Al deshabilitar todos los botones, el foco permanece dentro del diálogo.
   useEffect(() => {
@@ -48,23 +58,43 @@ export function ModalConfirmacion({
       keepMounted={false}
       transitionProps={{ duration: 150, transition: 'fade' }}
       className={clases.raiz}
-      classNames={{ inner: clases.interior, content: clases.contenido, header: clases.cabecera, title: clases.titulo, body: clases.cuerpo }}
+      classNames={{
+        inner: clases.interior,
+        content: clases.contenido,
+        header: clases.cabecera,
+        title: clases.titulo,
+        body: clases.cuerpo,
+      }}
     >
       <Modal.Overlay backgroundOpacity={0.55} />
       <Modal.Content ref={contenido} aria-busy={procesando}>
         <Modal.Header>
           <Group gap="sm" wrap="nowrap" align="flex-start" className={clases.encabezado}>
-            <Icono size={24} aria-hidden="true" className={destructiva ? clases.advertencia : clases.informacion} />
+            <Icono
+              size={24}
+              aria-hidden="true"
+              className={destructiva ? clases.advertencia : clases.informacion}
+            />
             <Modal.Title>{titulo}</Modal.Title>
           </Group>
-          <Modal.CloseButton aria-label="Cerrar confirmación" type="button" disabled={procesando} className={clases.cerrar} />
+          <Modal.CloseButton
+            aria-label="Cerrar confirmación"
+            type="button"
+            disabled={procesando}
+            className={clases.cerrar}
+          />
         </Modal.Header>
         <Modal.Body>
           <Stack gap="lg">
             <Text>{descripcion}</Text>
             {children}
             {error && (
-              <Alert color="red.8" variant="light" className={clases.error} icon={<IconAlertCircle size={20} aria-hidden="true" />}>
+              <Alert
+                color="red.8"
+                variant="light"
+                className={clases.error}
+                icon={<IconAlertCircle size={20} aria-hidden="true" />}
+              >
                 {error}
               </Alert>
             )}
@@ -75,7 +105,9 @@ export function ModalConfirmacion({
                 color="orange.8"
                 className={clases.boton}
                 disabled={procesando}
-                data-autofocus={!procesando && (destructiva || confirmacionDeshabilitada) ? true : undefined}
+                data-autofocus={
+                  !procesando && (destructiva || confirmacionDeshabilitada) ? true : undefined
+                }
                 onClick={cancelar}
               >
                 Cancelar
@@ -87,9 +119,17 @@ export function ModalConfirmacion({
                 className={`${clases.boton} ${destructiva ? '' : clases.principal}`}
                 disabled={procesando || confirmacionDeshabilitada}
                 aria-busy={procesando}
-                leftSection={procesando ? <Loader size={20} color="currentColor" aria-hidden="true" /> : undefined}
-                data-autofocus={!procesando && !destructiva && !confirmacionDeshabilitada ? true : undefined}
-                onClick={() => { if (!procesando && !confirmacionDeshabilitada) alConfirmar(); }}
+                leftSection={
+                  procesando ? (
+                    <Loader size={20} color="currentColor" aria-hidden="true" />
+                  ) : undefined
+                }
+                data-autofocus={
+                  !procesando && !destructiva && !confirmacionDeshabilitada ? true : undefined
+                }
+                onClick={() => {
+                  if (!procesando && !confirmacionDeshabilitada) alConfirmar();
+                }}
               >
                 {etiquetaConfirmar}
               </Button>

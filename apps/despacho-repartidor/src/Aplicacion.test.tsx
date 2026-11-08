@@ -13,23 +13,38 @@ import type { PuertoOperacion } from './api/tipos';
 import { SesionProveedor, useSesion } from './sesion/SesionProveedor';
 
 vi.mock('./evidencia/optimizarFoto', () => ({ optimizarFoto: async (archivo: File) => archivo }));
-vi.mock('@despacho/cliente-api/sesion', async importar => {
+vi.mock('@despacho/cliente-api/sesion', async (importar) => {
   const real = await importar<typeof import('@despacho/cliente-api/sesion')>();
-  return { ...real, crearAccesoSeguridad: () => ({
-    iniciar: vi.fn(async (correo: string, clave: string) => {
-      if (clave !== 'correcta') throw new real.ErrorSesion('CREDENCIALES_INVALIDAS', 'El correo o la contraseña no son correctos.', 401);
-      return { accessToken: 'jwt', refreshToken: 'refresco', tokenType: 'Bearer', expiresIn: 900, expiraEn: Date.now() + 900_000,
-        usuario: { id: 'persona', nombreCompleto: correo, correo, roles: [] } };
+  return {
+    ...real,
+    crearAccesoSeguridad: () => ({
+      iniciar: vi.fn(async (correo: string, clave: string) => {
+        if (clave !== 'correcta')
+          throw new real.ErrorSesion(
+            'CREDENCIALES_INVALIDAS',
+            'El correo o la contraseña no son correctos.',
+            401,
+          );
+        return {
+          accessToken: 'jwt',
+          refreshToken: 'refresco',
+          tokenType: 'Bearer',
+          expiresIn: 900,
+          expiraEn: Date.now() + 900_000,
+          usuario: { id: 'persona', nombreCompleto: correo, correo, roles: [] },
+        };
+      }),
+      cerrar: vi.fn(async () => {}),
     }),
-    cerrar: vi.fn(async () => {}),
-  }) };
+  };
 });
 let prepararSesion = false;
 function SesionInicial({ children }: { children: ReactNode }) {
   const { gestor } = useSesion();
   const [lista, setLista] = useState(!prepararSesion);
   useEffect(() => {
-    if (prepararSesion) void gestor.iniciar('mrojas@despacho.pe', 'correcta').then(() => setLista(true));
+    if (prepararSesion)
+      void gestor.iniciar('mrojas@despacho.pe', 'correcta').then(() => setLista(true));
   }, [gestor]);
   return lista ? <>{children}</> : null;
 }
@@ -48,7 +63,11 @@ function montar(ruta: string, puerto: PuertoOperacion) {
     <MantineProvider theme={tema}>
       <Notifications />
       <MemoryRouter initialEntries={[ruta]}>
-        <SesionProveedor><SesionInicial><Aplicacion puerto={puerto} /></SesionInicial></SesionProveedor>
+        <SesionProveedor>
+          <SesionInicial>
+            <Aplicacion puerto={puerto} />
+          </SesionInicial>
+        </SesionProveedor>
       </MemoryRouter>
     </MantineProvider>,
   );
@@ -60,15 +79,21 @@ function iniciarSesionGuardada() {
 
 beforeEach(() => {
   prepararSesion = false;
-  localStorage.clear(); sessionStorage.clear();
+  localStorage.clear();
+  sessionStorage.clear();
   // JSDOM no implementa URLs de objetos; la previsualización solo necesita una cadena.
   URL.createObjectURL = vi.fn(() => 'blob:prueba');
   URL.revokeObjectURL = vi.fn();
   // El Textarea con autosize escucha la carga de fuentes, que JSDOM tampoco implementa.
-  Object.defineProperty(document, 'fonts', { configurable: true,
-    value: { addEventListener: vi.fn(), removeEventListener: vi.fn(), ready: Promise.resolve() } });
+  Object.defineProperty(document, 'fonts', {
+    configurable: true,
+    value: { addEventListener: vi.fn(), removeEventListener: vi.fn(), ready: Promise.resolve() },
+  });
 });
-afterEach(() => { localStorage.clear(); sessionStorage.clear(); });
+afterEach(() => {
+  localStorage.clear();
+  sessionStorage.clear();
+});
 
 describe('acceso', () => {
   it('sin sesión lleva al ingreso y, con credenciales válidas, abre la ruta', async () => {
@@ -77,7 +102,9 @@ describe('acceso', () => {
     await usuario.type(await screen.findByLabelText('Correo electrónico'), 'mrojas@despacho.pe');
     await usuario.type(screen.getByLabelText('Contraseña'), 'incorrecta');
     await usuario.click(screen.getByRole('button', { name: 'Ingresar' }));
-    expect(await screen.findByRole('alert')).toHaveTextContent('El correo o la contraseña no son correctos.');
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'El correo o la contraseña no son correctos.',
+    );
     await usuario.clear(screen.getByLabelText('Contraseña'));
     await usuario.type(screen.getByLabelText('Contraseña'), 'correcta');
     await usuario.click(screen.getByRole('button', { name: 'Ingresar' }));
@@ -87,9 +114,13 @@ describe('acceso', () => {
   it('un 401 de Operación cierra la sesión y avisa que expiró', async () => {
     iniciarSesionGuardada();
     const puerto = espiar(crearOperacionDemo());
-    vi.mocked(puerto.consultarRuta).mockRejectedValue(new ErrorOperacion('sesion', 'Tu sesión expiró.'));
+    vi.mocked(puerto.consultarRuta).mockRejectedValue(
+      new ErrorOperacion('sesion', 'Tu sesión expiró.'),
+    );
     montar('/repartidor/ruta', puerto);
-    expect(await screen.findByText('Tu sesión terminó. Inicia sesión de nuevo.')).toBeInTheDocument();
+    expect(
+      await screen.findByText('Tu sesión terminó. Inicia sesión de nuevo.'),
+    ).toBeInTheDocument();
     expect(localStorage.getItem('despacho.token')).toBeNull();
   });
 });
@@ -116,7 +147,10 @@ describe('detalle e inicio de traslado', () => {
     const puerto = espiar(crearOperacionDemo());
     montar(`/repartidor/despachos/${ASIGNADO}`, puerto);
     expect(await screen.findByText('Asignado a las')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /Llamar/ })).toHaveAttribute('href', 'tel:+51987654321');
+    expect(screen.getByRole('link', { name: /Llamar/ })).toHaveAttribute(
+      'href',
+      'tel:+51987654321',
+    );
     await usuario.click(screen.getByRole('button', { name: 'Iniciar traslado' }));
     expect(await screen.findByText('En camino desde')).toBeInTheDocument();
     expect(vi.mocked(puerto.iniciarTraslado).mock.calls[0][1]).toMatch(UUID_V4);
@@ -127,7 +161,9 @@ describe('detalle e inicio de traslado', () => {
     iniciarSesionGuardada();
     const usuario = userEvent.setup();
     const puerto = espiar(crearOperacionDemo());
-    vi.mocked(puerto.iniciarTraslado).mockRejectedValueOnce(new ErrorOperacion('sinConexion', 'Sin conexión. El cambio no se registró.'));
+    vi.mocked(puerto.iniciarTraslado).mockRejectedValueOnce(
+      new ErrorOperacion('sinConexion', 'Sin conexión. El cambio no se registró.'),
+    );
     montar(`/repartidor/despachos/${ASIGNADO}`, puerto);
     await usuario.click(await screen.findByRole('button', { name: 'Iniciar traslado' }));
     expect(await screen.findByText('No se registró el cambio')).toBeInTheDocument();
@@ -139,7 +175,9 @@ describe('detalle e inicio de traslado', () => {
 });
 
 describe('entrega y fallo', () => {
-  async function enCamino(puerto: PuertoOperacion) { await puerto.iniciarTraslado(ASIGNADO, 'clave'); }
+  async function enCamino(puerto: PuertoOperacion) {
+    await puerto.iniciarTraslado(ASIGNADO, 'clave');
+  }
 
   it('la entrega exige foto, la sube una vez y vuelve a la ruta', async () => {
     iniciarSesionGuardada();
@@ -150,12 +188,16 @@ describe('entrega y fallo', () => {
     const confirmar = await screen.findByRole('button', { name: 'Confirmar entrega' });
     expect(confirmar).toBeDisabled();
     await usuario.upload(document.querySelector('input[type="file"]') as HTMLInputElement, foto());
-    expect(await screen.findByText(/Foto optimizada · 586 KB · sin datos de ubicación/)).toBeInTheDocument();
+    expect(
+      await screen.findByText(/Foto optimizada · 586 KB · sin datos de ubicación/),
+    ).toBeInTheDocument();
     await usuario.type(screen.getByLabelText('Nombre de quien recibe (opcional)'), 'Carlos Quispe');
     await usuario.click(screen.getByRole('button', { name: 'Confirmar entrega' }));
     expect(await screen.findByRole('heading', { name: 'Mi ruta' })).toBeInTheDocument();
     expect(puerto.subirEvidencia).toHaveBeenCalledTimes(1);
-    expect(vi.mocked(puerto.registrarEntrega).mock.calls[0][2]).toMatchObject({ recibidoPor: 'Carlos Quispe' });
+    expect(vi.mocked(puerto.registrarEntrega).mock.calls[0][2]).toMatchObject({
+      recibidoPor: 'Carlos Quispe',
+    });
   });
 
   it('el fallo ofrece solo motivos de campo, exige motivo y muestra el resultado', async () => {
@@ -163,9 +205,27 @@ describe('entrega y fallo', () => {
     const usuario = userEvent.setup();
     const puerto = espiar(crearOperacionDemo());
     vi.mocked(puerto.consultarMotivos).mockResolvedValue([
-      { codigo: 'CLIENTE_AUSENTE', etiqueta: 'Cliente ausente', seleccionableEnCampo: true, consumeIntento: true, activo: true },
-      { codigo: 'NO_INTENTADO', etiqueta: 'No intentado por fin de jornada', seleccionableEnCampo: false, consumeIntento: false, activo: true },
-      { codigo: 'ANTIGUO', etiqueta: 'Motivo retirado', seleccionableEnCampo: true, consumeIntento: true, activo: false },
+      {
+        codigo: 'CLIENTE_AUSENTE',
+        etiqueta: 'Cliente ausente',
+        seleccionableEnCampo: true,
+        consumeIntento: true,
+        activo: true,
+      },
+      {
+        codigo: 'NO_INTENTADO',
+        etiqueta: 'No intentado por fin de jornada',
+        seleccionableEnCampo: false,
+        consumeIntento: false,
+        activo: true,
+      },
+      {
+        codigo: 'ANTIGUO',
+        etiqueta: 'Motivo retirado',
+        seleccionableEnCampo: true,
+        consumeIntento: true,
+        activo: false,
+      },
     ]);
     await enCamino(puerto);
     montar(`/repartidor/despachos/${ASIGNADO}/fallo`, puerto);
@@ -182,7 +242,9 @@ describe('entrega y fallo', () => {
     await usuario.type(screen.getByLabelText('Comentario (opcional)'), 'Nadie respondió');
     expect(screen.getByText('15/200')).toBeInTheDocument();
     await usuario.click(screen.getByRole('button', { name: 'Registrar fallo' }));
-    expect(await screen.findByText('TRK-78904 quedó como No entregado. Este intento contó como 1 de 2.')).toBeInTheDocument();
+    expect(
+      await screen.findByText('TRK-78904 quedó como No entregado. Este intento contó como 1 de 2.'),
+    ).toBeInTheDocument();
     expect(screen.getByText('Cliente ausente')).toBeInTheDocument();
   });
 });
@@ -195,8 +257,12 @@ describe('cierre y resumen', () => {
     montar('/repartidor/cierre', puerto);
     expect(await screen.findByText('3 despachos siguen pendientes')).toBeInTheDocument();
     expect(screen.getByText('1 despacho entregado hoy')).toBeInTheDocument();
-    await usuario.click(within(screen.getByRole('main')).getByRole('button', { name: 'Cerrar jornada' }));
-    expect(await screen.findByText(/3 despachos quedarán como No intentado y pasarás a Fuera de turno/)).toBeInTheDocument();
+    await usuario.click(
+      within(screen.getByRole('main')).getByRole('button', { name: 'Cerrar jornada' }),
+    );
+    expect(
+      await screen.findByText(/3 despachos quedarán como No intentado y pasarás a Fuera de turno/),
+    ).toBeInTheDocument();
     await usuario.click(screen.getByRole('button', { name: 'Sí, cerrar jornada' }));
     expect(await screen.findByText('Paquetes a devolver al centro')).toBeInTheDocument();
     expect(vi.mocked(puerto.cerrarJornada).mock.calls[0][1]).toMatch(UUID_V4);

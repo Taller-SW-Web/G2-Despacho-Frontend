@@ -13,7 +13,10 @@ export type PropiedadesBarraAccionesFija = {
 
 /** CR-13. Colocar al final del contenido; reserva su altura real en ese contenedor. */
 export function BarraAccionesFija({
-  principal, secundaria, intencionPrincipal = 'principal', alAccionar,
+  principal,
+  secundaria,
+  intencionPrincipal = 'principal',
+  alAccionar,
 }: PropiedadesBarraAccionesFija) {
   const identificador = useId();
   const reserva = useRef<HTMLDivElement>(null);
@@ -35,7 +38,8 @@ export function BarraAccionesFija({
     }
 
     medir();
-    const observador = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(medir) : undefined;
+    const observador =
+      typeof ResizeObserver !== 'undefined' ? new ResizeObserver(medir) : undefined;
     observador?.observe(contenido);
     observador?.observe(espacio);
     window.addEventListener('resize', medir);
@@ -57,25 +61,37 @@ export function BarraAccionesFija({
   function accion(entrada: AccionUi, esPrincipal: boolean) {
     const motivoId = `${identificador}-${esPrincipal ? 'principal' : 'secundaria'}-motivo`;
     const bloqueada = Boolean(entrada.disabled || entrada.loading);
-    return <div className={clases.accion}>
-      <Button
-        {...(esPrincipal ? accionesUi[intencionPrincipal] : accionesUi.secundaria)}
-        type="button"
-        className={clases.boton}
-        disabled={entrada.disabled}
-        loading={entrada.loading}
-        aria-busy={entrada.loading || undefined}
-        aria-describedby={entrada.motivoDeshabilitado ? motivoId : undefined}
-        onClick={() => { if (!bloqueada) alAccionar(entrada.id); }}
-      >{entrada.etiqueta}</Button>
-      {entrada.motivoDeshabilitado && <Text id={motivoId} size="sm" className={clases.motivo}>{entrada.motivoDeshabilitado}</Text>}
-    </div>;
+    return (
+      <div className={clases.accion}>
+        <Button
+          {...(esPrincipal ? accionesUi[intencionPrincipal] : accionesUi.secundaria)}
+          type="button"
+          className={clases.boton}
+          disabled={entrada.disabled}
+          loading={entrada.loading}
+          aria-busy={entrada.loading || undefined}
+          aria-describedby={entrada.motivoDeshabilitado ? motivoId : undefined}
+          onClick={() => {
+            if (!bloqueada) alAccionar(entrada.id);
+          }}
+        >
+          {entrada.etiqueta}
+        </Button>
+        {entrada.motivoDeshabilitado && (
+          <Text id={motivoId} size="sm" className={clases.motivo}>
+            {entrada.motivoDeshabilitado}
+          </Text>
+        )}
+      </div>
+    );
   }
 
-  return <div ref={reserva} className={clases.reserva}>
-    <section ref={barra} aria-label="Acciones de la página" className={clases.barra}>
-      {secundaria && accion(secundaria, false)}
-      {accion(principal, true)}
-    </section>
-  </div>;
+  return (
+    <div ref={reserva} className={clases.reserva}>
+      <section ref={barra} aria-label="Acciones de la página" className={clases.barra}>
+        {secundaria && accion(secundaria, false)}
+        {accion(principal, true)}
+      </section>
+    </div>
+  );
 }

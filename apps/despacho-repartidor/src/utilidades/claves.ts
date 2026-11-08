@@ -15,7 +15,11 @@ export function generarUuidV4(): string {
 }
 
 function almacen(): Storage | null {
-  try { return window.sessionStorage; } catch { return null; }
+  try {
+    return window.sessionStorage;
+  } catch {
+    return null;
+  }
 }
 
 export function claveDeIntencion(alcance: string): string {
@@ -23,10 +27,18 @@ export function claveDeIntencion(alcance: string): string {
   const existente = memoria?.getItem(PREFIJO + alcance);
   if (existente) return existente;
   const nueva = generarUuidV4();
-  try { memoria?.setItem(PREFIJO + alcance, nueva); } catch { /* Sin almacenamiento, la clave vive solo en esta llamada. */ }
+  try {
+    memoria?.setItem(PREFIJO + alcance, nueva);
+  } catch {
+    /* Sin almacenamiento, la clave vive solo en esta llamada. */
+  }
   return nueva;
 }
 
 export function liberarClave(alcance: string) {
-  try { almacen()?.removeItem(PREFIJO + alcance); } catch { /* Nada que liberar. */ }
+  try {
+    almacen()?.removeItem(PREFIJO + alcance);
+  } catch {
+    /* Nada que liberar. */
+  }
 }

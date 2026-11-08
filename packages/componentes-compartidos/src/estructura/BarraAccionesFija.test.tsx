@@ -6,7 +6,11 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { BarraAccionesFija, tema, type PropiedadesBarraAccionesFija } from '../index';
 
 function Proveedor({ children }: PropsWithChildren) {
-  return <MantineProvider theme={tema} env="test">{children}</MantineProvider>;
+  return (
+    <MantineProvider theme={tema} env="test">
+      {children}
+    </MantineProvider>
+  );
 }
 
 function preparar(cambios: Partial<PropiedadesBarraAccionesFija> = {}) {
@@ -19,13 +23,20 @@ function preparar(cambios: Partial<PropiedadesBarraAccionesFija> = {}) {
   return { ...render(<BarraAccionesFija {...propiedades} />, { wrapper: Proveedor }), propiedades };
 }
 
-afterEach(() => { vi.restoreAllMocks(); vi.unstubAllGlobals(); });
+afterEach(() => {
+  vi.restoreAllMocks();
+  vi.unstubAllGlobals();
+});
 
 describe('CR-13 BarraAccionesFija', () => {
   it('identifica la región y solicita acciones con teclado en orden secundaria/principal', async () => {
     const { propiedades } = preparar();
     const region = screen.getByRole('region', { name: 'Acciones de la página' });
-    expect(within(region).getAllByRole('button').map((boton) => boton.textContent)).toEqual(['Cancelar', 'Guardar zona']);
+    expect(
+      within(region)
+        .getAllByRole('button')
+        .map((boton) => boton.textContent),
+    ).toEqual(['Cancelar', 'Guardar zona']);
     const usuario = userEvent.setup();
     await usuario.tab();
     expect(screen.getByRole('button', { name: 'Cancelar' })).toHaveFocus();
@@ -39,7 +50,20 @@ describe('CR-13 BarraAccionesFija', () => {
   it('no envía el formulario nativo y permite omitir la secundaria', async () => {
     const enviar = vi.fn();
     const accionar = vi.fn();
-    render(<form onSubmit={(evento) => { evento.preventDefault(); enviar(); }}><BarraAccionesFija principal={{ id: 'entrega', etiqueta: 'Confirmar entrega' }} alAccionar={accionar} /></form>, { wrapper: Proveedor });
+    render(
+      <form
+        onSubmit={(evento) => {
+          evento.preventDefault();
+          enviar();
+        }}
+      >
+        <BarraAccionesFija
+          principal={{ id: 'entrega', etiqueta: 'Confirmar entrega' }}
+          alAccionar={accionar}
+        />
+      </form>,
+      { wrapper: Proveedor },
+    );
     const usuario = userEvent.setup();
     await usuario.click(screen.getByRole('button', { name: 'Confirmar entrega' }));
     expect(screen.getAllByRole('button')).toHaveLength(1);
@@ -49,13 +73,25 @@ describe('CR-13 BarraAccionesFija', () => {
 
   it('asocia motivos visibles independientes y no activa acciones bloqueadas', async () => {
     const { propiedades } = preparar({
-      principal: { id: 'guardar', etiqueta: 'Guardar zona', disabled: true, motivoDeshabilitado: 'Selecciona al menos un distrito antes de guardar.' },
-      secundaria: { id: 'cancelar', etiqueta: 'Cancelar', disabled: true, motivoDeshabilitado: 'Espera a que termine la consulta.' },
+      principal: {
+        id: 'guardar',
+        etiqueta: 'Guardar zona',
+        disabled: true,
+        motivoDeshabilitado: 'Selecciona al menos un distrito antes de guardar.',
+      },
+      secundaria: {
+        id: 'cancelar',
+        etiqueta: 'Cancelar',
+        disabled: true,
+        motivoDeshabilitado: 'Espera a que termine la consulta.',
+      },
     });
     const usuario = userEvent.setup();
     const guardar = screen.getByRole('button', { name: 'Guardar zona' });
     const cancelar = screen.getByRole('button', { name: 'Cancelar' });
-    expect(guardar).toHaveAccessibleDescription('Selecciona al menos un distrito antes de guardar.');
+    expect(guardar).toHaveAccessibleDescription(
+      'Selecciona al menos un distrito antes de guardar.',
+    );
     expect(cancelar).toHaveAccessibleDescription('Espera a que termine la consulta.');
     expect(screen.getByText('Selecciona al menos un distrito antes de guardar.')).toBeVisible();
     await usuario.click(guardar);
@@ -64,14 +100,21 @@ describe('CR-13 BarraAccionesFija', () => {
   });
 
   it('conserva etiqueta y contexto en carga y recupera las acciones al finalizar', async () => {
-    const { propiedades, rerender } = preparar({ principal: { id: 'guardar', etiqueta: 'Guardar zona', loading: true } });
+    const { propiedades, rerender } = preparar({
+      principal: { id: 'guardar', etiqueta: 'Guardar zona', loading: true },
+    });
     const guardar = screen.getByRole('button', { name: 'Guardar zona' });
     expect(guardar).toBeDisabled();
     expect(guardar).toHaveAttribute('aria-busy', 'true');
     const usuario = userEvent.setup();
     await usuario.click(guardar);
     expect(propiedades.alAccionar).not.toHaveBeenCalled();
-    rerender(<BarraAccionesFija {...propiedades} principal={{ ...propiedades.principal, loading: false }} />);
+    rerender(
+      <BarraAccionesFija
+        {...propiedades}
+        principal={{ ...propiedades.principal, loading: false }}
+      />,
+    );
     await usuario.click(guardar);
     expect(propiedades.alAccionar).toHaveBeenCalledExactlyOnceWith('guardar');
   });
@@ -80,7 +123,15 @@ describe('CR-13 BarraAccionesFija', () => {
     const enviar = vi.fn();
     function Contenedor() {
       const [cargando, cargar] = useState(false);
-      return <BarraAccionesFija principal={{ id: 'guardar', etiqueta: 'Guardar zona', loading: cargando }} alAccionar={() => { cargar(true); enviar(); }} />;
+      return (
+        <BarraAccionesFija
+          principal={{ id: 'guardar', etiqueta: 'Guardar zona', loading: cargando }}
+          alAccionar={() => {
+            cargar(true);
+            enviar();
+          }}
+        />
+      );
     }
     render(<Contenedor />, { wrapper: Proveedor });
     await userEvent.setup().dblClick(screen.getByRole('button', { name: 'Guardar zona' }));
@@ -89,23 +140,45 @@ describe('CR-13 BarraAccionesFija', () => {
 
   it('aplica intención destructiva solo a la principal', () => {
     preparar({ intencionPrincipal: 'destructiva' });
-    expect(screen.getByRole('button', { name: 'Guardar zona' }).style.getPropertyValue('--button-bg')).toBe('var(--mantine-color-red-8)');
-    expect(screen.getByRole('button', { name: 'Cancelar' })).toHaveAttribute('data-variant', 'outline');
+    expect(
+      screen.getByRole('button', { name: 'Guardar zona' }).style.getPropertyValue('--button-bg'),
+    ).toBe('var(--mantine-color-red-8)');
+    expect(screen.getByRole('button', { name: 'Cancelar' })).toHaveAttribute(
+      'data-variant',
+      'outline',
+    );
   });
 
   it('CCR-13-01: actualiza la reserva al crecer mensajes y al cambiar el ancho; desconecta el observador', () => {
     let avisarCambio: () => void = () => {};
     const desconectar = vi.fn();
     const observar = vi.fn();
-    vi.stubGlobal('ResizeObserver', class {
-      constructor(avisar: () => void) { avisarCambio = avisar; }
-      observe = observar;
-      disconnect = desconectar;
-    });
+    vi.stubGlobal(
+      'ResizeObserver',
+      class {
+        constructor(avisar: () => void) {
+          avisarCambio = avisar;
+        }
+        observe = observar;
+        disconnect = desconectar;
+      },
+    );
     let altura = 96;
     let ancho = 358;
-    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (this: HTMLElement) {
-      return { x: 16, y: 0, left: 16, right: 16 + ancho, top: 0, bottom: altura, width: ancho, height: this.tagName === 'SECTION' ? altura : 0, toJSON() {} };
+    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (
+      this: HTMLElement,
+    ) {
+      return {
+        x: 16,
+        y: 0,
+        left: 16,
+        right: 16 + ancho,
+        top: 0,
+        bottom: altura,
+        width: ancho,
+        height: this.tagName === 'SECTION' ? altura : 0,
+        toJSON() {},
+      };
     });
     const { unmount } = preparar();
     const barra = screen.getByRole('region', { name: 'Acciones de la página' });
@@ -125,9 +198,22 @@ describe('CR-13 BarraAccionesFija', () => {
   });
 
   it('mantiene identificadores de ayuda únicos entre dos barras', () => {
-    const principal = { id: 'guardar', etiqueta: 'Guardar', disabled: true, motivoDeshabilitado: 'Faltan datos.' };
-    render(<><BarraAccionesFija principal={principal} alAccionar={vi.fn()} /><BarraAccionesFija principal={principal} alAccionar={vi.fn()} /></>, { wrapper: Proveedor });
-    const ids = screen.getAllByRole('button', { name: 'Guardar' }).map((boton) => boton.getAttribute('aria-describedby'));
+    const principal = {
+      id: 'guardar',
+      etiqueta: 'Guardar',
+      disabled: true,
+      motivoDeshabilitado: 'Faltan datos.',
+    };
+    render(
+      <>
+        <BarraAccionesFija principal={principal} alAccionar={vi.fn()} />
+        <BarraAccionesFija principal={principal} alAccionar={vi.fn()} />
+      </>,
+      { wrapper: Proveedor },
+    );
+    const ids = screen
+      .getAllByRole('button', { name: 'Guardar' })
+      .map((boton) => boton.getAttribute('aria-describedby'));
     expect(new Set(ids).size).toBe(2);
   });
 });
