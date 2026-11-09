@@ -8,7 +8,11 @@ import { ModalConfirmacion, tema } from '../index';
 import type { PropiedadesModalConfirmacion } from '../index';
 
 function ProveedorPruebas({ children }: PropsWithChildren) {
-  return <MantineProvider theme={tema} env="test">{children}</MantineProvider>;
+  return (
+    <MantineProvider theme={tema} env="test">
+      {children}
+    </MantineProvider>
+  );
 }
 
 function preparar(cambios: Partial<PropiedadesModalConfirmacion> = {}) {
@@ -36,7 +40,9 @@ describe('CR-12 ModalConfirmacion / CCR-12-01', () => {
     preparar({ children: <p>Zona ZN-001 · Lima Norte</p> });
     const dialogo = screen.getByRole('dialog', { name: '¿Desactivar la zona Lima Norte?' });
     expect(dialogo).toHaveAttribute('aria-modal', 'true');
-    expect(dialogo).toHaveAccessibleDescription(expect.stringContaining('La zona dejará de estar disponible'));
+    expect(dialogo).toHaveAccessibleDescription(
+      expect.stringContaining('La zona dejará de estar disponible'),
+    );
     expect(screen.getByText('Zona ZN-001 · Lima Norte')).toBeInTheDocument();
     expect(screen.queryByRole('heading', { level: 1 })).not.toBeInTheDocument();
   });
@@ -45,10 +51,22 @@ describe('CR-12 ModalConfirmacion / CCR-12-01', () => {
     const usuario = userEvent.setup();
     function Contenedor() {
       const [abierto, cambiarAbierto] = useState(false);
-      return <>
-        <button type="button" onClick={() => cambiarAbierto(true)}>Dar de baja vehículo</button>
-        <ModalConfirmacion abierto={abierto} intencion="destructiva" titulo="¿Dar de baja el vehículo DEMO-001?" descripcion="El vehículo dejará de estar disponible." etiquetaConfirmar="Dar de baja" alConfirmar={vi.fn()} alCancelar={() => cambiarAbierto(false)} />
-      </>;
+      return (
+        <>
+          <button type="button" onClick={() => cambiarAbierto(true)}>
+            Dar de baja vehículo
+          </button>
+          <ModalConfirmacion
+            abierto={abierto}
+            intencion="destructiva"
+            titulo="¿Dar de baja el vehículo DEMO-001?"
+            descripcion="El vehículo dejará de estar disponible."
+            etiquetaConfirmar="Dar de baja"
+            alConfirmar={vi.fn()}
+            alCancelar={() => cambiarAbierto(false)}
+          />
+        </>
+      );
     }
     render(<Contenedor />, { wrapper: ProveedorPruebas });
     const disparador = screen.getByRole('button', { name: 'Dar de baja vehículo' });
@@ -61,18 +79,23 @@ describe('CR-12 ModalConfirmacion / CCR-12-01', () => {
 
   it('en la intención principal enfoca la confirmación habilitada', async () => {
     preparar();
-    await waitFor(() => expect(screen.getByRole('button', { name: 'Desactivar zona' })).toHaveFocus());
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Desactivar zona' })).toHaveFocus(),
+    );
   });
 
-  it.each(['Cancelar', 'Cerrar confirmación', 'Escape'])('solicita cancelación una vez mediante %s y deja la apertura bajo control del consumidor', async (via) => {
-    const usuario = userEvent.setup();
-    const { propiedades } = preparar({ intencion: 'destructiva' });
-    if (via === 'Escape') await usuario.keyboard('{Escape}');
-    else await usuario.click(screen.getByRole('button', { name: via }));
-    expect(propiedades.alCancelar).toHaveBeenCalledExactlyOnceWith();
-    expect(propiedades.alConfirmar).not.toHaveBeenCalled();
-    expect(screen.getByRole('dialog')).toBeInTheDocument();
-  });
+  it.each(['Cancelar', 'Cerrar confirmación', 'Escape'])(
+    'solicita cancelación una vez mediante %s y deja la apertura bajo control del consumidor',
+    async (via) => {
+      const usuario = userEvent.setup();
+      const { propiedades } = preparar({ intencion: 'destructiva' });
+      if (via === 'Escape') await usuario.keyboard('{Escape}');
+      else await usuario.click(screen.getByRole('button', { name: via }));
+      expect(propiedades.alCancelar).toHaveBeenCalledExactlyOnceWith();
+      expect(propiedades.alConfirmar).not.toHaveBeenCalled();
+      expect(screen.getByRole('dialog')).toBeInTheDocument();
+    },
+  );
 
   it('el clic en el fondo no solicita cancelación', async () => {
     const usuario = userEvent.setup();
@@ -137,7 +160,20 @@ describe('CR-12 ModalConfirmacion / CCR-12-01', () => {
     const cancelar = vi.fn();
     function Contenedor() {
       const [procesando, cambiarProcesando] = useState(false);
-      return <ModalConfirmacion abierto titulo="¿Activar la zona Lima Norte?" descripcion="Estará disponible para nuevas cotizaciones." etiquetaConfirmar="Activar zona" procesando={procesando} alConfirmar={() => { cambiarProcesando(true); confirmar(); }} alCancelar={cancelar} />;
+      return (
+        <ModalConfirmacion
+          abierto
+          titulo="¿Activar la zona Lima Norte?"
+          descripcion="Estará disponible para nuevas cotizaciones."
+          etiquetaConfirmar="Activar zona"
+          procesando={procesando}
+          alConfirmar={() => {
+            cambiarProcesando(true);
+            confirmar();
+          }}
+          alCancelar={cancelar}
+        />
+      );
     }
     render(<Contenedor />, { wrapper: ProveedorPruebas });
     await usuario.dblClick(screen.getByRole('button', { name: 'Activar zona' }));
@@ -151,11 +187,22 @@ describe('CR-12 ModalConfirmacion / CCR-12-01', () => {
 describe('CR-12 ModalConfirmacion / CCR-12-02', () => {
   it('al fallar conserva el objeto y el diálogo, muestra el error y permite reintentar', async () => {
     const usuario = userEvent.setup();
-    const { propiedades, rerender } = preparar({ procesando: true, children: <p>Zona ZN-001 · Lima Norte</p> });
+    const { propiedades, rerender } = preparar({
+      procesando: true,
+      children: <p>Zona ZN-001 · Lima Norte</p>,
+    });
     const resumen = screen.getByText('Zona ZN-001 · Lima Norte');
-    rerender(<ModalConfirmacion {...propiedades} procesando={false} error="No pudimos desactivar la zona. Inténtalo nuevamente." />);
+    rerender(
+      <ModalConfirmacion
+        {...propiedades}
+        procesando={false}
+        error="No pudimos desactivar la zona. Inténtalo nuevamente."
+      />,
+    );
     expect(screen.getByRole('dialog', { name: propiedades.titulo })).toBeInTheDocument();
-    expect(screen.getByRole('alert')).toHaveTextContent('No pudimos desactivar la zona. Inténtalo nuevamente.');
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      'No pudimos desactivar la zona. Inténtalo nuevamente.',
+    );
     expect(screen.getByText('Zona ZN-001 · Lima Norte')).toBe(resumen);
     const confirmar = screen.getByRole('button', { name: 'Desactivar zona' });
     expect(confirmar).toBeEnabled();

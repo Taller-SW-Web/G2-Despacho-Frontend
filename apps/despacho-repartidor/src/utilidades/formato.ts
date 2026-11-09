@@ -1,6 +1,11 @@
 import { ZONA_HORARIA } from '../config';
 
-const hora = new Intl.DateTimeFormat('es-PE', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: ZONA_HORARIA });
+const hora = new Intl.DateTimeFormat('es-PE', {
+  hour: '2-digit',
+  minute: '2-digit',
+  hour12: false,
+  timeZone: ZONA_HORARIA,
+});
 
 /** Instante ISO del backend a HH:mm en la zona operativa; null si no hay marca. */
 export function formatearHora(instante: string | null | undefined): string | null {
@@ -18,14 +23,22 @@ export function formatearFecha(fecha: string | null | undefined): string {
 
 /** Intento que se juega ahora: el contador guarda los consumidos, y un despacho pendiente va por el siguiente. */
 export function intentoEnCurso(numeroIntentos: number, estado: string): number {
-  return estado === 'ASIGNADO' || estado === 'EN_CAMINO' ? numeroIntentos + 1 : Math.max(numeroIntentos, 1);
+  return estado === 'ASIGNADO' || estado === 'EN_CAMINO'
+    ? numeroIntentos + 1
+    : Math.max(numeroIntentos, 1);
 }
 
-export function etiquetaIntento(numeroIntentos: number, maximo: number | null, estado: string): string {
+export function etiquetaIntento(
+  numeroIntentos: number,
+  maximo: number | null,
+  estado: string,
+): string {
   const actual = intentoEnCurso(numeroIntentos, estado);
   return maximo ? `Intento ${actual} de ${maximo}` : `Intento ${actual}`;
 }
 
 export function formatearTamano(bytes: number): string {
-  return bytes < 1_048_576 ? `${Math.max(1, Math.round(bytes / 1024))} KB` : `${(bytes / 1_048_576).toFixed(1)} MB`;
+  return bytes < 1_048_576
+    ? `${Math.max(1, Math.round(bytes / 1024))} KB`
+    : `${(bytes / 1_048_576).toFixed(1)} MB`;
 }

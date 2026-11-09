@@ -12,8 +12,19 @@ export type EntradaNotificacionOperacion = {
 };
 
 /** CR-15. Invocar desde el consumidor después de confirmar el resultado. */
-export function notificarOperacion({ id, tipo, mensaje, accion, alAccionar }: EntradaNotificacionOperacion): string {
-  const Icono = tipo === 'exito' ? IconCircleCheck : tipo === 'efectoPendiente' ? IconAlertTriangle : IconInfoCircle;
+export function notificarOperacion({
+  id,
+  tipo,
+  mensaje,
+  accion,
+  alAccionar,
+}: EntradaNotificacionOperacion): string {
+  const Icono =
+    tipo === 'exito'
+      ? IconCircleCheck
+      : tipo === 'efectoPendiente'
+        ? IconAlertTriangle
+        : IconInfoCircle;
   const datos: NotificationData = {
     id,
     color: tipo === 'exito' ? 'green' : tipo === 'efectoPendiente' ? 'yellow' : 'blue',
@@ -22,20 +33,37 @@ export function notificarOperacion({ id, tipo, mensaje, accion, alAccionar }: En
     role: 'status',
     'aria-live': 'polite',
     closeButtonProps: { 'aria-label': 'Cerrar notificación' },
-    message: <Stack gap="xs">
-      <Text size="sm">{mensaje}</Text>
-      {accion && <>
-        <Button type="button" variant="subtle" mih={44} loading={accion.loading}
-          disabled={accion.disabled || !alAccionar} aria-describedby={accion.motivoDeshabilitado ? `${id}-motivo` : undefined}
-          onClick={() => { if (!accion.disabled && !accion.loading) alAccionar?.(accion.id); }}>
-          {accion.etiqueta}
-        </Button>
-        {accion.motivoDeshabilitado && <Text id={`${id}-motivo`} size="sm">{accion.motivoDeshabilitado}</Text>}
-      </>}
-    </Stack>,
+    message: (
+      <Stack gap="xs">
+        <Text size="sm">{mensaje}</Text>
+        {accion && (
+          <>
+            <Button
+              type="button"
+              variant="subtle"
+              mih={44}
+              loading={accion.loading}
+              disabled={accion.disabled || !alAccionar}
+              aria-describedby={accion.motivoDeshabilitado ? `${id}-motivo` : undefined}
+              onClick={() => {
+                if (!accion.disabled && !accion.loading) alAccionar?.(accion.id);
+              }}
+            >
+              {accion.etiqueta}
+            </Button>
+            {accion.motivoDeshabilitado && (
+              <Text id={`${id}-motivo`} size="sm">
+                {accion.motivoDeshabilitado}
+              </Text>
+            )}
+          </>
+        )}
+      </Stack>
+    ),
   };
   const { notifications: visibles, queue: cola } = notificationsStore.getState();
-  if ([...visibles, ...cola].some((notificacion) => notificacion.id === id)) notifications.update(datos);
+  if ([...visibles, ...cola].some((notificacion) => notificacion.id === id))
+    notifications.update(datos);
   else notifications.show(datos);
   return id;
 }

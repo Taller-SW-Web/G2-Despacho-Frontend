@@ -11,7 +11,14 @@ import { within } from '@testing-library/react';
 import { filtrosIniciales, leerFiltros, parametrosFiltros, type PaginaFallidos } from './modelo';
 
 const { obtener, publicar } = vi.hoisted(() => ({ obtener: vi.fn(), publicar: vi.fn() }));
-vi.stubGlobal('ResizeObserver', class { observe() {} unobserve() {} disconnect() {} });
+vi.stubGlobal(
+  'ResizeObserver',
+  class {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  },
+);
 Element.prototype.scrollIntoView = vi.fn();
 vi.mock('../../cliente/useClienteApi', () => {
   const cliente = { get: obtener, post: publicar };
@@ -20,48 +27,127 @@ vi.mock('../../cliente/useClienteApi', () => {
 
 // Fixtures exclusivos de presentación. No representan una API ni prueban reglas backend.
 const paginaBase: PaginaFallidos = {
-  pagina: 1, tamanoPagina: 20, totalElementos: 3, totalPaginas: 1, consultadoEn: '2026-10-16T18:00:00Z',
-  indicadores: { pendientesRetorno: 7, recibidosCentro: 5, retornosAtrasados: 2, retornosSinJornadaConfirmada: 0 },
+  pagina: 1,
+  tamanoPagina: 20,
+  totalElementos: 3,
+  totalPaginas: 1,
+  consultadoEn: '2026-10-16T18:00:00Z',
+  indicadores: {
+    pendientesRetorno: 7,
+    recibidosCentro: 5,
+    retornosAtrasados: 2,
+    retornosSinJornadaConfirmada: 0,
+  },
   contenido: [0, 1, 2].map((numero) => ({
-    idDespacho: `DSP-${numero}`, idIncidencia: `INC-${numero}`, versionDespacho: 2, codigoRastreoInterno: `COD-${numero}`,
-    fechaIncidencia: '2026-10-15T03:00:00Z', motivo: { codigo: 'NO_INTENTADO', etiqueta: 'No intentado por fin de jornada' },
-    numeroIntentos: numero === 0 ? 0 : 1, maximoIntentos: 2, consumeIntento: false,
-    repartidor: { idRepartidor: `REP-${numero}`, nombre: numero === 2 ? null : `Repartidor sintético ${numero}` },
+    idDespacho: `DSP-${numero}`,
+    idIncidencia: `INC-${numero}`,
+    versionDespacho: 2,
+    codigoRastreoInterno: `COD-${numero}`,
+    fechaIncidencia: '2026-10-15T03:00:00Z',
+    motivo: { codigo: 'NO_INTENTADO', etiqueta: 'No intentado por fin de jornada' },
+    numeroIntentos: numero === 0 ? 0 : 1,
+    maximoIntentos: 2,
+    consumeIntento: false,
+    repartidor: {
+      idRepartidor: `REP-${numero}`,
+      nombre: numero === 2 ? null : `Repartidor sintético ${numero}`,
+    },
     recepcion: numero === 0 ? 'RECIBIDO_EN_CENTRO' : 'PENDIENTE_RETORNO',
-    jornada: { idJornada: `JOR-${numero}`, estado: 'CERRADA', cerradaEn: '2026-10-15T04:00:00Z', consultadaEn: '2026-10-16T18:00:00Z' },
-    retornoAtrasado: numero !== 0, tieneEvidencia: numero === 1, pedidoAnulado: numero === 2,
+    jornada: {
+      idJornada: `JOR-${numero}`,
+      estado: 'CERRADA',
+      cerradaEn: '2026-10-15T04:00:00Z',
+      consultadaEn: '2026-10-16T18:00:00Z',
+    },
+    retornoAtrasado: numero !== 0,
+    tieneEvidencia: numero === 1,
+    pedidoAnulado: numero === 2,
   })),
 };
-const catalogo = { motivos: [
-  { codigo: 'NO_INTENTADO', etiqueta: 'No intentado por fin de jornada', activo: true, consumeIntento: false, seleccionableEnCampo: false },
-  { codigo: 'HISTORICO', etiqueta: 'Motivo anterior', activo: false, consumeIntento: true, seleccionableEnCampo: false },
-] };
+const catalogo = {
+  motivos: [
+    {
+      codigo: 'NO_INTENTADO',
+      etiqueta: 'No intentado por fin de jornada',
+      activo: true,
+      consumeIntento: false,
+      seleccionableEnCampo: false,
+    },
+    {
+      codigo: 'HISTORICO',
+      etiqueta: 'Motivo anterior',
+      activo: false,
+      consumeIntento: true,
+      seleccionableEnCampo: false,
+    },
+  ],
+};
 let responder: (parametros: URLSearchParams) => Promise<{ data: PaginaFallidos }>;
-function Ubicacion() { return <output data-testid="url">{useLocation().search}</output>; }
-function montar(ruta = '/entregas-fallidas') {
-  return render(<MantineProvider theme={tema}><MemoryRouter initialEntries={[ruta]} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}><PaginaEntregasFallidas /><Ubicacion /></MemoryRouter></MantineProvider>);
+function Ubicacion() {
+  return <output data-testid="url">{useLocation().search}</output>;
 }
-function fallo(status: number, code = '') { return { isAxiosError: true, response: { status, data: { status, code } } }; }
+function montar(ruta = '/entregas-fallidas') {
+  return render(
+    <MantineProvider theme={tema}>
+      <MemoryRouter
+        initialEntries={[ruta]}
+        future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
+      >
+        <PaginaEntregasFallidas />
+        <Ubicacion />
+      </MemoryRouter>
+    </MantineProvider>,
+  );
+}
+function fallo(status: number, code = '') {
+  return { isAxiosError: true, response: { status, data: { status, code } } };
+}
 it('recibe desde el listado con la versión actual del detalle, refresca indicadores y conserva filtros', async () => {
   Object.defineProperty(document, 'fonts', { configurable: true, value: new EventTarget() });
   const detalle = detallePrueba({ idDespacho: 'DSP-1', versionDespacho: 8 });
   detalle.incidencia.idIncidencia = 'INC-1';
   const implementacion = obtener.getMockImplementation()!;
-  obtener.mockImplementation((ruta: string, opciones: unknown) => ruta.endsWith('/incidencia')
-    ? Promise.resolve({ data: detalle }) : implementacion(ruta, opciones));
+  obtener.mockImplementation((ruta: string, opciones: unknown) =>
+    ruta.endsWith('/incidencia')
+      ? Promise.resolve({ data: detalle })
+      : implementacion(ruta, opciones),
+  );
   let recibida = false;
   responder = async () => {
     const pagina = structuredClone(paginaBase);
-    if (recibida) { pagina.contenido[1].recepcion = 'RECIBIDO_EN_CENTRO'; pagina.contenido[1].retornoAtrasado = false;
-      pagina.indicadores.pendientesRetorno = 6; pagina.indicadores.recibidosCentro = 6; }
+    if (recibida) {
+      pagina.contenido[1].recepcion = 'RECIBIDO_EN_CENTRO';
+      pagina.contenido[1].retornoAtrasado = false;
+      pagina.indicadores.pendientesRetorno = 6;
+      pagina.indicadores.recibidosCentro = 6;
+    }
     return { data: pagina };
   };
   publicar.mockImplementation(async () => {
     recibida = true;
-    return { status: 202, data: { idDespacho: 'DSP-1', idIncidencia: 'INC-1', estado: 'FALLIDO', versionDespacho: 9,
-      recepcion: { estado: 'RECIBIDO_EN_CENTRO', confirmadaEn: '2026-10-24T12:00:00Z', idUsuario: 'gestor',
-        selloIntacto: false, observacion: null, liberacionCapacidad: { idSolicitud: 'lib-1', estado: 'PENDIENTE',
-          requiereRevision: false, actualizadaEn: '2026-10-24T12:00:00Z', confirmadaEn: null } } } };
+    return {
+      status: 202,
+      data: {
+        idDespacho: 'DSP-1',
+        idIncidencia: 'INC-1',
+        estado: 'FALLIDO',
+        versionDespacho: 9,
+        recepcion: {
+          estado: 'RECIBIDO_EN_CENTRO',
+          confirmadaEn: '2026-10-24T12:00:00Z',
+          idUsuario: 'gestor',
+          selloIntacto: false,
+          observacion: null,
+          liberacionCapacidad: {
+            idSolicitud: 'lib-1',
+            estado: 'PENDIENTE',
+            requiereRevision: false,
+            actualizadaEn: '2026-10-24T12:00:00Z',
+            confirmadaEn: null,
+          },
+        },
+      },
+    };
   });
   montar('/entregas-fallidas?motivo=NO_INTENTADO');
   await screen.findByRole('table');
@@ -71,15 +157,21 @@ it('recibe desde el listado con la versión actual del detalle, refresca indicad
   await userEvent.click(await within(modal).findByRole('radio', { name: 'No' }));
   await userEvent.click(within(modal).getByRole('button', { name: 'Confirmar recepción' }));
   await screen.findByText('Paquete recibido. Liberación de capacidad pendiente.');
-  expect(publicar).toHaveBeenCalledWith('/api/v1/despachos/DSP-1/recepcion-centro',
-    { idIncidencia: 'INC-1', versionDespacho: 8, selloIntacto: false, observacion: null }, expect.anything());
-  await waitFor(() => expect(screen.getByRole('button', { name: 'Recibidos en centro: 6' })).toBeVisible());
+  expect(publicar).toHaveBeenCalledWith(
+    '/api/v1/despachos/DSP-1/recepcion-centro',
+    { idIncidencia: 'INC-1', versionDespacho: 8, selloIntacto: false, observacion: null },
+    expect.anything(),
+  );
+  await waitFor(() =>
+    expect(screen.getByRole('button', { name: 'Recibidos en centro: 6' })).toBeVisible(),
+  );
   expect(screen.getByTestId('url')).toHaveTextContent('motivo=NO_INTENTADO');
 });
 beforeEach(() => {
   responder = async () => ({ data: structuredClone(paginaBase) });
-  obtener.mockImplementation((ruta: string, opciones: { params: URLSearchParams }) => ruta.includes('/catalogos/')
-    ? Promise.resolve({ data: catalogo }) : responder(opciones.params));
+  obtener.mockImplementation((ruta: string, opciones: { params: URLSearchParams }) =>
+    ruta.includes('/catalogos/') ? Promise.resolve({ data: catalogo }) : responder(opciones.params),
+  );
 });
 
 it('muestra los indicadores del servidor y alterna grupos sin inventar totales ni reiniciar intentos', async () => {
@@ -96,24 +188,41 @@ it('muestra los indicadores del servidor y alterna grupos sin inventar totales n
   expect(screen.getByRole('img', { name: 'Tiene evidencia' })).toBeVisible();
   expect(screen.queryByRole('img', { name: /fotografía/i })).not.toBeInTheDocument();
   expect(screen.getAllByRole('button', { name: 'Confirmar recepción' })).toHaveLength(2);
-  expect(obtener.mock.calls.find(([ruta]) => ruta.includes('/fallidos'))?.[1].params.toString()).toBe('');
+  expect(
+    obtener.mock.calls.find(([ruta]) => ruta.includes('/fallidos'))?.[1].params.toString(),
+  ).toBe('');
   await usuario.click(screen.getByRole('button', { name: 'Retornos atrasados: 2' }));
-  await waitFor(() => expect(screen.getByRole('button', { name: 'Retornos atrasados: 2' })).toHaveAttribute('aria-pressed', 'true'));
+  await waitFor(() =>
+    expect(screen.getByRole('button', { name: 'Retornos atrasados: 2' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    ),
+  );
   expect(screen.getByTestId('url')).toHaveTextContent('soloRetornosAtrasados=true');
-  await waitFor(() => expect(screen.getByRole('button', { name: 'Retornos atrasados: 2' })).toBeEnabled());
+  await waitFor(() =>
+    expect(screen.getByRole('button', { name: 'Retornos atrasados: 2' })).toBeEnabled(),
+  );
   await usuario.click(screen.getByRole('button', { name: 'Retornos atrasados: 2' }));
   await waitFor(() => expect(screen.getByTestId('url')).toBeEmptyDOMElement());
 });
 
 it('restaura la URL, corrige una página desaparecida y conserva el tamaño al limpiar', async () => {
   const usuario = userEvent.setup();
-  responder = async (parametros) => ({ data: { ...structuredClone(paginaBase), pagina: Number(parametros.get('pagina') ?? 1), tamanoPagina: 50 } });
+  responder = async (parametros) => ({
+    data: {
+      ...structuredClone(paginaBase),
+      pagina: Number(parametros.get('pagina') ?? 1),
+      tamanoPagina: 50,
+    },
+  });
   montar('/entregas-fallidas?pagina=3&tamanoPagina=50&motivo=NO_INTENTADO');
   // Restaurar una página que desapareció requiere una segunda consulta.
   await screen.findByText('COD-0', undefined, { timeout: 5000 });
   await waitFor(() => expect(screen.getByTestId('url')).not.toHaveTextContent('pagina=3'));
   expect(screen.getByTestId('url')).toHaveTextContent('motivo=NO_INTENTADO');
-  await usuario.click(screen.getByRole('button', { name: 'Quitar No intentado por fin de jornada' }));
+  await usuario.click(
+    screen.getByRole('button', { name: 'Quitar No intentado por fin de jornada' }),
+  );
   await waitFor(() => expect(screen.getByTestId('url').textContent).toBe('?tamanoPagina=50'));
 });
 
@@ -121,7 +230,12 @@ it('descarta respuestas anteriores aunque el transporte ignore la cancelación',
   const usuario = userEvent.setup();
   let resolverAnterior!: (respuesta: { data: PaginaFallidos }) => void;
   let anterior = false;
-  responder = () => anterior ? new Promise((resolver) => { resolverAnterior = resolver; }) : Promise.resolve({ data: structuredClone(paginaBase) });
+  responder = () =>
+    anterior
+      ? new Promise((resolver) => {
+          resolverAnterior = resolver;
+        })
+      : Promise.resolve({ data: structuredClone(paginaBase) });
   montar('/entregas-fallidas?motivo=NO_INTENTADO');
   await screen.findByText('COD-0');
   anterior = true;
@@ -141,18 +255,23 @@ it('retira filas, indicadores y filtros inmediatamente si el catálogo revoca el
   const usuario = userEvent.setup();
   montar();
   await screen.findByText('COD-0');
-  obtener.mockImplementation((ruta: string) => ruta.includes('/catalogos/') ? Promise.reject(fallo(403)) : new Promise(() => {}));
+  obtener.mockImplementation((ruta: string) =>
+    ruta.includes('/catalogos/') ? Promise.reject(fallo(403)) : new Promise(() => {}),
+  );
   await usuario.click(screen.getByRole('button', { name: 'Actualizar' }));
   await screen.findByText('No tienes permisos para ver esta información');
   expect(screen.queryByText('COD-0')).not.toBeInTheDocument();
   expect(screen.queryByRole('combobox', { name: 'Recepción' })).not.toBeInTheDocument();
-  expect(screen.queryByRole('button', { name: 'Pendientes de retorno: 7' })).not.toBeInTheDocument();
+  expect(
+    screen.queryByRole('button', { name: 'Pendientes de retorno: 7' }),
+  ).not.toBeInTheDocument();
 });
 
 it('conserva desconocidos, rechaza un falso vacío de atrasados y recupera todos los grupos', async () => {
   const usuario = userEvent.setup();
   responder = async (parametros) => {
-    if (parametros.get('soloRetornosAtrasados') === 'true') throw fallo(503, 'DESP_ERROR_JORNADAS_NO_DISPONIBLES');
+    if (parametros.get('soloRetornosAtrasados') === 'true')
+      throw fallo(503, 'DESP_ERROR_JORNADAS_NO_DISPONIBLES');
     const pagina = structuredClone(paginaBase);
     pagina.indicadores.retornosAtrasados = null;
     pagina.indicadores.retornosSinJornadaConfirmada = 2;
@@ -177,8 +296,20 @@ it('distingue vacío, falta de coincidencias y error recuperable', async () => {
   let fallar = false;
   responder = async () => {
     if (fallar) throw new Error('Red simulada');
-    return { data: { ...structuredClone(paginaBase), contenido: [], totalElementos: 0, totalPaginas: 0,
-      indicadores: { pendientesRetorno: 0, recibidosCentro: 0, retornosAtrasados: 0, retornosSinJornadaConfirmada: 0 } } };
+    return {
+      data: {
+        ...structuredClone(paginaBase),
+        contenido: [],
+        totalElementos: 0,
+        totalPaginas: 0,
+        indicadores: {
+          pendientesRetorno: 0,
+          recibidosCentro: 0,
+          retornosAtrasados: 0,
+          retornosSinJornadaConfirmada: 0,
+        },
+      },
+    };
   };
   montar();
   await screen.findByText('No hay entregas fallidas por resolver');
@@ -187,16 +318,32 @@ it('distingue vacío, falta de coincidencias y error recuperable', async () => {
   fallar = true;
   await usuario.click(screen.getByRole('button', { name: 'Actualizar' }));
   await screen.findByText('No se pudo completar la consulta');
-  expect(screen.getByText('Se conservan los resultados anteriores. No se pudieron actualizar.')).toBeVisible();
+  expect(
+    screen.getByText('Se conservan los resultados anteriores. No se pudieron actualizar.'),
+  ).toBeVisible();
   fallar = false;
   await usuario.click(screen.getByRole('button', { name: 'Reintentar consulta' }));
-  await waitFor(() => expect(screen.queryByText('No se pudo completar la consulta')).not.toBeInTheDocument());
+  await waitFor(() =>
+    expect(screen.queryByText('No se pudo completar la consulta')).not.toBeInTheDocument(),
+  );
 });
 
 it('rechaza URLs inválidas y serializa fechas civiles sin cambiarlas de zona', () => {
-  for (const consulta of ['pagina=0', 'fechaDesde=2026-02-31', 'fechaDesde=2026-10-16&fechaHasta=2026-10-15', 'motivo=A&motivo=B', 'soloRetornosAtrasados=true&recepcion=RECIBIDO_EN_CENTRO', 'tamanoPagina=101', 'orden=fecha']) {
-    expect(Object.keys(leerFiltros(new URLSearchParams(consulta)).errores).length).toBeGreaterThan(0);
+  for (const consulta of [
+    'pagina=0',
+    'fechaDesde=2026-02-31',
+    'fechaDesde=2026-10-16&fechaHasta=2026-10-15',
+    'motivo=A&motivo=B',
+    'soloRetornosAtrasados=true&recepcion=RECIBIDO_EN_CENTRO',
+    'tamanoPagina=101',
+    'orden=fecha',
+  ]) {
+    expect(Object.keys(leerFiltros(new URLSearchParams(consulta)).errores).length).toBeGreaterThan(
+      0,
+    );
   }
-  expect(parametrosFiltros({ ...filtrosIniciales, fechaDesde: '2026-10-16' }).get('fechaDesde')).toBe('2026-10-16');
+  expect(
+    parametrosFiltros({ ...filtrosIniciales, fechaDesde: '2026-10-16' }).get('fechaDesde'),
+  ).toBe('2026-10-16');
   expect(leerFiltros(new URLSearchParams()).filtros).toEqual(filtrosIniciales);
 });

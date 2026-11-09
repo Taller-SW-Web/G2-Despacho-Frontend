@@ -16,16 +16,27 @@ export function useDistritos() {
     setCargando(true);
     setError(null);
     setDenegado(false);
-    listarDistritos(cliente, controlador.signal).then((datos) => {
-      if (!controlador.signal.aborted) setDistritos(datos);
-    }).catch((fallo) => {
-      if (controlador.signal.aborted) return;
-      const status = problemaDe(fallo)?.status;
-      setDenegado(status === 401 || status === 403);
-      setDistritos([]);
-      setError('No se pudo cargar el catálogo de distritos.');
-    }).finally(() => { if (!controlador.signal.aborted) setCargando(false); });
+    listarDistritos(cliente, controlador.signal)
+      .then((datos) => {
+        if (!controlador.signal.aborted) setDistritos(datos);
+      })
+      .catch((fallo) => {
+        if (controlador.signal.aborted) return;
+        const status = problemaDe(fallo)?.status;
+        setDenegado(status === 401 || status === 403);
+        setDistritos([]);
+        setError('No se pudo cargar el catálogo de distritos.');
+      })
+      .finally(() => {
+        if (!controlador.signal.aborted) setCargando(false);
+      });
     return () => controlador.abort();
   }, [cliente, revision]);
-  return { distritos, cargando, error, denegado, reintentar: () => setRevision((valor) => valor + 1) };
+  return {
+    distritos,
+    cargando,
+    error,
+    denegado,
+    reintentar: () => setRevision((valor) => valor + 1),
+  };
 }

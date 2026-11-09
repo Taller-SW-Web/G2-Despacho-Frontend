@@ -1,5 +1,13 @@
 import { useRef, useState, type PropsWithChildren } from 'react';
-import { ActionIcon, Button, MantineProvider, NumberInput, Radio, Select, TextInput } from '@mantine/core';
+import {
+  ActionIcon,
+  Button,
+  MantineProvider,
+  NumberInput,
+  Radio,
+  Select,
+  TextInput,
+} from '@mantine/core';
 import { DatePickerInput } from '@mantine/dates';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -7,7 +15,11 @@ import { describe, expect, it, vi } from 'vitest';
 import { accionesIconoUi, accionesUi, camposFormulario, tema } from '../index';
 
 function Proveedor({ children }: PropsWithChildren) {
-  return <MantineProvider theme={tema} env="test">{children}</MantineProvider>;
+  return (
+    <MantineProvider theme={tema} env="test">
+      {children}
+    </MantineProvider>
+  );
 }
 
 describe('CR-01 AccionesUi', () => {
@@ -16,17 +28,41 @@ describe('CR-01 AccionesUi', () => {
     function Contenedor() {
       const bloqueo = useRef(false);
       const [cargando, cargar] = useState(false);
-      return <>
-        <Button {...accionesUi.principal} type="button" loading={cargando} aria-busy={cargando} onClick={() => {
-          if (bloqueo.current) return;
-          bloqueo.current = true; cargar(true); solicitar();
-        }}>Guardar zona</Button>
-        <Button {...accionesUi.terciaria} type="button" onClick={() => { bloqueo.current = false; cargar(false); }}>Simular error recuperable</Button>
-      </>;
+      return (
+        <>
+          <Button
+            {...accionesUi.principal}
+            type="button"
+            loading={cargando}
+            aria-busy={cargando}
+            onClick={() => {
+              if (bloqueo.current) return;
+              bloqueo.current = true;
+              cargar(true);
+              solicitar();
+            }}
+          >
+            Guardar zona
+          </Button>
+          <Button
+            {...accionesUi.terciaria}
+            type="button"
+            onClick={() => {
+              bloqueo.current = false;
+              cargar(false);
+            }}
+          >
+            Simular error recuperable
+          </Button>
+        </>
+      );
     }
     render(<Contenedor />, { wrapper: Proveedor });
     const guardar = screen.getByRole('button', { name: 'Guardar zona' });
-    act(() => { guardar.click(); guardar.click(); });
+    act(() => {
+      guardar.click();
+      guardar.click();
+    });
     expect(solicitar).toHaveBeenCalledTimes(1);
     expect(guardar).toBeDisabled();
     expect(guardar).toHaveTextContent('Guardar zona');
@@ -40,11 +76,23 @@ describe('CR-01 AccionesUi', () => {
 
   it('CCR-01-02: asocia el bloqueo visible y Cancelar no envía el formulario', async () => {
     const enviar = vi.fn();
-    render(<form onSubmit={(evento) => { evento.preventDefault(); enviar(); }}>
-      <Button {...accionesUi.principal} type="submit" disabled aria-describedby="motivo-zona">Guardar zona</Button>
-      <p id="motivo-zona">Selecciona al menos un distrito.</p>
-      <Button {...accionesUi.secundaria} type="button">Cancelar</Button>
-    </form>, { wrapper: Proveedor });
+    render(
+      <form
+        onSubmit={(evento) => {
+          evento.preventDefault();
+          enviar();
+        }}
+      >
+        <Button {...accionesUi.principal} type="submit" disabled aria-describedby="motivo-zona">
+          Guardar zona
+        </Button>
+        <p id="motivo-zona">Selecciona al menos un distrito.</p>
+        <Button {...accionesUi.secundaria} type="button">
+          Cancelar
+        </Button>
+      </form>,
+      { wrapper: Proveedor },
+    );
     const usuario = userEvent.setup();
     const guardar = screen.getByRole('button', { name: 'Guardar zona' });
     expect(guardar).toHaveAccessibleDescription('Selecciona al menos un distrito.');
@@ -55,7 +103,17 @@ describe('CR-01 AccionesUi', () => {
 
   it('la acción de icono conserva nombre accesible y se activa con Espacio', async () => {
     const accionar = vi.fn();
-    render(<ActionIcon {...accionesIconoUi.movil} type="button" aria-label="Actualizar zonas" onClick={accionar}><span aria-hidden="true">↻</span></ActionIcon>, { wrapper: Proveedor });
+    render(
+      <ActionIcon
+        {...accionesIconoUi.movil}
+        type="button"
+        aria-label="Actualizar zonas"
+        onClick={accionar}
+      >
+        <span aria-hidden="true">↻</span>
+      </ActionIcon>,
+      { wrapper: Proveedor },
+    );
     const usuario = userEvent.setup();
     await usuario.tab();
     expect(screen.getByRole('button', { name: 'Actualizar zonas' })).toHaveFocus();
@@ -69,11 +127,29 @@ describe('CR-02 CamposFormulario', () => {
     function Formulario() {
       const [nombre, cambiarNombre] = useState('');
       const [error, cambiarError] = useState<string>();
-      return <form noValidate onSubmit={(evento) => { evento.preventDefault(); cambiarError(nombre.trim() ? undefined : 'Ingresa el nombre de la zona.'); }}>
-        <TextInput id="nombre-zona" label="Nombre de zona" required value={nombre} error={error} onChange={(evento) => { cambiarNombre(evento.currentTarget.value); cambiarError(undefined); }} />
-        <TextInput id="referencia" label="Referencia" defaultValue="Lima Norte" />
-        <Button type="submit">Validar</Button>
-      </form>;
+      return (
+        <form
+          noValidate
+          onSubmit={(evento) => {
+            evento.preventDefault();
+            cambiarError(nombre.trim() ? undefined : 'Ingresa el nombre de la zona.');
+          }}
+        >
+          <TextInput
+            id="nombre-zona"
+            label="Nombre de zona"
+            required
+            value={nombre}
+            error={error}
+            onChange={(evento) => {
+              cambiarNombre(evento.currentTarget.value);
+              cambiarError(undefined);
+            }}
+          />
+          <TextInput id="referencia" label="Referencia" defaultValue="Lima Norte" />
+          <Button type="submit">Validar</Button>
+        </form>
+      );
     }
     render(<Formulario />, { wrapper: Proveedor });
     const usuario = userEvent.setup();
@@ -91,12 +167,17 @@ describe('CR-02 CamposFormulario', () => {
     const confirmar = vi.fn();
     function Formulario() {
       const [sello, cambiarSello] = useState('');
-      return <>
-        <Radio.Group label="Sello intacto" required value={sello} onChange={cambiarSello}>
-          <Radio value="si" label="Sí" /><Radio value="no" label="No" />
-        </Radio.Group>
-        <Button type="button" disabled={sello === ''} onClick={() => confirmar(sello === 'si')}>Confirmar recepción</Button>
-      </>;
+      return (
+        <>
+          <Radio.Group label="Sello intacto" required value={sello} onChange={cambiarSello}>
+            <Radio value="si" label="Sí" />
+            <Radio value="no" label="No" />
+          </Radio.Group>
+          <Button type="button" disabled={sello === ''} onClick={() => confirmar(sello === 'si')}>
+            Confirmar recepción
+          </Button>
+        </>
+      );
     }
     render(<Formulario />, { wrapper: Proveedor });
     const usuario = userEvent.setup();
@@ -114,7 +195,20 @@ describe('CR-02 CamposFormulario', () => {
     const cambiar = vi.fn();
     function Importe() {
       const [valor, cambiarValor] = useState<string | number>('');
-      return <NumberInput {...camposFormulario.moneda} id="tarifa" label="Tarifa base" min={0} allowNegative={false} value={valor} onChange={(nuevo) => { cambiarValor(nuevo); cambiar(nuevo); }} />;
+      return (
+        <NumberInput
+          {...camposFormulario.moneda}
+          id="tarifa"
+          label="Tarifa base"
+          min={0}
+          allowNegative={false}
+          value={valor}
+          onChange={(nuevo) => {
+            cambiarValor(nuevo);
+            cambiar(nuevo);
+          }}
+        />
+      );
     }
     render(<Importe />, { wrapper: Proveedor });
     const usuario = userEvent.setup();
@@ -131,7 +225,16 @@ describe('CR-02 CamposFormulario', () => {
   });
 
   it('mantiene el DNI de solo lectura enfocable y asociado a su ayuda', async () => {
-    render(<TextInput id="dni" label="DNI" value="12345678" readOnly description="El DNI no se puede modificar." />, { wrapper: Proveedor });
+    render(
+      <TextInput
+        id="dni"
+        label="DNI"
+        value="12345678"
+        readOnly
+        description="El DNI no se puede modificar."
+      />,
+      { wrapper: Proveedor },
+    );
     const usuario = userEvent.setup();
     await usuario.tab();
     const dni = screen.getByRole('textbox', { name: 'DNI' });
@@ -144,7 +247,18 @@ describe('CR-02 CamposFormulario', () => {
 
   it('la selección buscable informa Sin resultados sin seleccionar un valor inventado', async () => {
     const cambiar = vi.fn();
-    render(<Select {...camposFormulario.seleccion} id="zona" label="Zona" searchable data={['Comas', 'Los Olivos']} value={null} onChange={cambiar} />, { wrapper: Proveedor });
+    render(
+      <Select
+        {...camposFormulario.seleccion}
+        id="zona"
+        label="Zona"
+        searchable
+        data={['Comas', 'Los Olivos']}
+        value={null}
+        onChange={cambiar}
+      />,
+      { wrapper: Proveedor },
+    );
     const usuario = userEvent.setup();
     await usuario.type(screen.getByRole('combobox', { name: 'Zona' }), 'Inexistente');
     expect(screen.getByText('Sin resultados')).toBeVisible();
@@ -153,8 +267,19 @@ describe('CR-02 CamposFormulario', () => {
 
   it('presenta la fecha civil DD/MM/YYYY sin desplazar el día por la zona horaria', () => {
     const cambiar = vi.fn();
-    render(<DatePickerInput {...camposFormulario.fecha} id="fecha" label="Fecha programada" value="2026-10-16" onChange={cambiar} />, { wrapper: Proveedor });
-    expect(screen.getByRole('button', { name: 'Fecha programada' })).toHaveTextContent('16/10/2026');
+    render(
+      <DatePickerInput
+        {...camposFormulario.fecha}
+        id="fecha"
+        label="Fecha programada"
+        value="2026-10-16"
+        onChange={cambiar}
+      />,
+      { wrapper: Proveedor },
+    );
+    expect(screen.getByRole('button', { name: 'Fecha programada' })).toHaveTextContent(
+      '16/10/2026',
+    );
     expect(cambiar).not.toHaveBeenCalled();
   });
 });

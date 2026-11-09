@@ -5,6 +5,8 @@
 export function registrarServiceWorker() {
   if (!import.meta.env.PROD || !('serviceWorker' in navigator)) return;
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').catch(() => { /* Sin SW la app funciona igual, solo no es instalable. */ });
+    navigator.serviceWorker.register('/sw.js').catch(() => {
+      /* Sin SW la app funciona igual, solo no es instalable. */
+    });
   });
 }
