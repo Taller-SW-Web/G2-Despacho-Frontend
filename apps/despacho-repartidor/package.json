@@ -1,6 +1,6 @@
 {
   "name": "@despacho/repartidor",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -11,9 +11,9 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@despacho/cliente-api": "0.1.0",
-    "@despacho/componentes-compartidos": "0.1.0",
-    "@despacho/tipos-compartidos": "0.1.0",
+    "@despacho/cliente-api": "0.2.0",
+    "@despacho/componentes-compartidos": "0.2.0",
+    "@despacho/tipos-compartidos": "0.2.0",
     "@hookform/resolvers": "^5.0.0",
     "@mantine/core": "9.6.2",
     "@mantine/dates": "9.6.2",

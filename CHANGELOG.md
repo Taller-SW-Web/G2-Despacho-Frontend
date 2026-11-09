@@ -1,20 +1,28 @@
 # Historial de cambios
 
-Este archivo resume los cambios significativos del frontend. Los avances en integración se registran en `Sin publicar`; al preparar una entrega se agrupan en una versión con fecha y se promueven de `develop` a `main` mediante PR, siguiendo el flujo de [G2-Despacho-Specs](https://github.com/Taller-SW-Web/G2-Despacho-Specs/blob/main/CONTRIBUTING.md).
+Los cambios de cada entrega se consolidan al preparar una línea base en `main`, según la [guía de contribución](https://github.com/Taller-SW-Web/G2-Despacho-Specs/blob/main/CONTRIBUTING.md). Los tags se crean sobre los commits de entrega aprobados.
 
-Revisar el corte aproximadamente cada dos semanas. La versión cambia cuando se entrega un conjunto de cambios, no por el paso del tiempo. Durante el desarrollo inicial se utiliza `0.x.y`: por ejemplo, nuevas capacidades en `0.2.0` y correcciones de una entrega en `0.1.1`. Los tags se crean manualmente; no se genera una GitHub Release automáticamente.
+## 0.2.0 — 2026-11-09
 
-## Sin publicar
+La fecha identifica la preparación del corte.
 
 ### Añadido
 
-- Pipeline CI/CD: construcción de `dist` de ambas aplicaciones como artefactos, compuerta única `CI frontend verde`, promoción a producción en Vercel solo si pasa la compuerta (Deployment Checks) y verificación posterior de las URLs publicadas (ver README, "Pipeline CI/CD").
-- F-03: app del repartidor como PWA instalable en Android con las 12 pantallas de Figma (acceso, ruta, detalle, inicio de traslado, entrega y fallo con foto, fallo registrado, cierre y resumen), integrada con Operación §3 y con el login propuesto a Seguridad; modo demostración sin backend y suite propia (`npm run test -w @despacho/repartidor`).
-- F-03: fotos reducidas en el navegador (1600 px, JPEG < 2 MiB, sin EXIF), subida con URL firmada e `Idempotency-Key` conservada entre reintentos.
+- F-03: PWA del repartidor con ruta, detalle, inicio de traslado, entrega y fallo con foto, cierre y resumen. Incluye demo en memoria y carga de evidencia por URL firmada; reduce fotos en el navegador y conserva la clave del comando entre reintentos.
+- F-04: confirmación de recepción en centro, reprogramación y cierre administrativo de un despacho fallido como devuelto a origen. Los formularios conservan el contexto y pueden recuperar una respuesta perdida.
+- F-02: consulta de rutas por jornada y repartidor, reordenamiento por teclado o arrastre y reasignación con motivo.
+- Acceso humano en ambas aplicaciones, MFA para el gestor, renovación rotativa y cierre de sesión.
+- CI/CD: suites de las dos apps, artefactos de compilación, check `CI frontend verde` para Vercel y verificación posterior de las URLs de producción.
 
 ### Cambiado
 
-- CR-16 `TarjetaDespacho` acepta dirección y destinatario nulos y muestra el resultado con su hora; título de `ShellRepartidor` alineado con Figma.
+- F-04: mejor lectura del listado, el detalle y el historial de incidencias.
+- F-05/F-06: vinculación de repartidores y operación de jornadas alineadas con el contrato de Seguridad; aislamiento de consultas al cambiar de sesión.
+- Componentes compartidos, legibilidad y pantallas de acceso denegado alineados con el sistema de diseño. La tarjeta de reparto admite destinatario y dirección ausentes y muestra la hora del resultado.
+
+### Integraciones
+
+- El emisor temporal permite probar el acceso local. La validación con cuentas reales de G7 y el recorrido completo de evidencia fotográfica requieren sus servicios correspondientes.
 
 ## 0.1.0
 
