@@ -1,5 +1,16 @@
 import { useEffect, useState } from 'react';
-import { Alert, Button, FileButton, Group, Image, Loader, Paper, Progress, Stack, Text } from '@mantine/core';
+import {
+  Alert,
+  Button,
+  FileButton,
+  Group,
+  Image,
+  Loader,
+  Paper,
+  Progress,
+  Stack,
+  Text,
+} from '@mantine/core';
 import { IconAlertCircle, IconCamera, IconPhoto } from '@tabler/icons-react';
 import clases from './CapturaEvidencia.module.css';
 
@@ -8,7 +19,8 @@ export type PoliticaArchivoEvidencia = {
   maximoBytes: number;
 };
 
-export type FaseCapturaEvidencia = 'vacia' | 'lista' | 'procesando' | 'subiendo' | 'cargada' | 'error';
+export type FaseCapturaEvidencia =
+  'vacia' | 'lista' | 'procesando' | 'subiendo' | 'cargada' | 'error';
 
 export type CapturaEvidenciaProps = {
   archivo: File | null;
@@ -120,8 +132,14 @@ export function CapturaEvidencia({
               >
                 <Stack gap={4} align="center">
                   <IconCamera size={48} aria-hidden="true" />
-                  <Text size="md" fw={600}>Tomar foto</Text>
-                  <Text size="md" fw={400}>{obligatoria ? 'Foto obligatoria como evidencia' : 'Agregar evidencia fotográfica'}</Text>
+                  <Text size="md" fw={600}>
+                    Tomar foto
+                  </Text>
+                  <Text size="md" fw={400}>
+                    {obligatoria
+                      ? 'Foto obligatoria como evidencia'
+                      : 'Agregar evidencia fotográfica'}
+                  </Text>
                 </Stack>
               </Button>
             )}
@@ -131,26 +149,43 @@ export function CapturaEvidencia({
 
       {!politicaArchivo && (
         <Alert icon={<IconAlertCircle size={18} />} color="yellow" title="Captura no disponible">
-          La política de archivo debe acordarse antes de habilitar la selección o carga de evidencia.
+          La política de archivo debe acordarse antes de habilitar la selección o carga de
+          evidencia.
         </Alert>
       )}
 
       {fase === 'lista' && archivo && (
-        <Text size="sm" role="status">Foto seleccionada; todavía no se ha cargado.</Text>
+        <Text size="sm" role="status">
+          Foto seleccionada; todavía no se ha cargado.
+        </Text>
       )}
       {fase === 'cargada' && archivo && (
-        <Text size="sm" c="green.8" role="status">Foto cargada. Aún falta confirmar el resultado del despacho.</Text>
+        <Text size="sm" c="green.8" role="status">
+          Foto cargada. Aún falta confirmar el resultado del despacho.
+        </Text>
       )}
       {(fase === 'procesando' || fase === 'subiendo') && (
         <Group gap="sm" role="status" aria-live="polite">
-          {progreso === null ? <Loader size="sm" /> : <Progress value={Math.min(100, Math.max(0, progreso))} flex={1} />}
-          <Text size="sm">{fase === 'procesando' ? 'Optimizando imagen…' : 'Cargando evidencia…'}</Text>
+          {progreso === null ? (
+            <Loader size="sm" />
+          ) : (
+            <Progress value={Math.min(100, Math.max(0, progreso))} flex={1} />
+          )}
+          <Text size="sm">
+            {fase === 'procesando' ? 'Optimizando imagen…' : 'Cargando evidencia…'}
+          </Text>
         </Group>
       )}
       {fase === 'error' && (
-        <Alert icon={<IconAlertCircle size={18} />} color="red" title="No se pudo cargar la evidencia">
+        <Alert
+          icon={<IconAlertCircle size={18} />}
+          color="red"
+          title="No se pudo cargar la evidencia"
+        >
           <Stack gap="xs">
-            <Text size="sm">{error || 'Inténtalo de nuevo. La foto seleccionada se conserva.'}</Text>
+            <Text size="sm">
+              {error || 'Inténtalo de nuevo. La foto seleccionada se conserva.'}
+            </Text>
             <Button
               type="button"
               variant="outline"

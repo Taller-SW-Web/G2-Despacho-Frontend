@@ -3,13 +3,18 @@ import { afterEach, expect, it, vi } from 'vitest';
 import { SesionProveedor, useSesion } from './SesionProveedor';
 import { useClienteApi } from '../cliente/useClienteApi';
 
-afterEach(() => { localStorage.clear(); vi.unstubAllEnvs(); });
+afterEach(() => {
+  localStorage.clear();
+  vi.unstubAllEnvs();
+});
 
 it('un build publicado ignora tanto el modo demo como los tokens antiguos del navegador', async () => {
   vi.stubEnv('DEV', false);
   vi.stubEnv('VITE_DEMO_SIN_AUTENTICACION', 'true');
   localStorage.setItem('despacho.token', 'token-antiguo');
-  const { result } = renderHook(() => ({ sesion: useSesion(), cliente: useClienteApi() }), { wrapper: SesionProveedor });
+  const { result } = renderHook(() => ({ sesion: useSesion(), cliente: useClienteApi() }), {
+    wrapper: SesionProveedor,
+  });
   expect(result.current.sesion.modoDemo).toBe(false);
   expect(result.current.sesion.obtenerToken()).toBeNull();
   let autorizacion: unknown;

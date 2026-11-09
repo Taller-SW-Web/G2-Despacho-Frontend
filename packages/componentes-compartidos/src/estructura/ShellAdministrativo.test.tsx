@@ -5,12 +5,24 @@ import { describe, expect, it, vi } from 'vitest';
 import { ShellAdministrativo, tema, type PropiedadesShellAdministrativo } from '../index';
 
 const propiedades: PropiedadesShellAdministrativo = {
-  destinos: [{ id: 'zonas', etiqueta: 'Zonas y Tarifas', ruta: '/zonas' }, { id: 'flota', etiqueta: 'Repartidores', ruta: '/flota' }],
-  destinoActivo: 'zonas', usuario: { nombre: 'Rhamses', etiquetaPerfil: 'Gestor' },
-  logoUrl: '/logo-autorizado.svg', rutaInicio: '/', alNavegar: vi.fn(), alCerrarSesion: vi.fn(), children: <h1>Zonas</h1>,
+  destinos: [
+    { id: 'zonas', etiqueta: 'Zonas y Tarifas', ruta: '/zonas' },
+    { id: 'flota', etiqueta: 'Repartidores', ruta: '/flota' },
+  ],
+  destinoActivo: 'zonas',
+  usuario: { nombre: 'Rhamses', etiquetaPerfil: 'Gestor' },
+  logoUrl: '/logo-autorizado.svg',
+  rutaInicio: '/',
+  alNavegar: vi.fn(),
+  alCerrarSesion: vi.fn(),
+  children: <h1>Zonas</h1>,
 };
 function Vista(props: PropiedadesShellAdministrativo) {
-  return <MantineProvider theme={tema} env="test"><ShellAdministrativo {...props} /></MantineProvider>;
+  return (
+    <MantineProvider theme={tema} env="test">
+      <ShellAdministrativo {...props} />
+    </MantineProvider>
+  );
 }
 
 describe('CR-03 ShellAdministrativo', () => {
@@ -18,13 +30,21 @@ describe('CR-03 ShellAdministrativo', () => {
     const usuario = userEvent.setup();
     const { rerender } = render(<Vista {...propiedades} />);
     expect(screen.getAllByRole('main')).toHaveLength(1);
-    expect(screen.getByRole('link', { name: 'Zonas y Tarifas' })).toHaveAttribute('aria-current', 'page');
+    expect(screen.getByRole('link', { name: 'Zonas y Tarifas' })).toHaveAttribute(
+      'aria-current',
+      'page',
+    );
     await usuario.click(screen.getByRole('link', { name: 'Repartidores' }));
     expect(propiedades.alNavegar).toHaveBeenCalledWith('flota', '/flota');
     rerender(<Vista {...propiedades} destinoActivo="flota" children={<h1>Repartidores</h1>} />);
     expect(document.querySelectorAll('[aria-current="page"]')).toHaveLength(1);
-    expect(within(screen.getByRole('main')).getByRole('heading', { level: 1 })).toHaveTextContent('Repartidores');
-    expect(screen.getByRole('img', { name: 'Inka Athletics' })).toHaveAttribute('src', '/logo-autorizado.svg');
+    expect(within(screen.getByRole('main')).getByRole('heading', { level: 1 })).toHaveTextContent(
+      'Repartidores',
+    );
+    expect(screen.getByRole('img', { name: 'Inka Athletics' })).toHaveAttribute(
+      'src',
+      '/logo-autorizado.svg',
+    );
   });
 
   it('CCR-03-02: abre con teclado, recorre destinos y cierra con Escape', async () => {
@@ -34,7 +54,9 @@ describe('CR-03 ShellAdministrativo', () => {
     disparador.focus();
     await usuario.keyboard('{Enter}');
     const menu = await screen.findByRole('dialog');
-    expect(within(menu).getByRole('link', { name: 'Inka Athletics · Despacho · Inicio' })).toHaveAttribute('href', '/');
+    expect(
+      within(menu).getByRole('link', { name: 'Inka Athletics · Despacho · Inicio' }),
+    ).toHaveAttribute('href', '/');
     const navegacion = within(menu).getByRole('navigation', { name: 'Navegación administrativa' });
     expect(within(navegacion).getAllByRole('link')).toHaveLength(2);
     const destino = within(menu).getByRole('link', { name: 'Repartidores' });
@@ -50,7 +72,9 @@ describe('CR-03 ShellAdministrativo', () => {
     const usuario = userEvent.setup();
     render(<Vista {...propiedades} />);
     await usuario.click(screen.getByRole('button', { name: 'Abrir menú' }));
-    await usuario.click(within(screen.getByRole('dialog')).getByRole('link', { name: 'Repartidores' }));
+    await usuario.click(
+      within(screen.getByRole('dialog')).getByRole('link', { name: 'Repartidores' }),
+    );
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     await usuario.click(screen.getByRole('button', { name: 'Menú de usuario: Rhamses' }));
     await usuario.click(await screen.findByRole('menuitem', { name: 'Cerrar sesión' }));

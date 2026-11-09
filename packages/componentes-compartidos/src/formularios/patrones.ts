@@ -1,4 +1,10 @@
-import type { ActionIconProps, ButtonProps, NumberInputProps, SelectProps, TextareaProps } from '@mantine/core';
+import type {
+  ActionIconProps,
+  ButtonProps,
+  NumberInputProps,
+  SelectProps,
+  TextareaProps,
+} from '@mantine/core';
 import type { DatePickerInputProps } from '@mantine/dates';
 import 'dayjs/locale/es';
 
@@ -18,13 +24,21 @@ export const accionesIconoUi = {
 /** CR-02: sin validaciones de negocio ni conversiones implícitas de valores vacíos. */
 export const camposFormulario = {
   moneda: {
-    leftSection: 'PEN', leftSectionWidth: 48,
-    decimalScale: 2, fixedDecimalScale: true,
+    leftSection: 'PEN',
+    leftSectionWidth: 48,
+    decimalScale: 2,
+    fixedDecimalScale: true,
   } satisfies NumberInputProps,
   seleccion: { nothingFoundMessage: 'Sin resultados' } satisfies SelectProps,
   comentario: { autosize: true, minRows: 3 } satisfies TextareaProps,
   fecha: {
-    locale: 'es', valueFormat: 'DD/MM/YYYY',
-    ariaLabels: { nextMonth: 'Mes siguiente', previousMonth: 'Mes anterior', monthLevelControl: 'Seleccionar mes', yearLevelControl: 'Seleccionar año' },
+    locale: 'es',
+    valueFormat: 'DD/MM/YYYY',
+    ariaLabels: {
+      nextMonth: 'Mes siguiente',
+      previousMonth: 'Mes anterior',
+      monthLevelControl: 'Seleccionar mes',
+      yearLevelControl: 'Seleccionar año',
+    },
   } satisfies DatePickerInputProps,
 };

@@ -1,6 +1,11 @@
 import { expect, test } from '@playwright/test';
 import { iniciarSesionGestor } from '../soporte/sesionGestor';
-import { creacionPrueba, disponiblesPrueba, paginaPrueba, zonasPrueba } from '../../apps/despacho-administrativo/src/features/programacion/fixtures.prueba';
+import {
+  creacionPrueba,
+  disponiblesPrueba,
+  paginaPrueba,
+  zonasPrueba,
+} from '../../apps/despacho-administrativo/src/features/programacion/fixtures.prueba';
 
 // Navegador real y API simulada explícita: no acredita las reglas de los servicios.
 test.beforeEach(async ({ page }) => {
@@ -18,7 +23,12 @@ test.beforeEach(async ({ page }) => {
       pagina.totalElementos++;
     } else if (url.pathname.endsWith('/asignacion') && solicitud.method() === 'POST') {
       const id = decodeURIComponent(url.pathname.split('/').at(-2)!);
-      datos = { idDespacho: id, estado: 'ASIGNADO', ...solicitud.postDataJSON(), posicionSecuencia: 4 };
+      datos = {
+        idDespacho: id,
+        estado: 'ASIGNADO',
+        ...solicitud.postDataJSON(),
+        posicionSecuencia: 4,
+      };
       pagina.contenido = pagina.contenido.filter((d) => d.idDespacho !== id);
       pagina.totalElementos--;
     } else return ruta.fulfill({ status: 404, json: { status: 404 } });
@@ -26,14 +36,25 @@ test.beforeEach(async ({ page }) => {
   });
 });
 
-for (const [ancho, alto] of [[1440, 1024], [1024, 768], [390, 844]]) {
+for (const [ancho, alto] of [
+  [1440, 1024],
+  [1024, 768],
+  [390, 844],
+]) {
   test(`cola y modal sin desbordamiento de página a ${ancho} px`, async ({ page }) => {
     await page.setViewportSize({ width: ancho, height: alto });
     await iniciarSesionGestor(page, '/programacion');
     await expect(page.getByText('TRK-78900', { exact: true })).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Programación y asignación', exact: true })).toBeVisible();
-    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
-    const tabla = page.getByRole('region', { name: 'Tabla desplazable: Cola de despachos pendientes de asignación', exact: true });
+    await expect(
+      page.getByRole('heading', { name: 'Programación y asignación', exact: true }),
+    ).toBeVisible();
+    expect(
+      await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
+    ).toBe(true);
+    const tabla = page.getByRole('region', {
+      name: 'Tabla desplazable: Cola de despachos pendientes de asignación',
+      exact: true,
+    });
     if (ancho === 1024) {
       expect(await tabla.evaluate((n) => n.scrollWidth <= n.clientWidth + 1)).toBe(true);
       await expect(page.getByRole('columnheader', { name: 'Volumen (m³)' })).toBeHidden();
@@ -47,9 +68,16 @@ for (const [ancho, alto] of [[1440, 1024], [1024, 768], [390, 844]]) {
     await page.keyboard.press('ArrowDown');
     await expect(modal.getByRole('radio', { name: 'Ana de otra zona', exact: true })).toBeChecked();
     const candidata = modal.getByRole('radio', { name: 'Ana de otra zona', exact: true });
-    await expect(candidata.getByRole('progressbar', { name: 'Peso', exact: true })).toHaveAttribute('aria-valuetext', /Proyección: 162 \/ 200 kg/);
+    await expect(candidata.getByRole('progressbar', { name: 'Peso', exact: true })).toHaveAttribute(
+      'aria-valuetext',
+      /Proyección: 162 \/ 200 kg/,
+    );
     await expect(candidata.getByText('F02-000', { exact: true })).toBeVisible();
-    expect(await modal.getByRole('radio', { name: 'Ana de otra zona', exact: true }).evaluate((n) => getComputedStyle(n).outlineColor)).toBe('rgb(67, 97, 238)');
+    expect(
+      await modal
+        .getByRole('radio', { name: 'Ana de otra zona', exact: true })
+        .evaluate((n) => getComputedStyle(n).outlineColor),
+    ).toBe('rgb(67, 97, 238)');
     await page.screenshot({ path: `docs/evidencia/f02/hito4/asignacion-${ancho}.png` });
     await page.keyboard.press('Escape');
     await expect(modal).not.toBeVisible();
@@ -57,7 +85,9 @@ for (const [ancho, alto] of [[1440, 1024], [1024, 768], [390, 844]]) {
   });
 }
 
-test('genera, muestra la nueva fila y asigna usando exclusivamente las rutas públicas', async ({ page }) => {
+test('genera, muestra la nueva fila y asigna usando exclusivamente las rutas públicas', async ({
+  page,
+}) => {
   await iniciarSesionGestor(page, '/programacion');
   await expect(page.getByText('TRK-78900', { exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Generar pedido de prueba', exact: true }).click();

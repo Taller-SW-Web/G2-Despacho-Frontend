@@ -9,22 +9,49 @@ import { PaginaProgramacion } from './PaginaProgramacion';
 import { creacionPrueba, disponiblesPrueba, paginaPrueba, zonasPrueba } from './fixtures.prueba';
 import { leerFiltros } from './modelo';
 
-const { obtener, publicar, notificar } = vi.hoisted(() => ({ obtener: vi.fn(), publicar: vi.fn(), notificar: vi.fn() }));
+const { obtener, publicar, notificar } = vi.hoisted(() => ({
+  obtener: vi.fn(),
+  publicar: vi.fn(),
+  notificar: vi.fn(),
+}));
 vi.mock('../../cliente/useClienteApi', () => {
   const cliente = { get: obtener, post: publicar };
   return { useClienteApi: () => cliente };
 });
-vi.mock('@despacho/componentes-compartidos', async (original) => ({ ...await original<typeof import('@despacho/componentes-compartidos')>(), notificarOperacion: notificar }));
-function Ubicacion() { return <output data-testid="url">{useLocation().search}</output>; }
-function montar(ruta = '/programacion') {
-  return render(<MantineProvider theme={tema}><MemoryRouter initialEntries={[ruta]} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-    <PaginaProgramacion /><Ubicacion /></MemoryRouter></MantineProvider>);
+vi.mock('@despacho/componentes-compartidos', async (original) => ({
+  ...(await original<typeof import('@despacho/componentes-compartidos')>()),
+  notificarOperacion: notificar,
+}));
+function Ubicacion() {
+  return <output data-testid="url">{useLocation().search}</output>;
 }
-function fallo(status: number, code = '') { return { isAxiosError: true, response: { status, data: { status, code } } }; }
+function montar(ruta = '/programacion') {
+  return render(
+    <MantineProvider theme={tema}>
+      <MemoryRouter
+        initialEntries={[ruta]}
+        future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
+      >
+        <PaginaProgramacion />
+        <Ubicacion />
+      </MemoryRouter>
+    </MantineProvider>,
+  );
+}
+function fallo(status: number, code = '') {
+  return { isAxiosError: true, response: { status, data: { status, code } } };
+}
 let pagina: typeof paginaPrueba;
 beforeEach(() => {
   pagina = structuredClone(paginaPrueba);
-  obtener.mockImplementation(async (ruta: string) => ({ data: ruta === '/api/v1/zonas' ? zonasPrueba : ruta.endsWith('/disponibles') ? disponiblesPrueba : structuredClone(pagina) }));
+  obtener.mockImplementation(async (ruta: string) => ({
+    data:
+      ruta === '/api/v1/zonas'
+        ? zonasPrueba
+        : ruta.endsWith('/disponibles')
+          ? disponiblesPrueba
+          : structuredClone(pagina),
+  }));
   publicar.mockResolvedValue({ data: creacionPrueba });
 });
 
@@ -52,23 +79,39 @@ it('sincroniza filtros y KPI con la URL usando hoy del servidor y conserva el ta
   await waitFor(() => expect(screen.getByTestId('url')).toHaveTextContent('fechaHasta=2026-10-17'));
   await waitFor(() => expect(screen.getByRole('button', { name: 'Reintentos: 11' })).toBeEnabled());
   await usuario.click(screen.getByRole('button', { name: 'Reintentos: 11' }));
-  await waitFor(() => expect(screen.getByTestId('url')).toHaveTextContent('tipoIntento=REINTENTOS'));
+  await waitFor(() =>
+    expect(screen.getByTestId('url')).toHaveTextContent('tipoIntento=REINTENTOS'),
+  );
   await usuario.click(screen.getByRole('button', { name: 'Limpiar filtros' }));
   await waitFor(() => expect(screen.getByTestId('url').textContent).toBe('?tamanoPagina=50'));
-  expect(obtener.mock.calls.some(([ruta, opciones]) => ruta.endsWith('/pendientes') && opciones.params.get('idZona') === 'zona-centro')).toBe(true);
+  expect(
+    obtener.mock.calls.some(
+      ([ruta, opciones]) =>
+        ruta.endsWith('/pendientes') && opciones.params.get('idZona') === 'zona-centro',
+    ),
+  ).toBe(true);
 });
 
 it('genera una sola prueba ante doble clic, conserva filtros y refresca la cola tras el resultado', async () => {
   const usuario = userEvent.setup();
   let resolver!: (respuesta: unknown) => void;
-  publicar.mockImplementation(() => new Promise((r) => { resolver = r; }));
+  publicar.mockImplementation(
+    () =>
+      new Promise((r) => {
+        resolver = r;
+      }),
+  );
   montar('/programacion?tipoIntento=REINTENTOS');
   await screen.findByText('TRK-78900');
   await usuario.dblClick(screen.getByRole('button', { name: 'Generar pedido de prueba' }));
   expect(publicar).toHaveBeenCalledTimes(1);
   expect(publicar).toHaveBeenCalledWith('/api/v1/despachos/simulaciones', {});
   await act(async () => resolver({ data: creacionPrueba }));
-  await waitFor(() => expect(notificar).toHaveBeenCalledWith(expect.objectContaining({ tipo: 'exito', mensaje: expect.stringContaining('DSP-SIM-0001') })));
+  await waitFor(() =>
+    expect(notificar).toHaveBeenCalledWith(
+      expect.objectContaining({ tipo: 'exito', mensaje: expect.stringContaining('DSP-SIM-0001') }),
+    ),
+  );
   expect(screen.getByTestId('url')).toHaveTextContent('tipoIntento=REINTENTOS');
   expect(await screen.findByText(/Puede quedar fuera de los filtros/)).toBeVisible();
 });
@@ -87,7 +130,13 @@ it('valida la simulación personalizada y no confunde generar con asignar', asyn
   await usuario.clear(peso);
   await usuario.type(peso, '12.5');
   await usuario.click(modal.getByRole('button', { name: 'Generar' }));
-  await waitFor(() => expect(publicar).toHaveBeenCalledWith('/api/v1/despachos/simulaciones', { pesoKg: 12.5, volumenM3: 0.025, observaciones: '' }));
+  await waitFor(() =>
+    expect(publicar).toHaveBeenCalledWith('/api/v1/despachos/simulaciones', {
+      pesoKg: 12.5,
+      volumenM3: 0.025,
+      observaciones: '',
+    }),
+  );
   await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
 });
 
@@ -97,25 +146,60 @@ it('prioriza la zona, bloquea las tres dimensiones y confirma con las identidade
   await screen.findByText('TRK-78900');
   await usuario.click(screen.getAllByRole('button', { name: 'Asignar' })[0]);
   await screen.findByRole('radio', { name: 'Juan de la zona' });
-  for (const nombre of ['Pedro sin peso', 'María sin volumen', 'Luis sin paquetes']) expect(screen.getByRole('radio', { name: nombre })).toBeDisabled();
-  expect(within(screen.getByRole('radio', { name: 'Pedro sin peso' })).getByRole('progressbar', { name: 'Peso' }))
-    .toHaveAttribute('aria-valuetext', expect.stringContaining('Excede en 11 kg'));
-  expect(within(screen.getByRole('radiogroup', { name: 'Repartidor' })).getAllByRole('radio').at(-1)).toHaveAccessibleName('Ana de otra zona');
+  for (const nombre of ['Pedro sin peso', 'María sin volumen', 'Luis sin paquetes'])
+    expect(screen.getByRole('radio', { name: nombre })).toBeDisabled();
+  expect(
+    within(screen.getByRole('radio', { name: 'Pedro sin peso' })).getByRole('progressbar', {
+      name: 'Peso',
+    }),
+  ).toHaveAttribute('aria-valuetext', expect.stringContaining('Excede en 11 kg'));
+  expect(
+    within(screen.getByRole('radiogroup', { name: 'Repartidor' }))
+      .getAllByRole('radio')
+      .at(-1),
+  ).toHaveAccessibleName('Ana de otra zona');
   expect(screen.getAllByRole('progressbar')).toHaveLength(15);
   await usuario.click(screen.getByRole('radio', { name: 'Juan de la zona' }));
-  expect(within(screen.getByRole('radio', { name: 'Juan de la zona' })).getByRole('progressbar', { name: 'Peso' }))
-    .toHaveAttribute('aria-valuetext', expect.stringContaining('Proyección: 112 / 200 kg'));
-  await usuario.type(screen.getByRole('textbox', { name: 'Observaciones o instrucciones de entrega' }), 'Prioridad');
+  expect(
+    within(screen.getByRole('radio', { name: 'Juan de la zona' })).getByRole('progressbar', {
+      name: 'Peso',
+    }),
+  ).toHaveAttribute('aria-valuetext', expect.stringContaining('Proyección: 112 / 200 kg'));
+  await usuario.type(
+    screen.getByRole('textbox', { name: 'Observaciones o instrucciones de entrega' }),
+    'Prioridad',
+  );
   let resolver!: (respuesta: unknown) => void;
-  publicar.mockImplementation(() => new Promise((r) => { resolver = r; }));
+  publicar.mockImplementation(
+    () =>
+      new Promise((r) => {
+        resolver = r;
+      }),
+  );
   await usuario.dblClick(screen.getByRole('button', { name: 'Confirmar asignación' }));
   expect(publicar).toHaveBeenCalledTimes(1);
-  expect(publicar).toHaveBeenCalledWith('/api/v1/despachos/despacho-0/asignacion', { idRepartidor: 'rep-centro', idJornada: 'jor-1', observacion: 'Prioridad' });
+  expect(publicar).toHaveBeenCalledWith('/api/v1/despachos/despacho-0/asignacion', {
+    idRepartidor: 'rep-centro',
+    idJornada: 'jor-1',
+    observacion: 'Prioridad',
+  });
   pagina.contenido = pagina.contenido.slice(1);
-  await act(async () => resolver({ data: { idDespacho: 'despacho-0', estado: 'ASIGNADO', idRepartidor: 'rep-centro', idJornada: 'jor-1', posicionSecuencia: 4 } }));
+  await act(async () =>
+    resolver({
+      data: {
+        idDespacho: 'despacho-0',
+        estado: 'ASIGNADO',
+        idRepartidor: 'rep-centro',
+        idJornada: 'jor-1',
+        posicionSecuencia: 4,
+      },
+    }),
+  );
   await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
   await waitFor(() => expect(screen.queryByText('TRK-78900')).not.toBeInTheDocument());
-  expect(notificar).toHaveBeenCalledWith(expect.objectContaining({ mensaje: expect.stringContaining('Parada #4') }));
+  expect(notificar).toHaveBeenCalledWith(
+    expect.objectContaining({ mensaje: expect.stringContaining('Parada #4') }),
+  );
 });
 
 it('un conflicto requiere actualizar la cola y no reenvía automáticamente la asignación', async () => {
@@ -137,14 +221,18 @@ it('retira filas, filtros, indicadores y modal si disponibilidad revoca el permi
   const usuario = userEvent.setup();
   montar();
   await screen.findByText('TRK-78900');
-  obtener.mockImplementation((ruta: string) => ruta.endsWith('/disponibles') ? Promise.reject(fallo(403)) : Promise.resolve({ data: pagina }));
+  obtener.mockImplementation((ruta: string) =>
+    ruta.endsWith('/disponibles') ? Promise.reject(fallo(403)) : Promise.resolve({ data: pagina }),
+  );
   await usuario.click(screen.getAllByRole('button', { name: 'Asignar' })[0]);
   await screen.findByText('No tienes permisos para ver esta información');
   expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   expect(screen.queryByText('TRK-78900')).not.toBeInTheDocument();
   expect(screen.queryByRole('combobox', { name: 'Zona' })).not.toBeInTheDocument();
   expect(screen.queryByRole('button', { name: 'Pendientes para hoy: 32' })).not.toBeInTheDocument();
-  expect(screen.queryByRole('button', { name: 'Generar pedido de prueba' })).not.toBeInTheDocument();
+  expect(
+    screen.queryByRole('button', { name: 'Generar pedido de prueba' }),
+  ).not.toBeInTheDocument();
 });
 
 it('reconsulta capacidad tras un rechazo y exige una selección nueva sin repetir el POST', async () => {
@@ -159,9 +247,17 @@ it('reconsulta capacidad tras un rechazo y exige una selección nueva sin repeti
   candidato.capacidadRemanente.paquetes = 0;
   candidato.ocupacion.paquetes = candidato.limites.paquetes;
   candidato.porcentajeOcupacion.paquetes = 100;
-  obtener.mockImplementation(async (ruta: string) => ({ data: ruta.endsWith('/disponibles') ? nuevaCapacidad : ruta === '/api/v1/zonas' ? zonasPrueba : pagina }));
+  obtener.mockImplementation(async (ruta: string) => ({
+    data: ruta.endsWith('/disponibles')
+      ? nuevaCapacidad
+      : ruta === '/api/v1/zonas'
+        ? zonasPrueba
+        : pagina,
+  }));
   await usuario.click(screen.getByRole('button', { name: 'Confirmar asignación' }));
-  await waitFor(() => expect(screen.getByRole('radio', { name: 'Juan de la zona' })).toBeDisabled());
+  await waitFor(() =>
+    expect(screen.getByRole('radio', { name: 'Juan de la zona' })).toBeDisabled(),
+  );
   expect(screen.getByRole('button', { name: 'Confirmar asignación' })).toBeDisabled();
   expect(publicar).toHaveBeenCalledTimes(1);
 });
@@ -175,17 +271,32 @@ it('busca por la placa publicada y proyecta ocupación solo en el candidato sele
   await usuario.type(screen.getByRole('textbox', { name: 'Buscar repartidor' }), 'F02-002');
   const tarjeta = screen.getByRole('radio', { name: 'Juan de la zona' });
   expect(within(screen.getByRole('dialog')).getAllByRole('radio')).toHaveLength(1);
-  expect(within(tarjeta).getByRole('progressbar', { name: 'Peso' })).toHaveAttribute('aria-valuenow', '50');
-  expect(within(tarjeta).getByRole('progressbar', { name: 'Peso' })).not.toHaveAttribute('aria-valuetext', expect.stringContaining('Proyección'));
+  expect(within(tarjeta).getByRole('progressbar', { name: 'Peso' })).toHaveAttribute(
+    'aria-valuenow',
+    '50',
+  );
+  expect(within(tarjeta).getByRole('progressbar', { name: 'Peso' })).not.toHaveAttribute(
+    'aria-valuetext',
+    expect.stringContaining('Proyección'),
+  );
   await usuario.click(tarjeta);
-  expect(within(tarjeta).getByRole('progressbar', { name: 'Peso' })).toHaveAttribute('aria-valuetext', expect.stringContaining('Proyección: 112 / 200 kg'));
+  expect(within(tarjeta).getByRole('progressbar', { name: 'Peso' })).toHaveAttribute(
+    'aria-valuetext',
+    expect.stringContaining('Proyección: 112 / 200 kg'),
+  );
 });
 
 it('no fabrica métricas ni permite asignar si la respuesta omite límites o contiene remanente incoherente', async () => {
   const usuario = userEvent.setup();
   const invalida = structuredClone(disponiblesPrueba);
   invalida.repartidores[0].capacidadRemanente.pesoKg = 999;
-  obtener.mockImplementation(async (ruta: string) => ({ data: ruta.endsWith('/disponibles') ? invalida : ruta === '/api/v1/zonas' ? zonasPrueba : pagina }));
+  obtener.mockImplementation(async (ruta: string) => ({
+    data: ruta.endsWith('/disponibles')
+      ? invalida
+      : ruta === '/api/v1/zonas'
+        ? zonasPrueba
+        : pagina,
+  }));
   montar();
   await screen.findByText('TRK-78900');
   await usuario.click(screen.getAllByRole('button', { name: 'Asignar' })[0]);
@@ -200,7 +311,13 @@ it('ignora respuestas viejas cuando cambian filtros aunque HTTP ignore la cancel
   let resolver!: (respuesta: unknown) => void;
   montar();
   await screen.findByText('TRK-78900');
-  obtener.mockImplementation((ruta: string) => ruta === '/api/v1/zonas' ? Promise.resolve({ data: zonasPrueba }) : new Promise((r) => { resolver = r; }));
+  obtener.mockImplementation((ruta: string) =>
+    ruta === '/api/v1/zonas'
+      ? Promise.resolve({ data: zonasPrueba })
+      : new Promise((r) => {
+          resolver = r;
+        }),
+  );
   await usuario.click(screen.getByRole('button', { name: 'Actualizar' }));
   await waitFor(() => expect(resolver).toBeDefined());
   obtener.mockResolvedValue({ data: pagina });
@@ -214,7 +331,9 @@ it('ignora respuestas viejas cuando cambian filtros aunque HTTP ignore la cancel
 
 it('distingue falta de coincidencias, vacío y error y rechaza URL inválida antes de consultar', async () => {
   const usuario = userEvent.setup();
-  pagina.contenido = []; pagina.totalElementos = 0; pagina.totalPaginas = 0;
+  pagina.contenido = [];
+  pagina.totalElementos = 0;
+  pagina.totalPaginas = 0;
   montar('/programacion?pagina=0');
   expect(await screen.findByText('Revisa los filtros de la URL')).toBeVisible();
   expect(obtener.mock.calls.some(([ruta]) => ruta.endsWith('/pendientes'))).toBe(false);
@@ -237,14 +356,21 @@ it('no duplica una simulación con respuesta perdida y exige consultar antes de 
   await screen.findByText('No se pudo confirmar la generación');
   expect(screen.getByRole('button', { name: 'Generar pedido de prueba' })).toBeDisabled();
   await usuario.click(screen.getByRole('button', { name: 'Consultar cola' }));
-  await waitFor(() => expect(screen.getByRole('button', { name: 'Generar pedido de prueba' })).toBeEnabled());
+  await waitFor(() =>
+    expect(screen.getByRole('button', { name: 'Generar pedido de prueba' })).toBeEnabled(),
+  );
   expect(publicar).toHaveBeenCalledTimes(1);
 });
 
 it('descarta una mutación de la sesión anterior y sus notificaciones', async () => {
   const usuario = userEvent.setup();
   let resolver!: (respuesta: unknown) => void;
-  publicar.mockImplementation(() => new Promise((r) => { resolver = r; }));
+  publicar.mockImplementation(
+    () =>
+      new Promise((r) => {
+        resolver = r;
+      }),
+  );
   montar();
   await screen.findByText('TRK-78900');
   await usuario.click(screen.getByRole('button', { name: 'Generar pedido de prueba' }));
@@ -255,6 +381,16 @@ it('descarta una mutación de la sesión anterior y sus notificaciones', async (
 });
 
 it('rechaza fechas imposibles, repetidos y parámetros fuera del contrato', () => {
-  for (const consulta of ['fechaDesde=2026-02-31', 'fechaDesde=2026-10-19&fechaHasta=2026-10-17', 'idZona=A&idZona=B', 'tamanoPagina=101', 'pagina=2147483648', 'orden=fecha', 'tipoIntento=OTRO'])
-    expect(Object.keys(leerFiltros(new URLSearchParams(consulta)).errores).length).toBeGreaterThan(0);
+  for (const consulta of [
+    'fechaDesde=2026-02-31',
+    'fechaDesde=2026-10-19&fechaHasta=2026-10-17',
+    'idZona=A&idZona=B',
+    'tamanoPagina=101',
+    'pagina=2147483648',
+    'orden=fecha',
+    'tipoIntento=OTRO',
+  ])
+    expect(Object.keys(leerFiltros(new URLSearchParams(consulta)).errores).length).toBeGreaterThan(
+      0,
+    );
 });

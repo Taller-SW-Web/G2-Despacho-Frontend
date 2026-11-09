@@ -13,25 +13,62 @@ import { probarCotizacion } from './desarrollo/apiPruebas';
 import type { Zona } from './tipos';
 import type { ClienteApi } from '../../cliente/useClienteApi';
 
-const { cliente, notificar } = vi.hoisted(() => ({ cliente: { get: vi.fn(), post: vi.fn(), put: vi.fn(), patch: vi.fn() }, notificar: vi.fn() }));
+const { cliente, notificar } = vi.hoisted(() => ({
+  cliente: { get: vi.fn(), post: vi.fn(), put: vi.fn(), patch: vi.fn() },
+  notificar: vi.fn(),
+}));
 vi.mock('../../cliente/useClienteApi', () => ({ useClienteApi: () => cliente }));
 vi.mock('@mantine/notifications', () => ({ notifications: { show: notificar } }));
 Element.prototype.scrollIntoView = vi.fn();
 
 const zona: Zona = {
-  id: 'zona-1', nombre: 'Zona Norte', estado: 'ACTIVO', origenDelimitacion: 'DISTRITOS',
-  distritos: [{ id: 'd1', nombre: 'Comas', codigosPostales: ['15311'] }, { id: 'd2', nombre: 'Ancón', codigosPostales: [] }],
-  tarifaVigente: null, creadoEn: '2026-10-16T15:00:00Z', actualizadoEn: '2026-10-16T15:00:00Z',
+  id: 'zona-1',
+  nombre: 'Zona Norte',
+  estado: 'ACTIVO',
+  origenDelimitacion: 'DISTRITOS',
+  distritos: [
+    { id: 'd1', nombre: 'Comas', codigosPostales: ['15311'] },
+    { id: 'd2', nombre: 'Ancón', codigosPostales: [] },
+  ],
+  tarifaVigente: null,
+  creadoEn: '2026-10-16T15:00:00Z',
+  actualizadoEn: '2026-10-16T15:00:00Z',
 };
-const catalogo = zona.distritos.map(({ id, nombre }) => ({ id, nombre, provincia: 'Lima', departamento: 'Lima', ubigeo: id }));
-const pagina = { contenido: [zona], pagina: 1, tamanoPagina: 20, totalElementos: 1, totalPaginas: 1 };
-const fallo = (status: number, code = '', detail = '') => ({ isAxiosError: true, response: { status, data: { status, code, detail } } });
+const catalogo = zona.distritos.map(({ id, nombre }) => ({
+  id,
+  nombre,
+  provincia: 'Lima',
+  departamento: 'Lima',
+  ubigeo: id,
+}));
+const pagina = {
+  contenido: [zona],
+  pagina: 1,
+  tamanoPagina: 20,
+  totalElementos: 1,
+  totalPaginas: 1,
+};
+const fallo = (status: number, code = '', detail = '') => ({
+  isAxiosError: true,
+  response: { status, data: { status, code, detail } },
+});
 
 function montar(ruta: string) {
-  return render(<MantineProvider theme={tema}><MemoryRouter initialEntries={[ruta]} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-    <Routes><Route path="/zonas" element={<PaginaZonas />} /><Route path="/zonas/nueva" element={<FormularioZona />} />
-      <Route path="/zonas/:id/editar" element={<FormularioZona />} /><Route path="/zonas/:id/tarifas" element={<PanelTarifa />} /></Routes>
-  </MemoryRouter></MantineProvider>);
+  return render(
+    <MantineProvider theme={tema}>
+      <MemoryRouter
+        initialEntries={[ruta]}
+        future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
+      >
+        <Routes>
+          <Route path="/zonas" element={<PaginaZonas />} />
+          <Route path="/zonas/nueva" element={<FormularioZona />} />
+          <Route path="/zonas/:id/editar" element={<FormularioZona />} />
+          <Route path="/zonas/:id/tarifas" element={<PanelTarifa />} />
+        </Routes>
+      </MemoryRouter>
+    </MantineProvider>,
+  );
 }
 beforeEach(() => {
   vi.resetAllMocks();
@@ -53,7 +90,11 @@ it('muestra el listado con CP agrupados y exige confirmar la desactivación', as
   await usuario.click(screen.getByRole('button', { name: 'Desactivar Zona Norte' }));
   expect(cliente.patch).not.toHaveBeenCalled();
   await usuario.click(screen.getByRole('button', { name: 'Desactivar zona' }));
-  await waitFor(() => expect(cliente.patch).toHaveBeenCalledWith('/api/v1/zonas/zona-1/estado', { estado: 'INACTIVO' }));
+  await waitFor(() =>
+    expect(cliente.patch).toHaveBeenCalledWith('/api/v1/zonas/zona-1/estado', {
+      estado: 'INACTIVO',
+    }),
+  );
 });
 
 it('crea con distritos del catálogo y códigos anidados sin lista global', async () => {
@@ -67,26 +108,40 @@ it('crea con distritos del catálogo y códigos anidados sin lista global', asyn
   const codigos = screen.getByRole('combobox', { name: 'Códigos postales de Comas' });
   await usuario.type(codigos, '15312{Enter}');
   await usuario.click(screen.getByRole('button', { name: 'Guardar zona' }));
-  await waitFor(() => expect(cliente.post).toHaveBeenCalledWith('/api/v1/zonas', {
-    nombre: 'Zona de prueba', estado: 'ACTIVO', distritos: [{ distrito: 'Comas', codigosPostales: ['15312'] }],
-  }));
+  await waitFor(() =>
+    expect(cliente.post).toHaveBeenCalledWith('/api/v1/zonas', {
+      nombre: 'Zona de prueba',
+      estado: 'ACTIVO',
+      distritos: [{ distrito: 'Comas', codigosPostales: ['15312'] }],
+    }),
+  );
 });
 
 it('precarga y conserva los códigos de cada distrito al editar; un conflicto no borra los cambios', async () => {
   const usuario = userEvent.setup();
-  cliente.put.mockRejectedValue(fallo(409, 'DESP_ERROR_ZONA_CONFLICTO', 'La cobertura se solapa con otra zona activa'));
+  cliente.put.mockRejectedValue(
+    fallo(409, 'DESP_ERROR_ZONA_CONFLICTO', 'La cobertura se solapa con otra zona activa'),
+  );
   montar('/zonas/zona-1/editar');
   const nombre = await screen.findByRole('textbox', { name: 'Nombre de la zona' });
   expect(nombre).toHaveValue('Zona Norte');
   await usuario.clear(nombre);
   await usuario.type(nombre, 'Zona editada');
-  await usuario.type(screen.getByRole('combobox', { name: 'Códigos postales de Ancón' }), '15123{Enter}');
+  await usuario.type(
+    screen.getByRole('combobox', { name: 'Códigos postales de Ancón' }),
+    '15123{Enter}',
+  );
   await usuario.click(screen.getByRole('button', { name: 'Guardar zona' }));
   expect(await screen.findByText('La cobertura se solapa con otra zona activa')).toBeVisible();
   expect(nombre).toHaveValue('Zona editada');
-  expect(cliente.put).toHaveBeenCalledWith('/api/v1/zonas/zona-1', { nombre: 'Zona editada', estado: 'ACTIVO', distritos: [
-    { distrito: 'Comas', codigosPostales: ['15311'] }, { distrito: 'Ancón', codigosPostales: ['15123'] },
-  ] });
+  expect(cliente.put).toHaveBeenCalledWith('/api/v1/zonas/zona-1', {
+    nombre: 'Zona editada',
+    estado: 'ACTIVO',
+    distritos: [
+      { distrito: 'Comas', codigosPostales: ['15311'] },
+      { distrito: 'Ancón', codigosPostales: ['15123'] },
+    ],
+  });
 });
 
 it('un 404 de zona no permite editar un formulario vacío', async () => {
@@ -119,7 +174,12 @@ it('ignora una respuesta antigua cuando cambia el filtro, incluso sin cancelaci�
   let primera = true;
   cliente.get.mockImplementation(async (ruta: string) => {
     if (ruta === '/api/v1/distritos') return { data: catalogo };
-    if (primera) { primera = false; return new Promise((resolver) => { resolverAnterior = resolver; }); }
+    if (primera) {
+      primera = false;
+      return new Promise((resolver) => {
+        resolverAnterior = resolver;
+      });
+    }
     return { data: { ...pagina, contenido: [{ ...zona, nombre: 'Resultado vigente' }] } };
   });
   montar('/zonas');
@@ -132,16 +192,26 @@ it('ignora una respuesta antigua cuando cambia el filtro, incluso sin cancelaci�
 it('distingue tarifa ausente de zona inexistente', async () => {
   expect(await obtenerTarifaVigente(cliente as unknown as ClienteApi, 'zona-1')).toBeNull();
   cliente.get.mockRejectedValue(fallo(404, 'DESP_ERROR_ZONA_NO_ENCONTRADA'));
-  await expect(obtenerTarifaVigente(cliente as unknown as ClienteApi, 'no-existe')).rejects.toBeTruthy();
+  await expect(
+    obtenerTarifaVigente(cliente as unknown as ClienteApi, 'no-existe'),
+  ).rejects.toBeTruthy();
 });
 
 it('precarga factor nulo y bloquea una tarifa con peso cero', async () => {
   const usuario = userEvent.setup();
   cliente.get.mockImplementation(async (ruta: string) => {
     if (ruta === '/api/v1/distritos') return { data: structuredClone(catalogo) };
-    if (ruta.endsWith('/tarifa')) return { data: {
-      tarifaBase: 10, pesoIncluidoKg: 3, recargoKgAdicional: 2, factorVolumetrico: null, moneda: 'PEN', plazoEstimadoDiasHabiles: 2,
-    } };
+    if (ruta.endsWith('/tarifa'))
+      return {
+        data: {
+          tarifaBase: 10,
+          pesoIncluidoKg: 3,
+          recargoKgAdicional: 2,
+          factorVolumetrico: null,
+          moneda: 'PEN',
+          plazoEstimadoDiasHabiles: 2,
+        },
+      };
     return { data: structuredClone(zona) };
   });
   montar('/zonas/zona-1/tarifas');
@@ -163,14 +233,24 @@ it('la cotización usa su token técnico sin heredar el token humano guardado', 
   const solicitudes: string[] = [];
   axios.default.defaults.adapter = async (configuracion) => {
     solicitudes.push(String(configuracion.headers.Authorization));
-    return { status: 403, statusText: 'Forbidden', data: { status: 403 }, headers: {}, config: configuracion };
+    return {
+      status: 403,
+      statusText: 'Forbidden',
+      data: { status: 403 },
+      headers: {},
+      config: configuracion,
+    };
   };
   try {
-    expect((await probarCotizacion('token-tecnico-de-prueba', { destino: { distrito: 'Comas' } })).status).toBe(403);
+    expect(
+      (await probarCotizacion('token-tecnico-de-prueba', { destino: { distrito: 'Comas' } }))
+        .status,
+    ).toBe(403);
     await probarCotizacion('', {});
     expect(solicitudes).toEqual(['Bearer token-tecnico-de-prueba', 'undefined']);
   } finally {
     axios.default.defaults.adapter = adaptadorAnterior;
-    if (original) localStorage.setItem('despacho.token', original); else localStorage.removeItem('despacho.token');
+    if (original) localStorage.setItem('despacho.token', original);
+    else localStorage.removeItem('despacho.token');
   }
 });

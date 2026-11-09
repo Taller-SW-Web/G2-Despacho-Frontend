@@ -11,13 +11,16 @@ import { etiquetaIntento, formatearHora } from '../utilidades/formato';
 import clases from './PaginaRuta.module.css';
 
 /** Texto del resultado con su hora; los datos personales ya no llegan para estos estados. */
-export function complementoResultado(despacho: Pick<DespachoRuta, 'estado' | 'motivoFallo' | 'hitos'>): string | undefined {
+export function complementoResultado(
+  despacho: Pick<DespachoRuta, 'estado' | 'motivoFallo' | 'hitos'>,
+): string | undefined {
   const hitos = despacho.hitos;
   if (despacho.estado === 'ENTREGADO') {
     const hora = formatearHora(hitos?.entregadoEn);
     return hora ? `Entregado a las ${hora}` : 'Entregado';
   }
-  if (esNoIntentado(despacho.estado, despacho.motivoFallo)) return 'No intentado · devuelve el paquete al centro';
+  if (esNoIntentado(despacho.estado, despacho.motivoFallo))
+    return 'No intentado · devuelve el paquete al centro';
   if (despacho.estado === 'FALLIDO') {
     const hora = formatearHora(hitos?.fallidoEn);
     return `No entregado${hora ? ` a las ${hora}` : ''}, regresa al centro de despacho`;
@@ -38,7 +41,9 @@ export function PaginaRuta() {
 
   // Al volver a la app desde el teléfono o el mapa, la ruta se actualiza sin recargar toda la vista.
   useEffect(() => {
-    const alVolver = () => { if (document.visibilityState === 'visible') recargar(); };
+    const alVolver = () => {
+      if (document.visibilityState === 'visible') recargar();
+    };
     document.addEventListener('visibilitychange', alVolver);
     return () => document.removeEventListener('visibilitychange', alVolver);
   }, [recargar]);
@@ -53,26 +58,55 @@ export function PaginaRuta() {
       titulo="Mi ruta"
       seccion="ruta"
       estadoOperativo={ruta?.estadoOperativo ?? null}
-      accionEncabezado={<ActionIcon variant="subtle" color="gray.0" aria-label="Actualizar ruta" onClick={recargar} size="xl">
-        <IconRefresh size={22} aria-hidden="true" />
-      </ActionIcon>}
-      franja={ruta?.idJornada && total > 0 ? (
-        <Box className={clases.progreso} role="status" aria-live="polite">
-          <Text fw={700} size="md" className="ia-num">{resueltos} de {total} despachos resueltos</Text>
-          <Progress value={(resueltos / total) * 100} color="orange" size="md" radius="xl" aria-hidden="true" mt="xs" />
-        </Box>
-      ) : undefined}
+      accionEncabezado={
+        <ActionIcon
+          variant="subtle"
+          color="gray.0"
+          aria-label="Actualizar ruta"
+          onClick={recargar}
+          size="xl"
+        >
+          <IconRefresh size={22} aria-hidden="true" />
+        </ActionIcon>
+      }
+      franja={
+        ruta?.idJornada && total > 0 ? (
+          <Box className={clases.progreso} role="status" aria-live="polite">
+            <Text fw={700} size="md" className="ia-num">
+              {resueltos} de {total} despachos resueltos
+            </Text>
+            <Progress
+              value={(resueltos / total) * 100}
+              color="orange"
+              size="md"
+              radius="xl"
+              aria-hidden="true"
+              mt="xs"
+            />
+          </Box>
+        ) : undefined
+      }
     >
       {consulta.estado === 'cargando' && <CargandoTarjetas />}
-      {consulta.estado === 'error' && <ErrorConsulta error={consulta.error} alReintentar={recargar} />}
+      {consulta.estado === 'error' && (
+        <ErrorConsulta error={consulta.error} alReintentar={recargar} />
+      )}
       {ruta && !ruta.idJornada && (
         <Stack gap="md">
-          <FranjaEstado tipo="fueraDeTurno" mensaje="No tienes una jornada activa para hoy. Consulta tu resumen o comunícate con el Gestor." />
+          <FranjaEstado
+            tipo="fueraDeTurno"
+            mensaje="No tienes una jornada activa para hoy. Consulta tu resumen o comunícate con el Gestor."
+          />
         </Stack>
       )}
       {ruta?.idJornada && total === 0 && (
-        <EstadoVista estado="vacio" titulo="Ruta vacía" descripcion="Todavía no tienes despachos asignados a esta jornada."
-          accion={{ id: 'actualizar', etiqueta: 'Actualizar' }} alAccionar={recargar} />
+        <EstadoVista
+          estado="vacio"
+          titulo="Ruta vacía"
+          descripcion="Todavía no tienes despachos asignados a esta jornada."
+          accion={{ id: 'actualizar', etiqueta: 'Actualizar' }}
+          alAccionar={recargar}
+        />
       )}
       {ruta?.idJornada && total > 0 && (
         <Stack gap="md" component="ol" className={clases.lista} aria-label="Despachos de la ruta">
@@ -82,13 +116,31 @@ export function PaginaRuta() {
                 idDespacho={despacho.idDespacho}
                 codigo={despacho.codigoRastreoInterno}
                 posicion={despacho.secuenciaRuta ?? indice + 1}
-                direccion={despacho.direccion && despacho.distrito ? `${despacho.direccion}, ${despacho.distrito}` : despacho.direccion}
+                direccion={
+                  despacho.direccion && despacho.distrito
+                    ? `${despacho.direccion}, ${despacho.distrito}`
+                    : despacho.direccion
+                }
                 destinatario={despacho.destinatario}
                 estado={despacho.estado}
                 complementoEstado={complementoResultado(despacho)}
-                etiquetaIntento={etiquetaIntento(despacho.numeroIntentos, despacho.maximoIntentos, despacho.estado)}
-                variante={despacho === siguiente ? 'siguiente' : esPendiente(despacho.estado) ? 'normal' : 'resuelto'}
-                alAbrir={(id) => navigate(`/repartidor/despachos/${encodeURIComponent(id)}`, { state: { totalRuta: total } })}
+                etiquetaIntento={etiquetaIntento(
+                  despacho.numeroIntentos,
+                  despacho.maximoIntentos,
+                  despacho.estado,
+                )}
+                variante={
+                  despacho === siguiente
+                    ? 'siguiente'
+                    : esPendiente(despacho.estado)
+                      ? 'normal'
+                      : 'resuelto'
+                }
+                alAbrir={(id) =>
+                  navigate(`/repartidor/despachos/${encodeURIComponent(id)}`, {
+                    state: { totalRuta: total },
+                  })
+                }
               />
             </li>
           ))}

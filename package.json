@@ -4,6 +4,8 @@
   "version": "0.1.0",
   "workspaces": ["apps/*", "packages/*"],
   "scripts": {
+    "format": "prettier --write \"{apps,packages,pruebas}/**/*.{ts,tsx}\" \"playwright.*.config.ts\"",
+    "format:check": "prettier --check \"{apps,packages,pruebas}/**/*.{ts,tsx}\" \"playwright.*.config.ts\"",
     "dev:administrativo": "npm run dev -w @despacho/administrativo",
     "dev:repartidor": "npm run dev -w @despacho/repartidor",
     "build": "npm run build -w @despacho/administrativo && npm run build -w @despacho/repartidor",
@@ -24,6 +26,7 @@
   },
   "engines": { "node": ">=20", "npm": ">=10" },
   "devDependencies": {
-    "@playwright/test": "^1.64.1"
+    "@playwright/test": "^1.64.1",
+    "prettier": "3.9.10"
   }
 }

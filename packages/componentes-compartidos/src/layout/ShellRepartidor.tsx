@@ -49,12 +49,20 @@ export function ShellRepartidor({
       contenedor?.style.setProperty('--shell-altura-pie', '0px');
       return;
     }
-    const medir = () => contenedor.style.setProperty('--shell-altura-pie', `${contenidoPie.getBoundingClientRect().height}px`);
+    const medir = () =>
+      contenedor.style.setProperty(
+        '--shell-altura-pie',
+        `${contenidoPie.getBoundingClientRect().height}px`,
+      );
     medir();
-    const observador = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(medir) : undefined;
+    const observador =
+      typeof ResizeObserver !== 'undefined' ? new ResizeObserver(medir) : undefined;
     observador?.observe(contenidoPie);
     window.addEventListener('resize', medir);
-    return () => { observador?.disconnect(); window.removeEventListener('resize', medir); };
+    return () => {
+      observador?.disconnect();
+      window.removeEventListener('resize', medir);
+    };
   }, [modoPie, tienePie]);
 
   return (
@@ -79,7 +87,9 @@ export function ShellRepartidor({
           </Group>
           <Group gap="xs" wrap="nowrap" className={clases.estado}>
             {/* §16.3: mismo BadgeEstado que en administración; sus fondos claros mantienen text/primary sobre ink. */}
-            {estadoOperativo && <BadgeEstado contexto="operacionRepartidor" valor={estadoOperativo} size="sm" />}
+            {estadoOperativo && (
+              <BadgeEstado contexto="operacionRepartidor" valor={estadoOperativo} size="sm" />
+            )}
             {accionEncabezado}
           </Group>
         </Group>
@@ -111,7 +121,9 @@ export function ShellRepartidor({
                   c={activo ? 'orange.8' : 'var(--ia-color-text-secondary)'}
                 >
                   {destino.icono}
-                  <Text size="sm" fw={activo ? 600 : 500}>{destino.titulo}</Text>
+                  <Text size="sm" fw={activo ? 600 : 500}>
+                    {destino.titulo}
+                  </Text>
                 </UnstyledButton>
               );
             })}
@@ -120,11 +132,7 @@ export function ShellRepartidor({
       )}
 
       {modoPie === 'acciones' && accionesFijas && (
-        <Box
-          component="footer"
-          ref={pie}
-          className={clases.pieAcciones}
-        >
+        <Box component="footer" ref={pie} className={clases.pieAcciones}>
           {accionesFijas}
         </Box>
       )}

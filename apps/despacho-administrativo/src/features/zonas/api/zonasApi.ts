@@ -26,15 +26,21 @@ export function problemaDe(error: unknown): ProblemaZona | null {
   return null;
 }
 
-export async function listarDistritos(cliente: ClienteApi, signal?: AbortSignal): Promise<DistritoCatalogo[]> {
+export async function listarDistritos(
+  cliente: ClienteApi,
+  signal?: AbortSignal,
+): Promise<DistritoCatalogo[]> {
   const { data } = await cliente.get<DistritoCatalogo[]>('/api/v1/distritos', { signal });
   return data;
 }
 
 export function detalleProblema(error: unknown, alternativa: string): string {
   const problema = problemaDe(error);
-  return [problema?.detail, ...(problema?.errores?.map(({ motivo }) => motivo) ?? [])]
-    .filter(Boolean).join('. ') || alternativa;
+  return (
+    [problema?.detail, ...(problema?.errores?.map(({ motivo }) => motivo) ?? [])]
+      .filter(Boolean)
+      .join('. ') || alternativa
+  );
 }
 
 export async function listarZonas(

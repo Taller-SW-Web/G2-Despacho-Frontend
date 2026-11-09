@@ -17,7 +17,9 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     <MantineProvider theme={tema} defaultColorScheme="light">
       <Notifications position="top-center" limit={3} />
       <BrowserRouter>
-        <SesionProveedor><Aplicacion /></SesionProveedor>
+        <SesionProveedor>
+          <Aplicacion />
+        </SesionProveedor>
       </BrowserRouter>
     </MantineProvider>
   </React.StrictMode>,

@@ -1,6 +1,13 @@
 import { lazy, Suspense } from 'react';
 import { Anchor, Box, Loader, Stack, Text, Title } from '@mantine/core';
-import { IconMapPin, IconCalendarTime, IconChartBar, IconPackageOff, IconTruck, IconUsers } from '@tabler/icons-react';
+import {
+  IconMapPin,
+  IconCalendarTime,
+  IconChartBar,
+  IconPackageOff,
+  IconTruck,
+  IconUsers,
+} from '@tabler/icons-react';
 import { Link, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { ShellAdministrativo } from '@despacho/componentes-compartidos';
 import { PaginaEntregasFallidas } from './features/entregas-fallidas/PaginaEntregasFallidas';
@@ -16,27 +23,79 @@ import { PaginaProgramacion } from './features/programacion/PaginaProgramacion';
 import { PaginaJornadas } from './features/jornadas/PaginaJornadas';
 import clases from './Aplicacion.module.css';
 
-const ProbadorF01 = import.meta.env.DEV ? lazy(() => import('./features/zonas/desarrollo/ProbadorF01')) : null;
+const ProbadorF01 = import.meta.env.DEV
+  ? lazy(() => import('./features/zonas/desarrollo/ProbadorF01'))
+  : null;
 
 const secciones = [
-  { ruta: '/programacion', titulo: 'Programación', descripcion: 'Cola de despachos y asignación · F-02', endpoint: 'GET /api/v1/despachos/pendientes', Icono: IconCalendarTime },
-  { ruta: '/jornadas', titulo: 'Monitoreo de flota', descripcion: 'Disponibilidad y capacidad diaria · F-06', endpoint: 'GET /api/v1/flota/monitoreo', Icono: IconChartBar },
-  { ruta: '/entregas-fallidas', titulo: 'Entregas fallidas', descripcion: 'Incidencias y reprogramación · F-04', endpoint: 'GET /api/v1/despachos/fallidos', Icono: IconPackageOff },
-  { ruta: '/repartidores', titulo: 'Repartidores', descripcion: 'Catálogo de repartidores · F-05', endpoint: 'GET /api/v1/repartidores', Icono: IconUsers },
-  { ruta: '/furgonetas', titulo: 'Vehículos', descripcion: 'Catálogo de furgonetas · F-05', endpoint: 'GET /api/v1/furgonetas', Icono: IconTruck },
-  { ruta: '/zonas', titulo: 'Zonas y tarifas', descripcion: 'Gestión de cobertura y tarifas · F-01', endpoint: 'GET /api/v1/zonas', Icono: IconMapPin },
+  {
+    ruta: '/programacion',
+    titulo: 'Programación',
+    descripcion: 'Cola de despachos y asignación · F-02',
+    endpoint: 'GET /api/v1/despachos/pendientes',
+    Icono: IconCalendarTime,
+  },
+  {
+    ruta: '/jornadas',
+    titulo: 'Monitoreo de flota',
+    descripcion: 'Disponibilidad y capacidad diaria · F-06',
+    endpoint: 'GET /api/v1/flota/monitoreo',
+    Icono: IconChartBar,
+  },
+  {
+    ruta: '/entregas-fallidas',
+    titulo: 'Entregas fallidas',
+    descripcion: 'Incidencias y reprogramación · F-04',
+    endpoint: 'GET /api/v1/despachos/fallidos',
+    Icono: IconPackageOff,
+  },
+  {
+    ruta: '/repartidores',
+    titulo: 'Repartidores',
+    descripcion: 'Catálogo de repartidores · F-05',
+    endpoint: 'GET /api/v1/repartidores',
+    Icono: IconUsers,
+  },
+  {
+    ruta: '/furgonetas',
+    titulo: 'Vehículos',
+    descripcion: 'Catálogo de furgonetas · F-05',
+    endpoint: 'GET /api/v1/furgonetas',
+    Icono: IconTruck,
+  },
+  {
+    ruta: '/zonas',
+    titulo: 'Zonas y tarifas',
+    descripcion: 'Gestión de cobertura y tarifas · F-01',
+    endpoint: 'GET /api/v1/zonas',
+    Icono: IconMapPin,
+  },
 ];
 
-function PaginaPendiente({ titulo, descripcion, endpoint }: { titulo: string; descripcion: string; endpoint: string }) {
-  return <Stack gap="md" maw={760}>
-    <Text size="sm" c="dimmed">Módulo de Despacho</Text>
-    <Title order={1}>{titulo}</Title>
-    <Text size="lg">{descripcion}</Text>
-    <Box p="lg" bg="white" style={{ borderRadius: 'var(--mantine-radius-md)' }}>
-      <Text fw={600}>Pantalla lista para implementar</Text>
-      <Text c="dimmed" size="sm">Contrato inicial: {endpoint}</Text>
-    </Box>
-  </Stack>;
+function PaginaPendiente({
+  titulo,
+  descripcion,
+  endpoint,
+}: {
+  titulo: string;
+  descripcion: string;
+  endpoint: string;
+}) {
+  return (
+    <Stack gap="md" maw={760}>
+      <Text size="sm" c="dimmed">
+        Módulo de Despacho
+      </Text>
+      <Title order={1}>{titulo}</Title>
+      <Text size="lg">{descripcion}</Text>
+      <Box p="lg" bg="white" style={{ borderRadius: 'var(--mantine-radius-md)' }}>
+        <Text fw={600}>Pantalla lista para implementar</Text>
+        <Text c="dimmed" size="sm">
+          Contrato inicial: {endpoint}
+        </Text>
+      </Box>
+    </Stack>
+  );
 }
 
 export function Aplicacion() {
@@ -47,31 +106,88 @@ export function Aplicacion() {
   if (ubicacion.pathname === '/acceso') return <PaginaAcceso />;
   const esProbador = import.meta.env.DEV && ubicacion.pathname.startsWith('/desarrollo/');
   if (!sesion.modoDemo && !sesion.sesion && !sesion.obtenerToken() && !esProbador) {
-    return <Navigate to="/acceso" replace state={{ desde: ubicacion.pathname + ubicacion.search }} />;
+    return (
+      <Navigate to="/acceso" replace state={{ desde: ubicacion.pathname + ubicacion.search }} />
+    );
   }
 
-  return <ShellAdministrativo destinos={secciones.map(({ ruta, titulo, Icono }) => ({ id: ruta, ruta, etiqueta: titulo, icono: <Icono size={24} aria-hidden="true" /> }))}
-    usuario={sesion.modoDemo
-      ? { nombre: 'Demostración', etiquetaPerfil: 'Gestor de despacho' }
-      : { nombre: sesion.sesion?.usuario.nombreCompleto ?? 'Sesión de prueba', etiquetaPerfil: 'Gestor de despacho' }} logoUrl="" rutaInicio="/"
-    alCerrarSesion={() => { sesion.guardarToken(null); void sesion.gestor.cerrar(); navegar('/acceso', { replace: true }); }}
-    destinoActivo={secciones.find(({ ruta }) => ubicacion.pathname.startsWith(ruta))?.ruta ?? null} alNavegar={(_, ruta) => navegar(ruta)}>
-      {import.meta.env.DEV && <Box component="aside" className={clases.herramientasDesarrollo} aria-label="Herramientas de desarrollo">
-        <Text size="xs" c="dimmed">Entorno local</Text>
-        <Anchor component={Link} to="/desarrollo/f01" size="xs" c="orange.8">Preparar sesión de prueba</Anchor>
-        <Anchor href="/ejemplos/componentes-compartidos.html" size="xs" c="orange.8">Ver componentes compartidos</Anchor>
-      </Box>}
+  return (
+    <ShellAdministrativo
+      destinos={secciones.map(({ ruta, titulo, Icono }) => ({
+        id: ruta,
+        ruta,
+        etiqueta: titulo,
+        icono: <Icono size={24} aria-hidden="true" />,
+      }))}
+      usuario={
+        sesion.modoDemo
+          ? { nombre: 'Demostración', etiquetaPerfil: 'Gestor de despacho' }
+          : {
+              nombre: sesion.sesion?.usuario.nombreCompleto ?? 'Sesión de prueba',
+              etiquetaPerfil: 'Gestor de despacho',
+            }
+      }
+      logoUrl=""
+      rutaInicio="/"
+      alCerrarSesion={() => {
+        sesion.guardarToken(null);
+        void sesion.gestor.cerrar();
+        navegar('/acceso', { replace: true });
+      }}
+      destinoActivo={
+        secciones.find(({ ruta }) => ubicacion.pathname.startsWith(ruta))?.ruta ?? null
+      }
+      alNavegar={(_, ruta) => navegar(ruta)}
+    >
+      {import.meta.env.DEV && (
+        <Box
+          component="aside"
+          className={clases.herramientasDesarrollo}
+          aria-label="Herramientas de desarrollo"
+        >
+          <Text size="xs" c="dimmed">
+            Entorno local
+          </Text>
+          <Anchor component={Link} to="/desarrollo/f01" size="xs" c="orange.8">
+            Preparar sesión de prueba
+          </Anchor>
+          <Anchor href="/ejemplos/componentes-compartidos.html" size="xs" c="orange.8">
+            Ver componentes compartidos
+          </Anchor>
+        </Box>
+      )}
       <Routes>
-        {ProbadorF01 && <Route path="/desarrollo/f01" element={<Suspense fallback={<Loader />}><ProbadorF01 /></Suspense>} />}
+        {ProbadorF01 && (
+          <Route
+            path="/desarrollo/f01"
+            element={
+              <Suspense fallback={<Loader />}>
+                <ProbadorF01 />
+              </Suspense>
+            }
+          />
+        )}
         <Route path="/" element={<Navigate to="/zonas" replace />} />
         <Route path="/zonas" element={<PaginaZonas />} />
         <Route path="/zonas/nueva" element={<FormularioZona />} />
         <Route path="/zonas/:id/editar" element={<FormularioZona />} />
         <Route path="/zonas/:id/tarifas" element={<PanelTarifa />} />
-        <Route path="/entregas-fallidas" element={<PaginaEntregasFallidas alVerDetalle={(entrega, consulta) => {
-          const parametros = new URLSearchParams({ origen: consulta, incidencia: entrega.idIncidencia });
-          navegar(`/entregas-fallidas/${encodeURIComponent(entrega.idDespacho)}?${parametros}`);
-        }} />} />
+        <Route
+          path="/entregas-fallidas"
+          element={
+            <PaginaEntregasFallidas
+              alVerDetalle={(entrega, consulta) => {
+                const parametros = new URLSearchParams({
+                  origen: consulta,
+                  incidencia: entrega.idIncidencia,
+                });
+                navegar(
+                  `/entregas-fallidas/${encodeURIComponent(entrega.idDespacho)}?${parametros}`,
+                );
+              }}
+            />
+          }
+        />
         <Route path="/entregas-fallidas/:idDespacho" element={<PaginaDetalleIncidencia />} />
         <Route path="/repartidores" element={<PaginaRepartidores />} />
         <Route path="/furgonetas" element={<PaginaFurgonetas />} />
@@ -79,7 +195,17 @@ export function Aplicacion() {
         <Route path="/monitoreo" element={<Navigate to="/jornadas" replace />} />
         <Route path="/flota/*" element={<Navigate to="/repartidores" replace />} />
         <Route path="/programacion" element={<PaginaProgramacion />} />
-        <Route path="*" element={<PaginaPendiente titulo="Página no encontrada" descripcion="La ruta solicitada no existe." endpoint="—" />} />
+        <Route
+          path="*"
+          element={
+            <PaginaPendiente
+              titulo="Página no encontrada"
+              descripcion="La ruta solicitada no existe."
+              endpoint="—"
+            />
+          }
+        />
       </Routes>
-  </ShellAdministrativo>;
+    </ShellAdministrativo>
+  );
 }
