@@ -1,7 +1,7 @@
 {
   "name": "despacho-frontend",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.2.0",
   "workspaces": ["apps/*", "packages/*"],
   "scripts": {
     "format": "prettier --write \"{apps,packages,pruebas}/**/*.{ts,tsx}\" \"playwright.*.config.ts\"",

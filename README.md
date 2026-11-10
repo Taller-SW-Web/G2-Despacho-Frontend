@@ -1,27 +1,12 @@
 # G2 — Frontend de Despacho y Entrega a Domicilio
 
-Monorepositorio con dos aplicaciones React 19.2, TypeScript y Vite, una administrativa y otra para el repartidor. Comparten Mantine 9.6.2, tema, componentes, tipos y cliente HTTP. Las APIs se consumen mediante el Gateway de Despacho.
+Monorepositorio con dos aplicaciones React, TypeScript, Vite y Mantine. Administración gestiona zonas, programación, incidencias y flota. La PWA del repartidor permite consultar la ruta, registrar el resultado de las entregas y cerrar la jornada. Ambas consumen las APIs mediante el Gateway de Despacho.
 
-Esta rama documenta la primera línea base `v0.1.0` de la semana 1: código de `main` en `5384180` (17/10/2026), con documentación raíz preparada el 24/10/2026. El alcance y sus límites están en [CHANGELOG.md](./CHANGELOG.md); las instrucciones para colaborar, en [AGENTS.md](./AGENTS.md). Los avances posteriores de `develop` o de ramas de trabajo se incorporan en una entrega posterior.
+## Arranque local
 
-## Requisitos y servicios
+Requisitos: Node.js 20 o superior, npm 10 o superior y el [Compose del backend](https://github.com/Taller-SW-Web/G2-Despacho-Backend#arranque-local) para usar APIs locales.
 
-- Node.js 20 o superior, npm 10 o superior y Git. Instalar las dependencias desde la raíz para resolver los workspaces.
-- Para usar las pantallas administrativas con datos reales: Gateway y servicios de Gestión/Operación disponibles, JWT con el perfil correspondiente y CORS habilitado para el origen del frontend.
-- El [backend en develop](https://github.com/Taller-SW-Web/G2-Despacho-Backend/blob/develop/README.md) documenta su entorno local, bases y emisor temporal. El frontend no levanta servicios ni migra bases de datos.
-
-| Aplicación o servicio | Dirección local habitual | Uso |
-|---|---|---|
-| Administración | `http://localhost:5173` | Zonas, programación, incidencias, flota y jornadas. |
-| Repartidor | `http://localhost:5174` | Experiencia de prueba F-03 en desarrollo. |
-| Gateway | `http://localhost:8080` | Entrada pública de las APIs bajo `/api/v1`. |
-| Seguridad temporal | `http://127.0.0.1:8090` | Emisión de tokens de prueba mediante el proxy del Vite administrativo. |
-
-La interfaz puede arrancar sin backend; las consultas administrativas requieren sus APIs y mostrarán errores o falta de autorización si no están disponibles. La demo F-03 en desarrollo usa datos en memoria.
-
-## Instalación y configuración
-
-Clonar este repositorio, entrar a `G2-Despacho-Frontend` y ejecutar:
+Desde la raíz del frontend, instalar los paquetes y preparar la configuración de cada aplicación en PowerShell:
 
 ```powershell
 npm ci
@@ -33,270 +18,42 @@ if (-not (Test-Path apps/despacho-repartidor/.env)) {
 }
 ```
 
-Editar cada `.env` según su [plantilla administrativa](./apps/despacho-administrativo/.env.example) o [plantilla del repartidor](./apps/despacho-repartidor/.env.example):
+En terminales separadas, desde la raíz:
 
-| Variable | Valor local | Comportamiento |
+| Aplicación | Comando | Acceso |
 |---|---|---|
-| `VITE_API_BASE_URL` | `http://localhost:8080` | Origen público del Gateway, sin `/api/v1` al final; los adaptadores incluyen ese prefijo. |
-| `VITE_DEMO_SIN_AUTENTICACION` | `false` | El proveedor administrativo omite el token si vale `true`; no crea APIs ni desactiva la autorización del backend. La demo F-03 se selecciona por el modo de desarrollo, independientemente de esta variable. |
-| `VITE_DEV_TOKEN` | Vacío en la plantilla administrativa | JWT humano de prueba opcional, leído solo en desarrollo si no hay sesión guardada ni cierre de sesión. |
+| Administración | `npm run dev:administrativo` | [localhost:5173/acceso](http://localhost:5173/acceso) |
+| Repartidor | `npm run dev:repartidor` | [localhost:5174/repartidor/acceso](http://localhost:5174/repartidor/acceso) |
 
-Las variables `VITE_*` son públicas y se incluyen en el código del navegador. Mantener `.env` fuera de Git; no colocar contraseñas, claves de servicio ni tokens de producción en estas variables. Reiniciar Vite tras modificar la configuración. La URL del Gateway se fija al construir el frontend.
+Las plantillas de [Administración](./apps/despacho-administrativo/.env.example) y [Repartidor](./apps/despacho-repartidor/.env.example) apuntan al Gateway `http://localhost:8080`, usan Seguridad a través del Gateway (`VITE_SEGURIDAD_URL` vacío) y habilitan el buzón OTP local. Ajustar el origen si cambia el puerto del Gateway y reiniciar Vite. Las variables `VITE_*` se exponen al navegador; mantener las credenciales fuera de ellas.
 
-## Arranque y sesión local
+## Acceso, MFA y sesión de ambas apps
 
-En una terminal desde la raíz:
+- **Gestor local:** `gestor@despacho.pe` con clave ficticia `Ruta2026!`. En `/acceso`, solicitar el código MFA y usar el que muestra el buzón simulado. El proxy de Vite usa Seguridad temporal en `127.0.0.1:8090`.
+- **Repartidor local:** `gerardo@despacho.pe` o `kevin@despacho.pe`, con la misma clave ficticia. El gestor debe vincular la cuenta a un perfil activo y abrir una jornada antes de asignarle despachos. Entrega y fallo con foto requieren Storage en Operación.
+- **Herramientas de desarrollo:** `/desarrollo/f01` conserva el probador de cobertura y el generador de sesión temporal. Para recorrer la PWA sin backend, usar `VITE_MODO_DEMO=true` y el usuario de demostración `repartidor.prueba` con la clave ficticia anterior. La demo guarda sus datos en memoria.
 
-```powershell
-npm run dev:administrativo
-```
-
-En otra terminal, si se necesita la aplicación del repartidor:
-
-```powershell
-npm run dev:repartidor
-```
-
-`Ctrl+C` detiene cada servidor. Administración exige el puerto 5173 libre; repartidor solicita 5174 y Vite puede elegir otro si está ocupado. Revisar la dirección que imprime la terminal.
-
-### Administración con APIs locales
-
-1. Iniciar el entorno backend siguiendo su README y comprobar Gateway en 8080 y Seguridad temporal en 8090.
-2. Abrir `http://localhost:5173/desarrollo/f01`, seleccionar **Gestor de Despacho** y pulsar **Generar sesión de prueba**.
-3. Abrir **Zonas y tarifas** o navegar a las otras funcionalidades administrativas. Renovar la sesión desde el probador cuando venza.
-
-Solo el probador de desarrollo conserva su JWT ficticio en `localStorage` con la clave `despacho.token`. El nuevo acceso con correo/contraseña usa memoria y requiere iniciar sesión después de recargar. Para revisar login y MFA usar `/acceso`, según la sección de acceso de ambas apps. El probador anterior permanece como herramienta local; no sustituye la validación real de G7.
-
-El probador `/desarrollo/f01` y su proxy al emisor temporal existen solo en desarrollo, no en preview ni producción. Permiten además probar cobertura/cotización con una identidad técnica de prueba independiente; las pantallas administrativas utilizan la identidad humana.
-
-### Experiencia de prueba del repartidor
-
-En desarrollo, abrir `http://localhost:5174` e ingresar con el usuario ficticio `repartidor.prueba` y la contraseña de demostración `Ruta2026!`. Son valores incluidos en el código de la demo, no cuentas reales de Seguridad.
-
-La experiencia permite recorrer ruta, detalle, traslado, entrega/fallo con evidencia y cierre de jornada mediante estado en memoria. Recargar reinicia los datos; las acciones no se guardan en el backend ni aparecen en Administración. En la construcción de producción se utiliza otra composición: consulta de ruta, detalle y resumen por API; entrega, fallo, carga de evidencia y cierre siguen pendientes de integración real.
-
-## Pantallas incluidas en la línea base
-
-| Funcionalidad | Rutas principales | Alcance y límites de `v0.1.0` |
-|---|---|---|
-| F-01: zonas y tarifas | `/zonas`, `/zonas/nueva`, `/zonas/:id/editar`, `/zonas/:id/tarifas` | Catálogo, creación, edición, estado, distritos/códigos postales y tarifas; cobertura/cotización en el probador de desarrollo. |
-| F-02: programación | `/programacion` | Cola, filtros, indicadores, simulación y asignación; consulta de rutas, reordenamiento seguro y reasignación con recuperación idempotente. No se reordenan huecos históricos hasta aclaración. Integración real pendiente; las mutaciones administrativas pueden persistir en el backend. |
-| F-03: repartidor | `/repartidor/ruta`, `/repartidor/despachos/:id`, `/repartidor/resumen`, `/repartidor/cierre` | Demo en memoria en desarrollo; consultas por API y operaciones aún pendientes en producción, como se detalla arriba. |
-| F-04: entregas fallidas | `/entregas-fallidas`, `/entregas-fallidas/:idDespacho` | Listado, filtros, indicadores, detalle, historial, comunicaciones y visor de evidencia. Formularios de recepción, reprogramación y cierre no integrados en esta línea base. |
-| F-05: repartidores y vehículos | `/repartidores`, `/furgonetas` | Catálogos, formularios, cambios de estado y vinculación de cuenta. `/flota` redirige al catálogo de repartidores. |
-| F-06: jornadas y monitoreo | `/jornadas` | Apertura, cierre, detalle, indicadores y ocupación; `/monitoreo` redirige a esta pantalla. |
-
-Las fotografías reales requieren el servicio de evidencias/Storage de Operación. La existencia de una pantalla o demo no acredita la aceptación conjunta con Seguridad, Ventas, Productos y los servicios de Despacho. Los resultados y pendientes de cada comportamiento se mantienen en Specs.
-
-## Formato del código
-
-TypeScript y TSX usan Prettier con 2 espacios por nivel y un ancho de 100 columnas; la configuración está en `.prettierrc.json` y `.editorconfig`. Desde la raíz:
-
-```powershell
-npm run format        # Aplica el formato
-npm run format:check  # Comprueba el formato sin modificar archivos
-```
+El acceso habitual mantiene la sesión en memoria y pide volver a ingresar al recargar. Para una integración con G7 se deshabilita el buzón temporal con `VITE_SEGURIDAD_LOCAL=false`. Los requisitos del acceso humano se mantienen en el [contrato de integración](https://github.com/Taller-SW-Web/G2-Despacho-Specs/blob/main/integraciones/api-contract.md#86-acceso-humano-de-ambas-aplicaciones).
 
 ## Pruebas y construcción
-
-Desde la raíz, las comprobaciones locales sin servicios reales son:
 
 ```powershell
 npm test
 npm run test:administrativo
+npm run test -w @despacho/repartidor
 npm run typecheck
 npm run build
 ```
 
-| Comando | Alcance |
-|---|---|
-| `npm test` / `npm run test:watch` | Pruebas del paquete de componentes compartidos, una ejecución o modo interactivo. |
-| `npm run test:administrativo` | Toda la suite de la aplicación administrativa. |
-| `npm run test:f01`, `test:f02`, `test:f04`, `test:f05`, `test:f06` | Subconjuntos por funcionalidad; F-04 incluye sesión. |
-| `npm run typecheck` | Tipos del paquete compartido y ambas aplicaciones, incluidas sus pruebas donde están configuradas. |
-| `npm run build` | Comprueba tipos y construye ambas aplicaciones en sus respectivos `dist/`. |
+Las suites unitarias usan datos y APIs simulados. Los recorridos Playwright tienen requisitos distintos; F-01 escribe en las APIs configuradas y F-04 requiere instancias desechables de Gestión. Consultar la [guía de pruebas y despliegue](./docs/pruebas-y-despliegue.md) antes de ejecutarlos.
 
-Las suites Vitest usan Testing Library/JSDOM y APIs simuladas. No comprueban layout real ni autorización de servicios desplegados. La app del repartidor tiene su propia suite: `npm run test -w @despacho/repartidor`; sus tipos y compilación también están incluidos en los comandos generales.
+## Pipeline CI/CD
 
-Las pruebas de navegador disponibles son:
+El [workflow](./.github/workflows/ci.yaml) prueba y construye ambas apps. En `main`, Vercel puede promoverlas a producción con el check `CI frontend verde` cuando Deployment Checks está configurado. El workflow verifica las URLs publicadas. Los pasos para configurar Vercel, CORS y las variables están en la [guía de despliegue](./docs/pruebas-y-despliegue.md#despliegue-en-vercel).
 
-```powershell
-npx playwright install chromium
-npm run test:f02:e2e
-npm run test:f01:e2e
-```
+## Guías y contribuciones
 
-F-02 intercepta las APIs con fixtures y utiliza un servidor exclusivo en `127.0.0.1:4182`. F-01 utiliza el Gateway de `localhost:8080`, el emisor temporal y persistencia real; crea/modifica datos de zonas y tarifas. Antes de ejecutarla, comprobar que los servicios apuntan a un entorno de prueba aislado y autorizado; el script heredado no prepara ni aísla la base por sí mismo. No forma parte de las comprobaciones sin servicios.
-
-Las suites F-02 y flota completan el login y MFA del gestor mediante un doble HTTP de G7 antes de entrar a las pantallas protegidas. Usan credenciales ficticias, con el modo demo y el buzón local desactivados; no requieren Compose ni cuentas de Seguridad. El JWT simulado solo sirve al cliente de pruebas: estas suites no verifican su firma ni la autorización del backend.
-
-Los informes de navegador se generan en `test-results/` según el resultado. Registrar resultados reales en la evidencia correspondiente, diferenciando datos simulados, pruebas con persistencia e integración conjunta.
-
-### Integración continua y protección de develop
-
-El workflow [CI/CD frontend](.github/workflows/ci.yaml) se ejecuta en cada PR dirigido a `develop` o `main`, en los push a esas ramas y manualmente desde Actions. Usa Node.js 22 y `npm ci` con el lockfile raíz. Ejecuta por separado las suites completas de componentes, administrativo y repartidor, la comprobación de tipos y compilación de ambas aplicaciones, y las pruebas de navegador F-02 y F-05/F-06 con Chromium y APIs simuladas. Conserva capturas y resultados de navegador durante siete días. Las etapas de construcción, compuerta y despliegue se describen en [Pipeline CI/CD](#pipeline-cicd); el pipeline no necesita secretos.
-
-Para impedir que se integre un PR con fallos, un administrador debe configurar en GitHub una protección o ruleset para `develop`: exigir PR, activar **Require status checks to pass before merging** y **Require branches to be up to date before merging**, y seleccionar la compuerta `CI frontend verde` tras su primera ejecución (resume las comprobaciones y las construcciones y no depende de los nombres de la matriz). Si se prefiere exigirlas por separado:
-
-- `Frontend (componentes)`
-- `Frontend (administrativo)`
-- `Frontend (repartidor)`
-- `Frontend (tipos-y-compilacion)`
-- `Frontend (e2e-f02)`
-- `Frontend (e2e-flota)`
-
-Aplicar los requisitos también a administradores y evitar excepciones de bypass si se quiere exigirlos a todo el equipo. La misma configuración puede aplicarse a `main` para la promoción de entregas. Añadir el YAML no configura por sí solo la protección remota. Consultar la [documentación de GitHub sobre ramas protegidas](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/about-protected-branches).
-
-### Pipeline CI/CD
-
-```
-PR / push a develop o main
-  1. Instalar y probar   componentes · administrativo · repartidor · tipos-y-compilacion · e2e-f02 · e2e-flota
-  2. Construir           Construir (administrativo | repartidor)  ->  artefactos dist-*
-  3. Compuerta           CI frontend verde
-  4. Desplegar           Vercel construye cada push a main y lo promueve a producción solo si pasa la compuerta
-  5. Verificar           ambas URLs responden 200 y entregan la SPA (raíz y ruta profunda)
-```
-
-- **Construir:** compila cada aplicación con `VITE_API_BASE_URL` (variable del repositorio, o el Gateway publicado si no existe), comprueba que `dist/index.html` existe y contiene el contenedor raíz, y conserva `dist/` 14 días como artefacto `dist-administrativo` y `dist-repartidor`.
-- **Compuerta:** `CI frontend verde` falla si cualquier etapa anterior no terminó en `success`; el despliegue depende solo de ella.
-- **Desplegar:** lo hace Vercel con su integración de Git, gobernado por **Deployment Checks**. Vercel construye cada push a `main`, pero no lo asigna al dominio de producción hasta que el check `CI frontend verde` de este workflow termina en verde. Si falla, producción conserva la versión anterior; solo se publicaría con *Force Promote* manual desde Vercel. Los previews de PR no cambian.
-- **Verificar:** en `main`, tras la compuerta, el job `Verificar producción (Vercel)` consulta la raíz y una ruta profunda de cada aplicación hasta obtener `200` con `id="root"` (la ruta profunda comprueba la reescritura SPA de `vercel.json`), con reintentos de hasta unos 10 minutos. Acredita que la aplicación está publicada y sirve la SPA; no identifica la versión desplegada.
-
-#### Despliegue continuo: configuración necesaria
-
-1. En **cada** proyecto de Vercel (administrativo y repartidor): Settings > Build and Deployment > **Deployment Checks** > *Add Checks* > **GitHub** > seleccionar `CI frontend verde`. El check aparece en la lista solo después de que el workflow haya corrido al menos una vez. Vercel identifica los checks por el nombre del job: no elegir los de la matriz uno por uno, y actualizar la regla si se renombra la compuerta.
-2. Mantener activo el despliegue automático de Vercel para `main` y la asignación automática del dominio de producción: Deployment Checks retiene la promoción, no la construcción.
-3. En GitHub (Settings > Secrets and variables > Actions > Variables), crear:
-
-| Variable | Valor |
-|---|---|
-| `URL_ADMINISTRATIVO` | URL pública de producción, por ejemplo `https://<proyecto>.vercel.app` |
-| `URL_REPARTIDOR` | URL pública de producción de la app del repartidor |
-| `VITE_API_BASE_URL` (opcional) | Origen del Gateway para el build del CI; por defecto `https://taller-api-gateway.onrender.com` |
-
-Mientras falten las variables `URL_*`, el job de verificación falla en `main` indicando cuál falta. No se necesitan secretos: el CI no despliega ni guarda credenciales de Vercel.
-
-F-01 E2E y F-04 E2E (reprogramación y cierre) quedan fuera de este workflow: necesitan preparar los servicios, identidades y bases desechables descritos arriba y en el README del backend. Por tanto, este CI no acredita todos los recorridos con servicios reales. No ejecutar esas suites contra bases compartidas ni sustituir sus resultados por las pruebas con APIs simuladas.
-
-### Verificación de F-05 y F-06
-
-Los catálogos `/repartidores`, `/furgonetas` y el tablero `/jornadas` invalidan consultas, datos, selecciones y formularios al cambiar/cerrar la sesión de prueba o cambiar su almacenamiento en otra pestaña. Las respuestas y notificaciones tardías de la identidad anterior se descartan. Esto funciona con el proveedor de sesión actual; no supone una integración ya realizada con Seguridad.
-
-`npm run test:f05` y `npm run test:f06` comprueban reglas de presentación, transporte, paginación, errores, recuperación e aislamiento de sesión con APIs simuladas. Para el recorrido en navegador ejecutar:
-
-```powershell
-npx playwright install chromium
-npm run test:flota:e2e
-```
-
-La suite abre un Vite exclusivo en `127.0.0.1:4186` y comprueba seis recorridos a 1440 y 390 px: alta/edición/vinculación manual/baja de repartidor; alta/edición/mantenimiento/rehabilitación de furgoneta; apertura/detalle/cierre de jornada y cambio de sesión entre pestañas. Conserva capturas en `test-results/flota/` y trazas solo ante fallo. Todas sus APIs están interceptadas; no usa cuentas reales, no crea datos en el backend y no acredita autorización ni persistencia reales. La comprobación `Frontend (e2e-flota)` la ejecuta también en CI.
-
-Para probar con servicios reales locales, iniciar el Compose desde la raíz del backend y preparar la sesión de gestor en `/desarrollo/f01` durante desarrollo. La vinculación del repartidor sigue siendo manual con el UUID del emisor temporal. La suite backend de Operación usa PostgreSQL desechable y valida reservas, cierres, auditoría y concurrencia; el recorrido con Seguridad real y la aceptación humana permanecen pendientes.
-
-## Detalle de incidencias de F-04
-
-Desde `Ver detalle` en entregas fallidas se abre `/entregas-fallidas/:idDespacho`, conservando filtros, página y tamaño en la URL para regresar. La vista presenta la última incidencia, su recepción, historial completo, comunicaciones y decisiones permitidas por Gestión. Consulta de nuevo cada 30 segundos mientras está activa, bloquea las decisiones al actualizar o fallar y descarta respuestas de otro recurso.
-
-La fotografía se solicita por separado a Operación y se presenta en el visor compartido. Al vencer, cerrar, cambiar de incidencia o perder autorización se retiran la imagen y la URL temporal. La recepción (ES-F04-03) está integrada desde el listado y el detalle. Su modal consulta el contexto vigente, registra sello y observación, controla concurrencia y recupera resultados desconocidos. La reprogramación (ES-F04-04) se abre desde el detalle, valida una fecha futura en Lima y observación opcional, recupera la solicitud original ante respuesta perdida y vuelve al listado conservando la consulta. El cierre ES-F04-05 se abre desde el detalle con motivo obligatorio de texto libre y observación opcional; conserva el contexto, consulta antes de recuperar una respuesta perdida y vuelve al listado con sus filtros. Las decisiones quedan bloqueadas mientras haya una solicitud de resultado desconocido. La [guía de recepción y verificación](./docs/ES-F04-03-ConfirmarRecepcionPaquete.md) conserva su alcance propio.
-
-`npm run test:f04` cubre interacción y transporte con fixtures. `npm run test:f04:e2e` recorre reprogramación con Gestión y PostgreSQL desechables; primero iniciar el [arranque de pruebas del backend](../G2-Despacho-Backend/README.md#pruebas-y-contratos). Usa Chromium de Playwright; para usar Edge instalado, establecer `$env:PLAYWRIGHT_F04_CHANNEL = 'msedge'` en PowerShell. El proxy `4184 → 18085` y la identidad sintética son exclusivos de pruebas. Los resultados, capturas y dependencias reales pendientes están en la [evidencia SDD de ES-F04-04](../G2-Despacho-Specs/especificaciones/ES-F04-04-ReprogramarDespachoFallido/evidence.md).
-
-`npm run test:f04:cierre:e2e` verifica ES-F04-05 en navegador contra `CierreNavegadorPruebas` de Gestión, con PostgreSQL desechable (backend en 18086 y proxy de pruebas en 4185). Primero iniciar ese arranque siguiendo el README del backend. Puede usarse `PLAYWRIGHT_F04_CHANNEL=msedge` con Edge instalado. Comprueba recuperación exacta tras perder la respuesta, filtros, teclado/foco, móvil y reflujo equivalente al 200 %. Las capturas y límites se conservan en [la evidencia SDD de cierre](../G2-Despacho-Specs/especificaciones/ES-F04-05-CerrarDespachoComoDevueltoAOrigen/evidence.md).
-
-Las pruebas del detalle utilizan fixtures y APIs simuladas; ejecutar `npm run test -w @despacho/administrativo -- src/features/entregas-fallidas/PaginaDetalleIncidencia.test.tsx`. `npm run test:f04` incluye también la regresión del listado y la sesión. La integración con servicios reales, teclado del visor y revisión visual en móvil siguen registradas en la [evidencia SDD](../G2-Despacho-Specs/especificaciones/ES-F04-02-ConsultarDetalleIncidencia/evidence.md).
-
-## App del repartidor (F-03)
-
-`apps/despacho-repartidor` es una PWA instalable en Android que implementa las
-12 pantallas del Figma de F-03: acceso, mi ruta, detalle, inicio de traslado,
-entrega y fallo con foto, fallo registrado, cierre de jornada y resumen. Consume
-el contrato de Operación §3 y el acceso humano de Seguridad (contrato externo §8.6).
-
-- **Variables:** `VITE_API_BASE_URL` (Gateway), `VITE_SEGURIDAD_URL` (origen del
-  login; vacío usa el Gateway) y `VITE_MODO_DEMO=true` para revisar la interfaz con
-  datos en memoria, sin backend. Ver `apps/despacho-repartidor/.env.example`.
-- **Login:** ambas apps usan `packages/cliente-api/src/sesion.ts`, preparado contra el kit G7 §7 y OpenAPI v1.1.0. Cuentas y comportamiento del ambiente publicado pendientes de verificación. En local: `gerardo@despacho.pe` o `kevin@despacho.pe`, clave `Ruta2026!`.
-- **Fotos:** se reducen en el navegador (lado mayor 1600 px, JPEG) para cumplir el
-  límite de 2 MiB, se suben con la URL firmada y luego se confirma el comando. La
-  re-codificación descarta EXIF. Sin bucket configurado en Operación, entrega y fallo
-  responden `503`.
-- **Reintentos:** cada acción conserva su `Idempotency-Key` hasta un resultado
-  definitivo; tras perder señal, el reintento no duplica la transición.
-- **PWA:** `public/manifest.webmanifest`, íconos y `public/sw.js`. El service worker
-  solo guarda la interfaz; nunca respuestas de la API ni fotos. Se registra en
-  producción (HTTPS o `localhost`).
-- **En un teléfono:** `npm run dev:repartidor` publica Vite en la red local
-  (`http://<IP-del-PC>:5174`); el Gateway debe admitir ese origen en `CORS_ORIGENES`.
-  La instalación como app requiere HTTPS, por ejemplo el despliegue en Vercel.
-
-```bash
-npm run test -w @despacho/repartidor
-```
-
-`TarjetaDespacho` (CR-16) acepta dirección y destinatario `null`, porque el contrato
-los omite fuera de `ASIGNADO`/`EN_CAMINO`, y muestra el resultado con su hora.
-
-## Estructura y componentes
-
-```text
-G2-Despacho-Frontend/
-├── apps/
-│   ├── despacho-administrativo/   # F-01, F-02, F-04, F-05 y F-06
-│   └── despacho-repartidor/       # F-03
-├── packages/
-│   ├── cliente-api/              # Axios, JWT y lectura de errores
-│   ├── componentes-compartidos/ # Tema, tokens y componentes React
-│   └── tipos-compartidos/        # Tipos transversales
-├── docs/                        # Guías técnicas y evidencia histórica
-├── pruebas/                     # Recorridos Playwright F-01/F-02
-├── AGENTS.md
-├── CHANGELOG.md
-├── package.json
-└── package-lock.json
-```
-
-Consumir los componentes desde `@despacho/componentes-compartidos`; las reglas de cada funcionalidad permanecen en su aplicación. El tema y los tokens compartidos concretan el sistema de diseño. Ejemplos locales como `/ejemplos/estado-vista.html`, `/ejemplos/componentes-rhamses.html` y `/ejemplos/controles-valqui.html` sirven para revisar controles con datos de prueba; no se incluyen como entradas de producción.
-
-Las guías técnicas existentes conservan instrucciones y verificaciones específicas: [F-01](./docs/F-01-PruebasLocales.md), [F-02](./docs/F-02-ProgramacionAsignacion.md), [listado F-04](./docs/ES-F04-01-ConsultarEntregasFallidas.md), [F-05](./docs/F-05-GestionRepartidoresFurgonetas.md) y [F-06](./docs/F-06-JornadasMonitoreo.md). Son registros de sus incrementos, no prueba automática del estado de otra rama o de una entrega posterior.
-
-## Preview y despliegue
-
-Después de `npm run build`, se puede inspeccionar cada construcción con `npm run preview -w @despacho/administrativo` o `npm run preview -w @despacho/repartidor`. Revisar el puerto anunciado y permitir ese origen en el CORS del Gateway si se necesitan APIs. Preview usa la composición de producción: no ofrece el probador administrativo ni la demo en memoria F-03; necesita una sesión válida para consultar datos protegidos.
-
-Para Vercel, crear un proyecto por aplicación. Usar su directorio como raíz (`apps/despacho-administrativo` o `apps/despacho-repartidor`), habilitar acceso a los archivos del monorepositorio para instalar workspaces, construir con `npm run build` en esa aplicación y publicar `dist`. Ambas conservan `vercel.json` con la reescritura SPA a `index.html`.
-
-Configurar `VITE_API_BASE_URL` en cada proyecto antes de construir, usar HTTPS en el Gateway si el sitio es HTTPS y autorizar el origen publicado en CORS. El adaptador humano está preparado contra el contrato recibido de G7; no se ha verificado contra sus cuentas reales ni contiene credenciales de despliegue. Desde `main`, Vercel solo promueve a producción los commits que pasan la compuerta del CI (ver [Pipeline CI/CD](#pipeline-cicd)).
-
-## Acceso, MFA y sesión de ambas apps
-
-La app administrativa ofrece `/acceso`; el repartidor conserva `/repartidor/acceso`. Ambas envían JSON a Seguridad. El gestor completa un desafío OTP antes de entrar y necesita `GESTOR_DESPACHO`; el repartidor no necesita rol global, pero Operación exige su perfil activo vinculado. Las sesiones nuevas mantienen los tokens solo en memoria: recargar pide login. La renovación rotativa se serializa y el cierre limpia la sesión aunque falle la conexión. Solo se reintenta una vez una petición rechazada explícitamente por el filtro JWT; los demás errores de negocio/red conservan su tratamiento habitual.
-
-Para revisar el flujo local, en una fase de ejecución posterior:
-
-1. Reconstruir y arrancar el Compose del backend (`docker compose up -d --build`).
-2. Usar `VITE_API_BASE_URL=http://localhost:8080`, `VITE_SEGURIDAD_URL=` y `VITE_SEGURIDAD_LOCAL=true` en ambas apps; mantener los modos demo desactivados.
-3. Iniciar los servidores Vite habituales. Entrar como `gestor@despacho.pe`, `gerardo@despacho.pe` o `kevin@despacho.pe`, con clave ficticia `Ruta2026!`.
-4. El gestor ve el código generado en un buzón local dentro de la pantalla. Los códigos tienen seis dígitos, tres intentos y vencimiento; reenviar reemplaza el anterior sin extender el desafío. No se envían correos reales.
-5. Los repartidores siguen necesitando registro/vínculo F-05 y jornada. El emisor no crea esos datos. La carga de fotos sigue requiriendo el almacenamiento configurado en Operación.
-
-El buzón usa `/__sesion-local/codigo-otp` del proxy Vite contra el emisor en `127.0.0.1:8090`; esa ruta no existe en builds ni previews. El probador administrativo anterior se conserva solo para desarrollo. La demo F-03 en memoria también queda restringida a desarrollo.
-
-Para G7, desactivar `VITE_SEGURIDAD_LOCAL`. Se puede mantener el origen del Gateway y configurar su `SEGURIDAD_URL`, o configurar `VITE_SEGURIDAD_URL` con el origen de G7 sin `/api/v1` y acordar CORS. Confirmar primero ambiente, revisión contractual desplegada, cuentas activadas, envío de OTP y UUID de los repartidores. El kit recibido identifica el OpenAPI como revisión local no publicada; configurar una URL no acredita integración real. Contrato canónico: [acceso humano §8.6](../G2-Despacho-Specs/integraciones/api-contract.md#86-acceso-humano-de-ambas-aplicaciones).
-
-La fase de código se preparó sin ejecuciones; posteriormente el usuario autorizó la verificación local. Se comprobaron ambos accesos en navegador, errores/OTP/permisos/cierre, tipos, builds y regresiones. Los resultados, las correcciones y los límites de integración se registran en [ES-F03-01](../G2-Despacho-Specs/especificaciones/ES-F03-01-AccesoHabilitacionRepartidor/evidence.md).
-
-## Especificaciones, contribuciones y versiones
-
-La fuente de requisitos, contratos, diseño y seguimiento SDD es [G2-Despacho-Specs](https://github.com/Taller-SW-Web/G2-Despacho-Specs), normalmente disponible como `../G2-Despacho-Specs`:
-
-- [Índice de funcionalidades y especificaciones](https://github.com/Taller-SW-Web/G2-Despacho-Specs/blob/main/funcionalidades/funcionalidad.md).
-- [Contrato de Gestión](https://github.com/Taller-SW-Web/G2-Despacho-Specs/blob/main/integraciones/api-contract-gestion-despachos.md), [contrato de Operación](https://github.com/Taller-SW-Web/G2-Despacho-Specs/blob/main/integraciones/api-contract-operacion-reparto.md) y [convenciones externas](https://github.com/Taller-SW-Web/G2-Despacho-Specs/blob/main/integraciones/api-contract.md).
-- [Sistema de diseño](https://github.com/Taller-SW-Web/G2-Despacho-Specs/blob/main/disenio/SYSTEM-DESIGN.md), [componentes React](https://github.com/Taller-SW-Web/G2-Despacho-Specs/blob/main/disenio/componentes-react.md) y [stack frontend](https://github.com/Taller-SW-Web/G2-Despacho-Specs/blob/main/arquitectura/stack-frontend.md).
-- [Reglas del repositorio de especificaciones](https://github.com/Taller-SW-Web/G2-Despacho-Specs/blob/main/AGENTS.md) y [flujo de contribución](https://github.com/Taller-SW-Web/G2-Despacho-Specs/blob/main/CONTRIBUTING.md).
-
-El flujo habitual crea ramas descriptivas desde `develop`, integra por PR y promueve entregas de `develop` a `main`. Actualizar [CHANGELOG.md](./CHANGELOG.md) únicamente al preparar y publicar una nueva línea base en `main`, consolidando los cambios de la entrega con versión y fecha. Las ramas funcionales registran su avance en commits y en el seguimiento SDD de Specs. Revisar el corte aproximadamente cada dos semanas; no obliga a publicar sin cambios ni a adoptar Scrum.
-
-Los tags se crean manualmente sobre el commit de `main` elegido para la entrega. Para esta primera línea base se recomienda el commit documental que incorpora este README, AGENTS y changelog: su código funcional sigue siendo el de `5384180`. El tag será `v0.1.0`; no se crea automáticamente ni requiere una GitHub Release. Evitar mover un tag ya publicado.
-
-El README concentra ejecución/configuración y el changelog resume entregas. `spec.md`, `ui.md`, `plan.md`, `tasks.md` y `evidence.md` de Specs conservan requisitos y evidencia por especificación; no se exige crear otra guía por cada especificación en este repositorio.
+- [Pruebas locales de F-01](./docs/F-01-PruebasLocales.md) y [programación F-02](./docs/F-02-ProgramacionAsignacion.md).
+- [Consulta de incidencias F-04](./docs/ES-F04-01-ConsultarEntregasFallidas.md) y [recepción en centro](./docs/ES-F04-03-ConfirmarRecepcionPaquete.md).
+- [Catálogos de flota F-05](./docs/F-05-GestionRepartidoresFurgonetas.md) y [jornadas F-06](./docs/F-06-JornadasMonitoreo.md).
+- [Especificaciones y contratos](https://github.com/Taller-SW-Web/G2-Despacho-Specs), [reglas de trabajo](./AGENTS.md) e [historial de entregas](./CHANGELOG.md).
