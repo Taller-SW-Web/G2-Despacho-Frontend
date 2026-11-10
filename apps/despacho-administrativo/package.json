@@ -1,13 +1,13 @@
 {
   "name": "@despacho/administrativo",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "scripts": { "dev": "vite", "build": "tsc --noEmit && vite build", "typecheck": "tsc --noEmit", "preview": "vite preview", "test": "vitest run" },
   "dependencies": {
-    "@despacho/cliente-api": "0.1.0",
-    "@despacho/componentes-compartidos": "0.1.0",
-    "@despacho/tipos-compartidos": "0.1.0",
+    "@despacho/cliente-api": "0.2.0",
+    "@despacho/componentes-compartidos": "0.2.0",
+    "@despacho/tipos-compartidos": "0.2.0",
     "@mantine/core": "9.6.2",
     "@mantine/hooks": "9.6.2",
     "@mantine/dates": "9.6.2",
