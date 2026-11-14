@@ -15,6 +15,7 @@ import { PaginaDetalleIncidencia } from './features/entregas-fallidas/PaginaDeta
 import { PaginaZonas } from './features/zonas/PaginaZonas';
 import { FormularioZona } from './features/zonas/FormularioZona';
 import { PanelTarifa } from './features/zonas/PanelTarifa';
+import { PaginaDistritos } from './features/distritos/PaginaDistritos';
 import { useSesion } from './sesion/SesionProveedor';
 import { PaginaAcceso } from './sesion/PaginaAcceso';
 import { PaginaRepartidores } from './features/flota/PaginaRepartidores';
@@ -135,7 +136,9 @@ export function Aplicacion() {
         navegar('/acceso', { replace: true });
       }}
       destinoActivo={
-        secciones.find(({ ruta }) => ubicacion.pathname.startsWith(ruta))?.ruta ?? null
+        ubicacion.pathname.startsWith('/distritos')
+          ? '/zonas'
+          : (secciones.find(({ ruta }) => ubicacion.pathname.startsWith(ruta))?.ruta ?? null)
       }
       alNavegar={(_, ruta) => navegar(ruta)}
     >
@@ -169,6 +172,9 @@ export function Aplicacion() {
         )}
         <Route path="/" element={<Navigate to="/zonas" replace />} />
         <Route path="/zonas" element={<PaginaZonas />} />
+        <Route path="/distritos" element={<PaginaDistritos />} />
+        <Route path="/distritos/nuevo" element={<PaginaDistritos />} />
+        <Route path="/distritos/:id/editar" element={<PaginaDistritos />} />
         <Route path="/zonas/nueva" element={<FormularioZona />} />
         <Route path="/zonas/:id/editar" element={<FormularioZona />} />
         <Route path="/zonas/:id/tarifas" element={<PanelTarifa />} />

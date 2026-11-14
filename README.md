@@ -1,6 +1,6 @@
 # G2 — Frontend de Despacho y Entrega a Domicilio
 
-Monorepositorio con dos aplicaciones React, TypeScript, Vite y Mantine. Administración gestiona zonas, programación, incidencias y flota. La PWA del repartidor permite consultar la ruta, registrar el resultado de las entregas y cerrar la jornada. Ambas consumen las APIs mediante el Gateway de Despacho.
+Monorepositorio con dos aplicaciones React, TypeScript, Vite y Mantine. Administración gestiona distritos, zonas, programación, incidencias y flota. La PWA del repartidor permite consultar la ruta, registrar el resultado de las entregas y cerrar la jornada. Ambas consumen las APIs mediante el Gateway de Despacho.
 
 ## Arranque local
 
@@ -39,6 +39,7 @@ El acceso habitual mantiene la sesión en memoria y pide volver a ingresar al re
 
 ```powershell
 npm test
+npm run test:f01
 npm run test:administrativo
 npm run test -w @despacho/repartidor
 npm run typecheck
@@ -46,6 +47,10 @@ npm run build
 ```
 
 Las suites unitarias usan datos y APIs simulados. Los recorridos Playwright tienen requisitos distintos; F-01 escribe en las APIs configuradas y F-04 requiere instancias desechables de Gestión. Consultar la [guía de pruebas y despliegue](./docs/pruebas-y-despliegue.md) antes de ejecutarlos.
+
+`test:f01` incluye zonas y distritos. El botón **Distritos** está en el encabezado de **Zonas y tarifas**, junto a **Actualizar** y **Nueva zona**. Abre `/distritos`, con formulario a la izquierda y listado a la derecha; en móvil se apilan y la tabla tiene desplazamiento horizontal interno. Crear, editar, desactivar y reactivar mantienen abierta la administración y conservan sus filtros. **Volver a zonas** restaura nombre, distrito, estado y página de la consulta original y renueva el catálogo distrital. `/distritos/nuevo` y `/distritos/:id/editar` abren la misma pantalla en alta o edición. Las tres rutas mantienen Zonas y tarifas como sección activa, sin otra entrada en el menú lateral. Los borradores requieren descarte explícito, los conflictos conservan valores y **Actualizar distritos** renueva solo el listado. El formulario de zonas conserva y señala sus distritos asociados inactivos, manteniendo la cobertura exclusivamente postal.
+
+Para `npm run test:distritos:e2e`, preparar primero el [Compose desechable de distritos del backend](https://github.com/Taller-SW-Web/G2-Despacho-Backend/blob/develop/docs/pruebas.md#administración-de-distritos-navegador-y-gateway-aislados). Playwright inicia su Vite en `127.0.0.1:4187` y usa Gateway/Seguridad temporal en `18080/18090`, con JWT y Productos simulados. Requiere una base nueva de ese entorno para cada ejecución. Capturas de escritorio y móvil en `test-results/distritos/`; no representan aceptación humana ni integración con G6/G7 publicados.
 
 ## Pipeline CI/CD
 

@@ -186,7 +186,9 @@ export function PaginaZonas() {
           <Text size="sm">
             {zona.distritos
               .slice(0, 3)
-              .map(({ nombre: n }) => n)
+              .map(({ nombre: n, estado }) =>
+                estado === 'INACTIVO' ? `${n} (inactivo · sin cobertura)` : n,
+              )
               .join(', ')}
             {zona.distritos.length > 3 ? ` +${zona.distritos.length - 3}` : ''}
           </Text>
@@ -246,6 +248,16 @@ export function PaginaZonas() {
             </Button>
             <Button leftSection={<IconPlus size={18} />} onClick={() => navegar('/zonas/nueva')}>
               Nueva zona
+            </Button>
+            <Button
+              variant="default"
+              onClick={() => {
+                const contexto = new URLSearchParams();
+                if (parametros.size) contexto.set('origenZonas', parametros.toString());
+                navegar(`/distritos${contexto.size ? `?${contexto}` : ''}`);
+              }}
+            >
+              Distritos
             </Button>
           </Group>
         }
