@@ -6,6 +6,8 @@ export type Distrito = {
   id: string;
   nombre: string;
   codigosPostales: string[];
+  estado?: EstadoZona;
+  soloCodigosPostales?: boolean;
 };
 
 export type DistritoCatalogo = {
@@ -14,6 +16,7 @@ export type DistritoCatalogo = {
   provincia: string;
   departamento: string;
   ubigeo: string;
+  estado?: EstadoZona;
 };
 
 export type Tarifa = {
@@ -48,7 +51,7 @@ export type PaginaZonas = {
 export type SolicitudZona = {
   nombre: string;
   estado: EstadoZona;
-  distritos: { distrito: string; codigosPostales: string[] }[];
+  distritos: { distrito: string; codigosPostales: string[]; soloCodigosPostales?: boolean }[];
 };
 
 export type SolicitudTarifa = {

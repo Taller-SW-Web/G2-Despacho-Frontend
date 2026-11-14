@@ -18,7 +18,10 @@ const { cliente, notificar } = vi.hoisted(() => ({
   notificar: vi.fn(),
 }));
 vi.mock('../../cliente/useClienteApi', () => ({ useClienteApi: () => cliente }));
-vi.mock('@mantine/notifications', () => ({ notifications: { show: notificar } }));
+vi.mock('@mantine/notifications', async (importar) => {
+  const original = await importar<typeof import('@mantine/notifications')>();
+  return { ...original, notifications: { ...original.notifications, show: notificar } };
+});
 Element.prototype.scrollIntoView = vi.fn();
 
 const zona: Zona = {
@@ -65,6 +68,7 @@ function montar(ruta: string) {
           <Route path="/zonas/nueva" element={<FormularioZona />} />
           <Route path="/zonas/:id/editar" element={<FormularioZona />} />
           <Route path="/zonas/:id/tarifas" element={<PanelTarifa />} />
+          <Route path="/distritos" element={<h1>Administración de distritos</h1>} />
         </Routes>
       </MemoryRouter>
     </MantineProvider>,
@@ -95,6 +99,13 @@ it('muestra el listado con CP agrupados y exige confirmar la desactivación', as
       estado: 'INACTIVO',
     }),
   );
+});
+
+it('permite abrir la administración desde Distritos en el encabezado de zonas', async () => {
+  const usuario = userEvent.setup();
+  montar('/zonas?nombre=Norte&distrito=Comas&estado=ACTIVO&pagina=1');
+  await usuario.click(await screen.findByRole('button', { name: 'Distritos' }));
+  expect(await screen.findByRole('heading', { name: 'Administración de distritos' })).toBeVisible();
 });
 
 it('crea con distritos del catálogo y códigos anidados sin lista global', async () => {
@@ -152,6 +163,43 @@ it('un 404 de zona no permite editar un formulario vacío', async () => {
   montar('/zonas/no-existe/editar');
   expect(await screen.findByText('La zona solicitada no existe.')).toBeVisible();
   expect(screen.queryByRole('button', { name: 'Guardar zona' })).not.toBeInTheDocument();
+});
+
+it('conserva distritos inactivos asociados y su cobertura exclusivamente postal al editar', async () => {
+  const usuario = userEvent.setup();
+  const inactiva = {
+    ...zona,
+    distritos: [
+      {
+        id: 'd1',
+        nombre: 'Comas',
+        codigosPostales: ['15311'],
+        estado: 'INACTIVO',
+        soloCodigosPostales: true,
+      },
+      zona.distritos[1],
+    ],
+  };
+  cliente.get.mockImplementation(async (ruta: string) => ({
+    data: ruta === '/api/v1/distritos' ? catalogo.filter((d) => d.id !== 'd1') : inactiva,
+  }));
+  montar('/zonas/zona-1/editar');
+  const nombre = await screen.findByRole('textbox', { name: 'Nombre de la zona' });
+  expect(await screen.findByText('Comas: inactivo · sin cobertura')).toBeVisible();
+  expect(screen.getByRole('combobox', { name: 'Códigos postales de Comas' })).toBeDisabled();
+  await usuario.clear(nombre);
+  await usuario.type(nombre, 'Zona conservada');
+  await usuario.click(screen.getByRole('button', { name: 'Guardar zona' }));
+  await waitFor(() =>
+    expect(cliente.put).toHaveBeenCalledWith('/api/v1/zonas/zona-1', {
+      nombre: 'Zona conservada',
+      estado: 'ACTIVO',
+      distritos: [
+        { distrito: 'Comas', codigosPostales: ['15311'], soloCodigosPostales: true },
+        { distrito: 'Ancón', codigosPostales: [] },
+      ],
+    }),
+  );
 });
 
 it('retira configuración y filtros si el catálogo revoca el permiso', async () => {

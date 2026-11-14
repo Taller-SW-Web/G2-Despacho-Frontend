@@ -37,7 +37,13 @@ const esquema = z.object({
     .min(1, 'El nombre es obligatorio')
     .max(80, 'El nombre no puede superar 80 caracteres'),
   distritos: z
-    .array(z.object({ distrito: z.string().min(1), codigosPostales: z.array(z.string()) }))
+    .array(
+      z.object({
+        distrito: z.string().min(1),
+        codigosPostales: z.array(z.string()),
+        soloCodigosPostales: z.boolean().optional(),
+      }),
+    )
     .min(1, 'Selecciona al menos un distrito'),
   estado: z.enum(['ACTIVO', 'INACTIVO']),
 });
@@ -91,6 +97,9 @@ export function FormularioZona() {
           distritos: zona.distritos.map((distrito) => ({
             distrito: distrito.nombre,
             codigosPostales: distrito.codigosPostales,
+            ...(distrito.soloCodigosPostales === undefined
+              ? {}
+              : { soloCodigosPostales: distrito.soloCodigosPostales }),
           })),
         });
       })
@@ -136,6 +145,9 @@ export function FormularioZona() {
         codigosPostales: [
           ...new Set(distrito.codigosPostales.map((codigo) => codigo.trim()).filter(Boolean)),
         ],
+        ...(distrito.soloCodigosPostales === undefined
+          ? {}
+          : { soloCodigosPostales: distrito.soloCodigosPostales }),
       })),
     };
     try {
@@ -268,10 +280,23 @@ export function FormularioZona() {
                       clearable
                       disabled={catalogo.cargando || Boolean(catalogo.error)}
                       nothingFoundMessage="No se encontraron distritos"
-                      data={catalogo.distritos.map((distrito) => ({
-                        value: distrito.nombre,
-                        label: `${distrito.nombre} · ${distrito.provincia}`,
-                      }))}
+                      data={[
+                        ...catalogo.distritos.map((distrito) => ({
+                          value: distrito.nombre,
+                          label: `${distrito.nombre} · ${distrito.provincia}`,
+                        })),
+                        ...(zonaActual?.distritos ?? [])
+                          .filter(
+                            (distrito) =>
+                              distrito.estado === 'INACTIVO' &&
+                              field.value.some((entrada) => entrada.distrito === distrito.nombre) &&
+                              !catalogo.distritos.some((activo) => activo.id === distrito.id),
+                          )
+                          .map((distrito) => ({
+                            value: distrito.nombre,
+                            label: `${distrito.nombre} · Inactivo · sin cobertura`,
+                          })),
+                      ]}
                       value={field.value.map(({ distrito }) => distrito)}
                       onChange={(nombres) =>
                         field.onChange(
@@ -288,21 +313,42 @@ export function FormularioZona() {
                       description="Seleccionar un distrito cubre todo su territorio; los códigos postales no restringen esa cobertura."
                     />
                     {field.value.map((entrada, indice) => (
-                      <TagsInput
-                        key={entrada.distrito}
-                        label={`Códigos postales de ${entrada.distrito}`}
-                        description="Opcional. Escribe cada código y pulsa Enter. Se asociará a este distrito."
-                        placeholder="Ej. 15311"
-                        clearable
-                        value={entrada.codigosPostales}
-                        onChange={(codigosPostales) =>
-                          field.onChange(
-                            field.value.map((actual, posicion) =>
-                              posicion === indice ? { ...actual, codigosPostales } : actual,
-                            ),
-                          )
-                        }
-                      />
+                      <Stack key={entrada.distrito} gap="xs">
+                        {zonaActual?.distritos.find(
+                          (distrito) => distrito.nombre === entrada.distrito,
+                        )?.estado === 'INACTIVO' && (
+                          <Alert title={`${entrada.distrito}: inactivo · sin cobertura`}>
+                            La asociación se conservará al guardar. Puedes retirar el distrito; no
+                            se permite ampliar su cobertura mientras esté inactivo.
+                          </Alert>
+                        )}
+                        {entrada.soloCodigosPostales && (
+                          <Text size="sm">
+                            Cobertura exclusivamente postal: se conservarán únicamente los códigos
+                            indicados.
+                          </Text>
+                        )}
+                        <TagsInput
+                          key={entrada.distrito}
+                          label={`Códigos postales de ${entrada.distrito}`}
+                          description="Opcional. Escribe cada código y pulsa Enter. Se asociará a este distrito."
+                          placeholder="Ej. 15311"
+                          clearable
+                          disabled={
+                            zonaActual?.distritos.find(
+                              (distrito) => distrito.nombre === entrada.distrito,
+                            )?.estado === 'INACTIVO'
+                          }
+                          value={entrada.codigosPostales}
+                          onChange={(codigosPostales) =>
+                            field.onChange(
+                              field.value.map((actual, posicion) =>
+                                posicion === indice ? { ...actual, codigosPostales } : actual,
+                              ),
+                            )
+                          }
+                        />
+                      </Stack>
                     ))}
                   </Stack>
                 )}
