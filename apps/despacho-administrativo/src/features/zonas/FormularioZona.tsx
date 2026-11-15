@@ -29,6 +29,8 @@ import { useClienteApi } from '../../cliente/useClienteApi';
 import { crearZona, detalleProblema, editarZona, obtenerZona, problemaDe } from './api/zonasApi';
 import { useDistritos } from './useDistritos';
 import type { SolicitudZona, Zona } from './tipos';
+import { SelectorMapaZona } from '../geometrias/SelectorMapaZona';
+import clasesGeograficas from '../geometrias/Geometrias.module.css';
 
 const esquema = z.object({
   nombre: z
@@ -63,6 +65,7 @@ export function FormularioZona() {
     reset,
     watch,
     setError,
+    setValue,
     formState: { errors, isDirty, isSubmitting },
   } = useForm<ValoresFormulario>({
     resolver: zodResolver(esquema),
@@ -75,6 +78,7 @@ export function FormularioZona() {
   const [denegado, setDenegado] = useState(false);
   const [confirmarDescarte, setConfirmarDescarte] = useState(false);
   const [revision, setRevision] = useState(0);
+  const [mostrarMapa, setMostrarMapa] = useState(false);
 
   useEffect(() => {
     let activo = true;
@@ -221,7 +225,7 @@ export function FormularioZona() {
     );
 
   return (
-    <Stack gap="lg" maw={880}>
+    <Stack gap="lg" maw={mostrarMapa ? undefined : 880}>
       <EncabezadoPagina
         titulo={esEdicion ? 'Editar zona' : 'Nueva zona'}
         subtitulo="Configura la cobertura por distrito y sus códigos postales."
@@ -250,151 +254,173 @@ export function FormularioZona() {
           </Stack>
         </Alert>
       )}
-      <Card>
-        <form onSubmit={(evento) => void guardar(evento)}>
-          <Fieldset variant="unstyled" disabled={isSubmitting}>
-            <Stack gap="lg">
-              <TextInput
-                label="Nombre de la zona"
-                placeholder="Lima Centro"
-                withAsterisk
-                maxLength={80}
-                description="El nombre identifica la zona en el catálogo y no puede repetirse."
-                error={errors.nombre?.message}
-                {...register('nombre')}
-              />
-              <Controller
-                name="distritos"
-                control={control}
-                render={({ field, fieldState }) => (
-                  <Stack gap="md">
-                    <MultiSelect
-                      label="Distritos"
-                      placeholder={
-                        catalogo.cargando
-                          ? 'Cargando distritos…'
-                          : 'Selecciona uno o varios distritos'
-                      }
-                      withAsterisk
-                      searchable
-                      clearable
-                      disabled={catalogo.cargando || Boolean(catalogo.error)}
-                      nothingFoundMessage="No se encontraron distritos"
-                      data={[
-                        ...catalogo.distritos.map((distrito) => ({
-                          value: distrito.nombre,
-                          label: `${distrito.nombre} · ${distrito.provincia}`,
-                        })),
-                        ...(zonaActual?.distritos ?? [])
-                          .filter(
-                            (distrito) =>
-                              distrito.estado === 'INACTIVO' &&
-                              field.value.some((entrada) => entrada.distrito === distrito.nombre) &&
-                              !catalogo.distritos.some((activo) => activo.id === distrito.id),
-                          )
-                          .map((distrito) => ({
-                            value: distrito.nombre,
-                            label: `${distrito.nombre} · Inactivo · sin cobertura`,
-                          })),
-                      ]}
-                      value={field.value.map(({ distrito }) => distrito)}
-                      onChange={(nombres) =>
-                        field.onChange(
-                          nombres.map(
-                            (nombre) =>
-                              field.value.find(({ distrito }) => distrito === nombre) ?? {
-                                distrito: nombre,
-                                codigosPostales: [],
-                              },
-                          ),
-                        )
-                      }
-                      error={fieldState.error?.message}
-                      description="Seleccionar un distrito cubre todo su territorio; los códigos postales no restringen esa cobertura."
-                    />
-                    {field.value.map((entrada, indice) => (
-                      <Stack key={entrada.distrito} gap="xs">
-                        {zonaActual?.distritos.find(
-                          (distrito) => distrito.nombre === entrada.distrito,
-                        )?.estado === 'INACTIVO' && (
-                          <Alert title={`${entrada.distrito}: inactivo · sin cobertura`}>
-                            La asociación se conservará al guardar. Puedes retirar el distrito; no
-                            se permite ampliar su cobertura mientras esté inactivo.
-                          </Alert>
-                        )}
-                        {entrada.soloCodigosPostales && (
-                          <Text size="sm">
-                            Cobertura exclusivamente postal: se conservarán únicamente los códigos
-                            indicados.
-                          </Text>
-                        )}
-                        <TagsInput
-                          key={entrada.distrito}
-                          label={`Códigos postales de ${entrada.distrito}`}
-                          description="Opcional. Escribe cada código y pulsa Enter. Se asociará a este distrito."
-                          placeholder="Ej. 15311"
-                          clearable
-                          disabled={
-                            zonaActual?.distritos.find(
-                              (distrito) => distrito.nombre === entrada.distrito,
-                            )?.estado === 'INACTIVO'
-                          }
-                          value={entrada.codigosPostales}
-                          onChange={(codigosPostales) =>
-                            field.onChange(
-                              field.value.map((actual, posicion) =>
-                                posicion === indice ? { ...actual, codigosPostales } : actual,
-                              ),
-                            )
-                          }
-                        />
-                      </Stack>
-                    ))}
-                  </Stack>
-                )}
-              />
-              {esEdicion ? (
-                <Stack gap={4}>
-                  <Text size="sm" fw={500}>
-                    Estado
-                  </Text>
-                  <Group>
-                    <BadgeEstado contexto="zona" valor={zonaActual?.estado} />
-                    <Text size="sm" c="dimmed">
-                      El estado se cambia desde el catálogo.
-                    </Text>
-                  </Group>
-                </Stack>
-              ) : (
+      <Button
+        variant="default"
+        onClick={() => setMostrarMapa((valor) => !valor)}
+        aria-expanded={mostrarMapa}
+      >
+        {mostrarMapa ? 'Ocultar mapa de selección' : 'Mostrar mapa de selección'}
+      </Button>
+      <div className={mostrarMapa ? clasesGeograficas.formularioZona : undefined}>
+        <Card>
+          <form onSubmit={(evento) => void guardar(evento)}>
+            <Fieldset variant="unstyled" disabled={isSubmitting}>
+              <Stack gap="lg">
+                <TextInput
+                  label="Nombre de la zona"
+                  placeholder="Lima Centro"
+                  withAsterisk
+                  maxLength={80}
+                  description="El nombre identifica la zona en el catálogo y no puede repetirse."
+                  error={errors.nombre?.message}
+                  {...register('nombre')}
+                />
                 <Controller
-                  name="estado"
+                  name="distritos"
                   control={control}
-                  render={({ field }) => (
-                    <Select
-                      label="Estado inicial"
-                      data={[
-                        { value: 'ACTIVO', label: 'Activo' },
-                        { value: 'INACTIVO', label: 'Inactivo' },
-                      ]}
-                      allowDeselect={false}
-                      value={field.value}
-                      onChange={(valor) => field.onChange(valor ?? 'ACTIVO')}
-                    />
+                  render={({ field, fieldState }) => (
+                    <Stack gap="md">
+                      <MultiSelect
+                        label="Distritos"
+                        placeholder={
+                          catalogo.cargando
+                            ? 'Cargando distritos…'
+                            : 'Selecciona uno o varios distritos'
+                        }
+                        withAsterisk
+                        searchable
+                        clearable
+                        disabled={catalogo.cargando || Boolean(catalogo.error)}
+                        nothingFoundMessage="No se encontraron distritos"
+                        data={[
+                          ...catalogo.distritos.map((distrito) => ({
+                            value: distrito.nombre,
+                            label: `${distrito.nombre} · ${distrito.provincia}`,
+                          })),
+                          ...(zonaActual?.distritos ?? [])
+                            .filter(
+                              (distrito) =>
+                                distrito.estado === 'INACTIVO' &&
+                                field.value.some(
+                                  (entrada) => entrada.distrito === distrito.nombre,
+                                ) &&
+                                !catalogo.distritos.some((activo) => activo.id === distrito.id),
+                            )
+                            .map((distrito) => ({
+                              value: distrito.nombre,
+                              label: `${distrito.nombre} · Inactivo · sin cobertura`,
+                            })),
+                        ]}
+                        value={field.value.map(({ distrito }) => distrito)}
+                        onChange={(nombres) =>
+                          field.onChange(
+                            nombres.map(
+                              (nombre) =>
+                                field.value.find(({ distrito }) => distrito === nombre) ?? {
+                                  distrito: nombre,
+                                  codigosPostales: [],
+                                },
+                            ),
+                          )
+                        }
+                        error={fieldState.error?.message}
+                        description="Seleccionar un distrito cubre todo su territorio; los códigos postales no restringen esa cobertura."
+                      />
+                      {field.value.map((entrada, indice) => (
+                        <Stack key={entrada.distrito} gap="xs">
+                          {zonaActual?.distritos.find(
+                            (distrito) => distrito.nombre === entrada.distrito,
+                          )?.estado === 'INACTIVO' && (
+                            <Alert title={`${entrada.distrito}: inactivo · sin cobertura`}>
+                              La asociación se conservará al guardar. Puedes retirar el distrito; no
+                              se permite ampliar su cobertura mientras esté inactivo.
+                            </Alert>
+                          )}
+                          {entrada.soloCodigosPostales && (
+                            <Text size="sm">
+                              Cobertura exclusivamente postal: se conservarán únicamente los códigos
+                              indicados.
+                            </Text>
+                          )}
+                          <TagsInput
+                            key={entrada.distrito}
+                            label={`Códigos postales de ${entrada.distrito}`}
+                            description="Opcional. Escribe cada código y pulsa Enter. Se asociará a este distrito."
+                            placeholder="Ej. 15311"
+                            clearable
+                            disabled={
+                              zonaActual?.distritos.find(
+                                (distrito) => distrito.nombre === entrada.distrito,
+                              )?.estado === 'INACTIVO'
+                            }
+                            value={entrada.codigosPostales}
+                            onChange={(codigosPostales) =>
+                              field.onChange(
+                                field.value.map((actual, posicion) =>
+                                  posicion === indice ? { ...actual, codigosPostales } : actual,
+                                ),
+                              )
+                            }
+                          />
+                        </Stack>
+                      ))}
+                    </Stack>
                   )}
                 />
-              )}
-              <Text size="sm" c="dimmed">
-                Cobertura seleccionada: {valores.distritos.length} distrito(s) y{' '}
-                {valores.distritos.reduce(
-                  (total, distrito) => total + distrito.codigosPostales.length,
-                  0,
-                )}{' '}
-                código(s) postal(es).
-              </Text>
-            </Stack>
-          </Fieldset>
-        </form>
-      </Card>
+                {esEdicion ? (
+                  <Stack gap={4}>
+                    <Text size="sm" fw={500}>
+                      Estado
+                    </Text>
+                    <Group>
+                      <BadgeEstado contexto="zona" valor={zonaActual?.estado} />
+                      <Text size="sm" c="dimmed">
+                        El estado se cambia desde el catálogo.
+                      </Text>
+                    </Group>
+                  </Stack>
+                ) : (
+                  <Controller
+                    name="estado"
+                    control={control}
+                    render={({ field }) => (
+                      <Select
+                        label="Estado inicial"
+                        data={[
+                          { value: 'ACTIVO', label: 'Activo' },
+                          { value: 'INACTIVO', label: 'Inactivo' },
+                        ]}
+                        allowDeselect={false}
+                        value={field.value}
+                        onChange={(valor) => field.onChange(valor ?? 'ACTIVO')}
+                      />
+                    )}
+                  />
+                )}
+                <Text size="sm" c="dimmed">
+                  Cobertura seleccionada: {valores.distritos.length} distrito(s) y{' '}
+                  {valores.distritos.reduce(
+                    (total, distrito) => total + distrito.codigosPostales.length,
+                    0,
+                  )}{' '}
+                  código(s) postal(es).
+                </Text>
+              </Stack>
+            </Fieldset>
+          </form>
+        </Card>
+        {mostrarMapa && (
+          <SelectorMapaZona
+            alDenegar={() => setDenegado(true)}
+            seleccion={valores.distritos}
+            bloqueado={isSubmitting || Boolean(catalogo.error) || catalogo.cargando}
+            zonaId={id}
+            alCambiar={(seleccion) =>
+              setValue('distritos', seleccion, { shouldDirty: true, shouldValidate: true })
+            }
+          />
+        )}
+      </div>
       <BarraAccionesFija
         principal={{
           id: 'guardar',

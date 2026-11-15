@@ -27,6 +27,7 @@ import {
   IconRefresh,
   IconToggleLeft,
   IconToggleRight,
+  IconMap,
 } from '@tabler/icons-react';
 import { useClienteApi } from '../../cliente/useClienteApi';
 import { cambiarEstado, detalleProblema, listarZonas, problemaDe } from './api/zonasApi';
@@ -34,6 +35,7 @@ import { BadgeEstadoZona } from './BadgeEstadoZona';
 import { useDistritos } from './useDistritos';
 import type { EstadoConsulta, EstadoZona, PaginaZonas as ResultadoZonas, Zona } from './tipos';
 import { formatearFecha, formatearMoneda } from './utilidades';
+import { VisorZonaGeografica } from '../geometrias/VisorZonaGeografica';
 
 const TAMANO_PAGINA = 20;
 
@@ -61,6 +63,7 @@ export function PaginaZonas() {
   );
   const [procesando, setProcesando] = useState(false);
   const [errorConfirmacion, setErrorConfirmacion] = useState<string | null>(null);
+  const [zonaEnMapa, setZonaEnMapa] = useState<string | null>(null);
 
   useEffect(() => setBusqueda(nombre), [nombre]);
   useEffect(() => {
@@ -384,6 +387,15 @@ export function PaginaZonas() {
           return (
             <>
               <Group gap="xs" wrap="nowrap">
+                <Tooltip label="Ver composición geográfica">
+                  <ActionIcon
+                    variant="subtle"
+                    aria-label={`Mapa de ${zona.nombre}`}
+                    onClick={() => setZonaEnMapa(zona.id)}
+                  >
+                    <IconMap size={18} />
+                  </ActionIcon>
+                </Tooltip>
                 <Tooltip label="Editar zona">
                   <ActionIcon
                     variant="subtle"
@@ -452,6 +464,17 @@ export function PaginaZonas() {
           if (!procesando) setConfirmacion(null);
         }}
       />
+      {zonaEnMapa && (
+        <VisorZonaGeografica
+          zonaId={zonaEnMapa}
+          alCerrar={() => setZonaEnMapa(null)}
+          alDenegar={() => {
+            setZonaEnMapa(null);
+            setResultado(null);
+            setConsulta('sinPermiso');
+          }}
+        />
+      )}
     </Stack>
   );
 }

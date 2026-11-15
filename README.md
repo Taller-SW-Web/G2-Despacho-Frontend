@@ -48,9 +48,24 @@ npm run build
 
 Las suites unitarias usan datos y APIs simulados. Los recorridos Playwright tienen requisitos distintos; F-01 escribe en las APIs configuradas y F-04 requiere instancias desechables de Gestión. Consultar la [guía de pruebas y despliegue](./docs/pruebas-y-despliegue.md) antes de ejecutarlos.
 
-`test:f01` incluye zonas y distritos. El botón **Distritos** está en el encabezado de **Zonas y tarifas**, junto a **Actualizar** y **Nueva zona**. Abre `/distritos`, con formulario a la izquierda y listado a la derecha; en móvil se apilan y la tabla tiene desplazamiento horizontal interno. Crear, editar, desactivar y reactivar mantienen abierta la administración y conservan sus filtros. **Volver a zonas** restaura nombre, distrito, estado y página de la consulta original y renueva el catálogo distrital. `/distritos/nuevo` y `/distritos/:id/editar` abren la misma pantalla en alta o edición. Las tres rutas mantienen Zonas y tarifas como sección activa, sin otra entrada en el menú lateral. Los borradores requieren descarte explícito, los conflictos conservan valores y **Actualizar distritos** renueva solo el listado. El formulario de zonas conserva y señala sus distritos asociados inactivos, manteniendo la cobertura exclusivamente postal.
+`test:f01` incluye zonas, distritos y geometrías. El botón **Distritos** está en el encabezado de **Zonas y tarifas**, junto a **Actualizar** y **Nueva zona**. Abre `/distritos`, con formulario a la izquierda y listado a la derecha; en móvil se apilan y la tabla tiene desplazamiento horizontal interno. Crear, editar, desactivar y reactivar mantienen abierta la administración y conservan sus filtros. **Volver a zonas** restaura nombre, distrito, estado y página de la consulta original y renueva el catálogo distrital. `/distritos/nuevo` y `/distritos/:id/editar` abren la misma pantalla en alta o edición. Las tres rutas mantienen Zonas y tarifas como sección activa, sin otra entrada en el menú lateral. Los borradores requieren descarte explícito, los conflictos conservan valores y **Actualizar distritos** renueva solo el listado. El formulario de zonas conserva y señala sus distritos asociados inactivos, manteniendo la cobertura exclusivamente postal.
 
 Para `npm run test:distritos:e2e`, preparar primero el [Compose desechable de distritos del backend](https://github.com/Taller-SW-Web/G2-Despacho-Backend/blob/develop/docs/pruebas.md#administración-de-distritos-navegador-y-gateway-aislados). Playwright inicia su Vite en `127.0.0.1:4187` y usa Gateway/Seguridad temporal en `18080/18090`, con JWT y Productos simulados. Requiere una base nueva de ese entorno para cada ejecución. Capturas de escritorio y móvil en `test-results/distritos/`; no representan aceptación humana ni integración con G6/G7 publicados.
+
+## Mapas e importación GeoJSON
+
+- En **Distritos**, alternar **Tabla / Mapa** para filtrar, consultar ficha y centrar límites. Los registros sin geometría siguen disponibles en la lista.
+- **Importar geometrías** recibe un archivo individual o una colección. Indicar fuente/revisión, revisar correspondencias, validar y confirmar. Las sugerencias nominales requieren selección explícita. Una respuesta perdida conserva propuesta y clave para **Reintentar confirmación**.
+- En el formulario de zona, **Mostrar mapa de selección** sincroniza polígonos y selector sin guardar automáticamente. Conserva códigos postales, referencias postales e inactivos existentes. En el listado, la acción **Mapa de [zona]** consulta su composición.
+- Leaflet y su CSS se cargan de forma diferida. `VITE_MAPA_TESELAS_URL` configura el proveedor y `VITE_MAPA_ATRIBUCION` su crédito visible; un URL vacío desactiva teselas. Reiniciar Vite o reconstruir al cambiar estas variables públicas. Si el proveedor falla, los límites y la lista siguen disponibles.
+
+Para el recorrido real aislado, seguir [la guía de geometrías del backend](https://github.com/Taller-SW-Web/G2-Despacho-Backend/blob/develop/docs/pruebas.md#geometrías-y-mapas-administrativos-f-01), preparar una base desechable y los archivos reproducibles y ejecutar:
+
+```bash
+F01_GEOMETRIAS_DIR=/ruta/distritos-f01 npm run test:geometrias:e2e
+```
+
+Requiere Chromium y usa `4187/18080/18090`. Exige catálogo inicial sin límites y cero zonas; no apuntarlo a una base de trabajo. Capturas y resultados en `test-results/geometrias/`, fuera de Git. Criterios y evidencia en ES-F01-13 a ES-F01-16 de Specs. La cotización de Marketplace/Chatbot conserva su contrato.
 
 ## Pipeline CI/CD
 

@@ -2,7 +2,16 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
-import { Alert, Button, Card, Group, Skeleton, Stack, Title } from '@mantine/core';
+import {
+  Alert,
+  Button,
+  Card,
+  Group,
+  SegmentedControl,
+  Skeleton,
+  Stack,
+  Title,
+} from '@mantine/core';
 import {
   EncabezadoPagina,
   EstadoVista,
@@ -22,6 +31,8 @@ import { ListadoDistritos } from './ListadoDistritos';
 import { DISTRITO_INICIAL, esquemaDistrito } from './validacionDistrito';
 import type { DatosDistrito, DistritoAdministrable, EstadoDistrito } from './tipos';
 import clases from './Distritos.module.css';
+import { ExploradorGeografico } from '../geometrias/ExploradorGeografico';
+import { ImportadorGeometrias } from '../geometrias/ImportadorGeometrias';
 
 type AccionPendiente =
   | { tipo: 'seleccionar'; id: string }
@@ -57,6 +68,8 @@ export function PaginaDistritos() {
   const [error, setErrorGeneral] = useState<string | null>(null);
   const [conflicto, setConflicto] = useState(false);
   const [sinPermiso, setSinPermiso] = useState(false);
+  const [vista, setVista] = useState('tabla');
+  const [importando, setImportando] = useState(false);
   const [aviso, setAviso] = useState<string | null>(null);
   const [exito, setExito] = useState<string | null>(null);
   const [descarte, setDescarte] = useState<AccionPendiente | null>(null);
@@ -85,6 +98,7 @@ export function PaginaDistritos() {
     peticionDetalle.current?.abort();
     peticionEstado.current?.abort();
     setSinPermiso(true);
+    setImportando(false);
     setFilas([]);
     setOriginal(null);
     reset(DISTRITO_INICIAL);
@@ -339,6 +353,19 @@ export function PaginaDistritos() {
         subtitulo="Administración de distritos de Lima Metropolitana y Callao"
         acciones={
           <Group>
+            <SegmentedControl
+              aria-label="Vista de distritos"
+              value={vista}
+              disabled={bloqueado}
+              onChange={setVista}
+              data={[
+                { value: 'tabla', label: 'Tabla' },
+                { value: 'mapa', label: 'Mapa' },
+              ]}
+            />
+            <Button disabled={bloqueado} onClick={() => setImportando(true)}>
+              Importar geometrías
+            </Button>
             <Button variant="default" disabled={bloqueado} onClick={actualizar}>
               Actualizar distritos
             </Button>
@@ -362,94 +389,121 @@ export function PaginaDistritos() {
           {aviso}
         </Alert>
       )}
-      <div className={clases.paneles}>
-        <Card
-          component="section"
-          aria-labelledby="titulo-formulario-distrito"
-          className={clases.panel}
-          withBorder
-        >
-          <Stack>
-            <Title
-              order={2}
-              id="titulo-formulario-distrito"
-              ref={tituloFormulario}
-              tabIndex={-1}
-              className={clases.tituloFormulario}
-            >
-              {id ? 'Editar distrito' : 'Nuevo distrito'}
-            </Title>
-            {detalle === 'datos' && (!id || original?.id === id) ? (
-              <FormularioDistrito
-                formulario={formulario}
-                original={original}
-                bloqueado={bloqueado}
-                guardando={procesando === 'guardar'}
-                error={error}
-                conflicto={conflicto}
-                alGuardar={(evento) => void guardar(evento)}
-                alLimpiar={() => solicitar({ tipo: 'limpiar' })}
-                alRevisar={() => solicitar({ tipo: 'revisar' })}
-              />
-            ) : (
-              <>
-                <EstadoVista
-                  estado={detalle === 'error' ? 'error' : 'carga'}
-                  esqueleto={<Skeleton height={320} aria-label="Cargando distrito" />}
-                  descripcion={error ?? undefined}
-                  accion={
-                    detalle === 'error'
-                      ? { id: 'reintentar', etiqueta: 'Reintentar detalle' }
-                      : undefined
-                  }
-                  alAccionar={() => setRevisionDetalle((valor) => valor + 1)}
+      {vista === 'tabla' ? (
+        <div className={clases.paneles}>
+          <Card
+            component="section"
+            aria-labelledby="titulo-formulario-distrito"
+            className={clases.panel}
+            withBorder
+          >
+            <Stack>
+              <Title
+                order={2}
+                id="titulo-formulario-distrito"
+                ref={tituloFormulario}
+                tabIndex={-1}
+                className={clases.tituloFormulario}
+              >
+                {id ? 'Editar distrito' : 'Nuevo distrito'}
+              </Title>
+              {detalle === 'datos' && (!id || original?.id === id) ? (
+                <FormularioDistrito
+                  formulario={formulario}
+                  original={original}
+                  bloqueado={bloqueado}
+                  guardando={procesando === 'guardar'}
+                  error={error}
+                  conflicto={conflicto}
+                  alGuardar={(evento) => void guardar(evento)}
+                  alLimpiar={() => solicitar({ tipo: 'limpiar' })}
+                  alRevisar={() => solicitar({ tipo: 'revisar' })}
                 />
-                <Button
-                  variant="default"
-                  disabled={bloqueado}
-                  onClick={() => solicitar({ tipo: 'limpiar' })}
-                >
-                  Cancelar edición
-                </Button>
-              </>
-            )}
+              ) : (
+                <>
+                  <EstadoVista
+                    estado={detalle === 'error' ? 'error' : 'carga'}
+                    esqueleto={<Skeleton height={320} aria-label="Cargando distrito" />}
+                    descripcion={error ?? undefined}
+                    accion={
+                      detalle === 'error'
+                        ? { id: 'reintentar', etiqueta: 'Reintentar detalle' }
+                        : undefined
+                    }
+                    alAccionar={() => setRevisionDetalle((valor) => valor + 1)}
+                  />
+                  <Button
+                    variant="default"
+                    disabled={bloqueado}
+                    onClick={() => solicitar({ tipo: 'limpiar' })}
+                  >
+                    Cancelar edición
+                  </Button>
+                </>
+              )}
+            </Stack>
+          </Card>
+          <Stack
+            component="section"
+            aria-labelledby="titulo-listado-distritos"
+            className={clases.panel}
+          >
+            <Title order={2} id="titulo-listado-distritos">
+              Distritos registrados
+            </Title>
+            <ListadoDistritos
+              filas={filas}
+              consulta={consulta}
+              nombre={nombre}
+              estado={estado}
+              seleccionado={id}
+              bloqueado={bloqueado}
+              alFiltrar={(campo, valor) =>
+                setParametros(
+                  (actual) => {
+                    const siguiente = new URLSearchParams(actual);
+                    if (valor) siguiente.set(campo, valor);
+                    else siguiente.delete(campo);
+                    return siguiente;
+                  },
+                  { replace: true },
+                )
+              }
+              alReintentar={actualizar}
+              alLimpiarFiltros={() =>
+                setParametros(origenZonas ? { origenZonas } : {}, { replace: true })
+              }
+              alEditar={(seleccion) => solicitar({ tipo: 'seleccionar', id: seleccion })}
+              alCambiarEstado={(distrito) => solicitar({ tipo: 'estado', distrito })}
+            />
           </Stack>
-        </Card>
-        <Stack
-          component="section"
-          aria-labelledby="titulo-listado-distritos"
-          className={clases.panel}
-        >
-          <Title order={2} id="titulo-listado-distritos">
-            Distritos registrados
-          </Title>
-          <ListadoDistritos
-            filas={filas}
-            consulta={consulta}
-            nombre={nombre}
-            estado={estado}
-            seleccionado={id}
-            bloqueado={bloqueado}
-            alFiltrar={(campo, valor) =>
-              setParametros(
-                (actual) => {
-                  const siguiente = new URLSearchParams(actual);
-                  if (valor) siguiente.set(campo, valor);
-                  else siguiente.delete(campo);
-                  return siguiente;
-                },
-                { replace: true },
-              )
-            }
-            alReintentar={actualizar}
-            alLimpiarFiltros={() =>
-              setParametros(origenZonas ? { origenZonas } : {}, { replace: true })
-            }
-            alEditar={(seleccion) => solicitar({ tipo: 'seleccionar', id: seleccion })}
-            alCambiarEstado={(distrito) => solicitar({ tipo: 'estado', distrito })}
-          />
-        </Stack>
-      </div>
+        </div>
+      ) : (
+        <ExploradorGeografico
+          nombre={nombre}
+          estado={estado}
+          revision={revision}
+          alDenegar={denegar}
+          alFiltrar={(campo, valor) =>
+            setParametros(
+              (actual) => {
+                const siguiente = new URLSearchParams(actual);
+                if (valor) siguiente.set(campo, valor);
+                else siguiente.delete(campo);
+                return siguiente;
+              },
+              { replace: true },
+            )
+          }
+        />
+      )}
+      {importando && (
+        <ImportadorGeometrias
+          alCerrar={() => setImportando(false)}
+          alImportar={actualizar}
+          alDenegar={denegar}
+        />
+      )}
       <ModalConfirmacion
         abierto={Boolean(descarte)}
         titulo={
