@@ -1,0 +1,57 @@
+.mapa {
+  position: relative;
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--mantine-color-default-border);
+  border-radius: var(--mantine-radius-md);
+  isolation: isolate;
+}
+.lienzo {
+  height: 440px;
+  width: 100%;
+  background: var(--mantine-color-gray-1);
+  font-family: inherit;
+}
+.paneles {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 0.65fr);
+  gap: var(--mantine-spacing-lg);
+  align-items: start;
+}
+.panelesCompactos {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--mantine-spacing-md);
+}
+.paneles > *,
+.panelesCompactos > *,
+.formularioZona > * {
+  min-width: 0;
+}
+.ficha {
+  overflow-wrap: anywhere;
+}
+.lista {
+  max-height: 440px;
+  overflow: auto;
+  min-width: 0;
+}
+.fila {
+  padding: var(--mantine-spacing-sm);
+  border-bottom: 1px solid var(--mantine-color-default-border);
+}
+.formularioZona {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--mantine-spacing-lg);
+  align-items: start;
+}
+@media (max-width: 62em) {
+  .paneles,
+  .formularioZona {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .lienzo {
+    height: 360px;
+  }
+}

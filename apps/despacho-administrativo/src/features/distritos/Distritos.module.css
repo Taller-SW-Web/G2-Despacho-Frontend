@@ -1,0 +1,20 @@
+.paneles {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--mantine-spacing-lg);
+  align-items: start;
+}
+
+.panel {
+  min-width: 0;
+}
+
+.tituloFormulario {
+  scroll-margin-top: calc(var(--app-shell-header-height, 4rem) + var(--mantine-spacing-md));
+}
+
+@media (min-width: 75em) {
+  .paneles {
+    grid-template-columns: minmax(17rem, 0.8fr) minmax(0, 2.5fr);
+  }
+}
