@@ -411,3 +411,53 @@ it('avisa si la incidencia seleccionada cambió y vuelve a la consulta de origen
     '/entregas-fallidas?pagina=3&tamanoPagina=10&motivo=NO_INTENTADO',
   );
 });
+
+it('reenvía a Ventas una comunicación en envío fallido con el mismo idEvento y actualiza el detalle', async () => {
+  montar();
+  const boton = await screen.findByRole('button', { name: 'Reenviar a Ventas' });
+  const lecturas = obtener.mock.calls.length;
+  publicar.mockResolvedValueOnce({
+    status: 202,
+    data: { idEvento: 'evento-1', idDespacho: 'despacho-1', estadoEnvio: 'PENDIENTE' },
+  });
+  await userEvent.click(boton);
+  await waitFor(() =>
+    expect(publicar).toHaveBeenCalledWith(
+      '/api/v1/despachos/despacho-1/eventos-ventas/evento-1/reenvio',
+      undefined,
+      expect.objectContaining({ signal: expect.any(AbortSignal) }),
+    ),
+  );
+  await waitFor(() => expect(obtener.mock.calls.length).toBeGreaterThan(lecturas));
+  expect(screen.queryByText(/No se pudo reenviar/)).not.toBeInTheDocument();
+});
+
+it('explica un reenvío rechazado porque la comunicación ya no está en envío fallido', async () => {
+  montar();
+  publicar.mockRejectedValueOnce(fallo(409, 'DESP_ERROR_EVENTO_NO_REENVIABLE'));
+  await userEvent.click(await screen.findByRole('button', { name: 'Reenviar a Ventas' }));
+  expect(
+    await screen.findByText(
+      'La comunicación ya no está en envío fallido. Se actualizó el detalle.',
+    ),
+  ).toBeVisible();
+});
+
+it('no ofrece reenvío para comunicaciones enviadas o pendientes', async () => {
+  obtener.mockResolvedValue({
+    data: detallePrueba({
+      comunicaciones: [
+        {
+          idEvento: 'evento-1',
+          tipoEvento: 'DESPACHO_FALLIDO',
+          estadoEnvio: 'ENVIADO',
+          creadoEn: '2026-10-16T17:00:00Z',
+          enviadoEn: '2026-10-16T17:00:30Z',
+        },
+      ],
+    }),
+  });
+  montar();
+  await screen.findByText('Comunicación con Ventas');
+  expect(screen.queryByRole('button', { name: 'Reenviar a Ventas' })).not.toBeInTheDocument();
+});

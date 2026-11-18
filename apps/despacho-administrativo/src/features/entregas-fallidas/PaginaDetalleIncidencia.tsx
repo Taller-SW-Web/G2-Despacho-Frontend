@@ -42,6 +42,8 @@ import { ModalRecepcionPaquete, type ContextoRecepcion } from './ModalRecepcionP
 import { ModalReprogramacionDespacho } from './ModalReprogramacionDespacho';
 import { ModalCierreDespacho } from './ModalCierreDespacho';
 import type { ContextoDecisionIncidencia } from './modeloDetalle';
+import { useClienteApi } from '../../cliente/useClienteApi';
+import { mensajeErrorReenvio, reenviarEventoVentas } from './apiReenvio';
 
 function Fecha({ valor }: { valor: string }) {
   return (
@@ -158,7 +160,64 @@ function EvidenciaIncidencia({
     </Card>
   );
 }
-function InformacionIncidencia({ detalle }: { detalle: DetalleIncidencia }) {
+/** Reenvío manual de una comunicación con Ventas en ENVIO_FALLIDO; conserva el mismo idEvento. */
+function ReenvioComunicacion({
+  idDespacho,
+  idEvento,
+  alActualizar,
+}: {
+  idDespacho: string;
+  idEvento: string;
+  alActualizar: () => void;
+}) {
+  const cliente = useClienteApi();
+  const [enviando, establecerEnviando] = useState(false);
+  const [error, establecerError] = useState('');
+  const controlador = useRef<AbortController | null>(null);
+  useEffect(() => () => controlador.current?.abort(), []);
+  const reenviar = async () => {
+    controlador.current?.abort();
+    controlador.current = new AbortController();
+    establecerEnviando(true);
+    establecerError('');
+    try {
+      await reenviarEventoVentas(cliente, idDespacho, idEvento, controlador.current.signal);
+      alActualizar();
+    } catch (fallo) {
+      if (controlador.current.signal.aborted) return;
+      establecerError(mensajeErrorReenvio(fallo));
+      alActualizar();
+    } finally {
+      if (!controlador.current.signal.aborted) establecerEnviando(false);
+    }
+  };
+  return (
+    <Stack gap="xs">
+      <Group>
+        <Button
+          variant="light"
+          leftSection={<IconRefresh size={16} aria-hidden />}
+          loading={enviando}
+          onClick={() => void reenviar()}
+        >
+          Reenviar a Ventas
+        </Button>
+      </Group>
+      {error && (
+        <Alert color="red" role="alert">
+          {error}
+        </Alert>
+      )}
+    </Stack>
+  );
+}
+function InformacionIncidencia({
+  detalle,
+  alActualizar,
+}: {
+  detalle: DetalleIncidencia;
+  alActualizar: () => void;
+}) {
   const incidencia = detalle.incidencia;
   const recepcion = incidencia.recepcion;
   const liberacion = recepcion.liberacionCapacidad;
@@ -323,6 +382,13 @@ function InformacionIncidencia({ detalle }: { detalle: DetalleIncidencia }) {
                       El cierre está registrado. La comunicación requiere revisión o reenvío manual.
                     </Text>
                   )}
+                {evento.estadoEnvio === 'ENVIO_FALLIDO' && (
+                  <ReenvioComunicacion
+                    idDespacho={detalle.idDespacho}
+                    idEvento={evento.idEvento}
+                    alActualizar={alActualizar}
+                  />
+                )}
                 <dl className={clases.datos}>
                   <Dato etiqueta="Registrado" valor={<Fecha valor={evento.creadoEn} />} />
                   {evento.enviadoEn && (
@@ -598,7 +664,7 @@ export function PaginaDetalleIncidencia({
             <Grid gap="lg" align="flex-start">
               <Grid.Col span={{ base: 12, lg: 7 }}>
                 <Stack gap="lg">
-                  <InformacionIncidencia detalle={detalle} />
+                  <InformacionIncidencia detalle={detalle} alActualizar={consulta.actualizar} />
                 </Stack>
               </Grid.Col>
               <Grid.Col span={{ base: 12, lg: 5 }} className={clases.columnaResolucion}>
