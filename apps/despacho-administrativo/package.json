@@ -30,7 +30,7 @@
     "react-leaflet": "^5.0.0",
     "react-router-dom": "^6.26.0",
     "zod": "^4.6.7",
-    "zustand": "^4.5.0"
+    "zustand": "^5.1.0"
   },
   "devDependencies": {
     "@testing-library/dom": "^10.4.0",
