@@ -41,7 +41,6 @@ La revisión de seguridad forma parte de la compuerta `CI frontend verde`. Como 
 | Dependencias vulnerables (A03) | `Seguridad (dependencias npm)` | `npm audit --omit=dev --audit-level=high` | Una dependencia que llega a producción tiene una vulnerabilidad high o critical. |
 | Paquetes alterados (A08) | `Seguridad (dependencias npm)` | `npm audit signatures` | La firma del registro de un paquete del lockfile no es válida. |
 | Secretos expuestos (A02, A08) | `Seguridad (secretos en el historial)` | gitleaks 8.30.1 | Hay una credencial en cualquier commit del historial. |
-| Dependencias desactualizadas (A03) | Dependabot | `.github/dependabot.yml` | No falla; abre PR semanales hacia `develop`. |
 
 Los informes quedan 30 días como artefactos: `seguridad-dependencias` (auditoría completa, incluidas las dependencias de desarrollo) y `seguridad-secretos` (con los valores ocultos).
 
