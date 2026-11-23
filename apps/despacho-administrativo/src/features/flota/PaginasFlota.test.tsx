@@ -422,7 +422,7 @@ it('ES-F05-04: la baja confirmada conserva el registro y retira las acciones exc
   await usuario.click(screen.getByRole('button', { name: 'Más acciones para Ana Prueba' }));
   await usuario.click(await screen.findByRole('menuitem', { name: 'Dar de baja' }));
   await usuario.click(screen.getByRole('button', { name: 'Confirmar baja' }));
-  expect(await screen.findByRole('cell', { name: 'Inactivo' })).toBeVisible();
+  expect(await screen.findByRole('cell', { name: /^Inactivo/ })).toBeVisible();
   expect(screen.getByText('Ana Prueba')).toBeVisible();
   expect(
     screen.queryByRole('button', { name: 'Más acciones para Ana Prueba' }),

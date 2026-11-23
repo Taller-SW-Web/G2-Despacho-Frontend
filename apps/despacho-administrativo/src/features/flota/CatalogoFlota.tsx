@@ -10,6 +10,7 @@ import {
   type EstadoConsulta,
 } from '@despacho/componentes-compartidos';
 import { FiltrosFlota } from './FiltrosFlota';
+import clases from './CatalogoFlota.module.css';
 import type { DefinicionFiltro, useCatalogoFlota } from './useCatalogoFlota';
 
 export function CatalogoFlota<T>({
@@ -23,6 +24,7 @@ export function CatalogoFlota<T>({
   alNuevo,
   children,
   estiloFila,
+  anchoMinimo,
 }: {
   titulo: string;
   subtitulo: string;
@@ -34,6 +36,8 @@ export function CatalogoFlota<T>({
   alNuevo: () => void;
   children?: ReactNode;
   estiloFila?: (fila: T) => CSSProperties;
+  /** Ancho a partir del cual la tabla se desplaza en lugar de partir códigos y estados. */
+  anchoMinimo?: number;
 }) {
   if (consulta.denegado)
     return <EstadoVista estado="sinPermiso" alAccionar={consulta.actualizar} />;
@@ -116,47 +120,50 @@ export function CatalogoFlota<T>({
               mensaje="Se conservan los resultados anteriores. Las acciones están bloqueadas hasta confirmar la consulta actual."
             />
           )}
-          <TablaDatos
-            filas={datos?.contenido ?? []}
-            obtenerId={obtenerId}
-            columnas={columnas}
-            tituloAccesible={`Catálogo de ${titulo.toLowerCase()}`}
-            estado={estado}
-            actualizando={!consulta.confirmada}
-            estiloFila={estiloFila}
-            paginacion={{
-              pagina: datos?.pagina ?? 1,
-              tamanioPagina: datos?.tamanoPagina ?? consulta.tamanoPagina,
-              total: datos?.totalElementos ?? 0,
-            }}
-            alCambiarPagina={(pagina) => consulta.cambiar({ pagina: String(pagina) })}
-            alCambiarTamano={(tamano) => consulta.cambiar({ tamanoPagina: String(tamano) })}
-            renderizarEstado={() => (
-              <EstadoVista
-                estado={estado as Exclude<EstadoConsulta, 'carga' | 'datos'>}
-                titulo={
-                  estado === 'vacio'
-                    ? `Aún no hay ${titulo.toLowerCase()} ${titulo === 'Furgonetas' ? 'registradas' : 'registrados'}`
-                    : undefined
-                }
-                accion={
-                  estado === 'vacio'
-                    ? { id: 'nuevo', etiqueta: etiquetaNuevo }
-                    : {
-                        id: 'recuperar',
-                        etiqueta: estado === 'sinResultados' ? 'Limpiar filtros' : 'Reintentar',
-                      }
-                }
-                alAccionar={
-                  estado === 'vacio'
-                    ? alNuevo
-                    : estado === 'sinResultados'
-                      ? consulta.limpiar
-                      : consulta.actualizar
-                }
-              />
-            )}
-          />
+          <div className={clases.tabla}>
+            <TablaDatos
+              filas={datos?.contenido ?? []}
+              obtenerId={obtenerId}
+              columnas={columnas}
+              tituloAccesible={`Catálogo de ${titulo.toLowerCase()}`}
+              estado={estado}
+              actualizando={!consulta.confirmada}
+              estiloFila={estiloFila}
+              anchoMinimo={anchoMinimo}
+              paginacion={{
+                pagina: datos?.pagina ?? 1,
+                tamanioPagina: datos?.tamanoPagina ?? consulta.tamanoPagina,
+                total: datos?.totalElementos ?? 0,
+              }}
+              alCambiarPagina={(pagina) => consulta.cambiar({ pagina: String(pagina) })}
+              alCambiarTamano={(tamano) => consulta.cambiar({ tamanoPagina: String(tamano) })}
+              renderizarEstado={() => (
+                <EstadoVista
+                  estado={estado as Exclude<EstadoConsulta, 'carga' | 'datos'>}
+                  titulo={
+                    estado === 'vacio'
+                      ? `Aún no hay ${titulo.toLowerCase()} ${titulo === 'Furgonetas' ? 'registradas' : 'registrados'}`
+                      : undefined
+                  }
+                  accion={
+                    estado === 'vacio'
+                      ? { id: 'nuevo', etiqueta: etiquetaNuevo }
+                      : {
+                          id: 'recuperar',
+                          etiqueta: estado === 'sinResultados' ? 'Limpiar filtros' : 'Reintentar',
+                        }
+                  }
+                  alAccionar={
+                    estado === 'vacio'
+                      ? alNuevo
+                      : estado === 'sinResultados'
+                        ? consulta.limpiar
+                        : consulta.actualizar
+                  }
+                />
+              )}
+            />
+          </div>
           {children}
         </Stack>
       </EstadoVista>
