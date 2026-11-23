@@ -32,6 +32,27 @@ El [workflow](../.github/workflows/ci.yaml) usa Node.js 22 y `npm ci`. Ejecuta l
 
 Tras la compuerta, el job `Verificar producción (Vercel)` comprueba que la raíz y una ruta profunda de cada aplicación sirven la SPA. La comprobación valida disponibilidad y reescritura de rutas.
 
+### Revisión de seguridad
+
+La revisión de seguridad forma parte de la compuerta `CI frontend verde`. Como Vercel solo promueve a producción cuando ese check pasa, una revisión fallida también bloquea el despliegue. Cubre los riesgos A02, A03 y A08 del OWASP Top 10:2025.
+
+| Control | Job | Herramienta | Falla cuando |
+|---|---|---|---|
+| Dependencias vulnerables (A03) | `Seguridad (dependencias npm)` | `npm audit --omit=dev --audit-level=high` | Una dependencia que llega a producción tiene una vulnerabilidad high o critical. |
+| Paquetes alterados (A08) | `Seguridad (dependencias npm)` | `npm audit signatures` | La firma del registro de un paquete del lockfile no es válida. |
+| Secretos expuestos (A02, A08) | `Seguridad (secretos en el historial)` | gitleaks 8.30.1 | Hay una credencial en cualquier commit del historial. |
+| Dependencias desactualizadas (A03) | Dependabot | `.github/dependabot.yml` | No falla; abre PR semanales hacia `develop`. |
+
+Los informes quedan 30 días como artefactos: `seguridad-dependencias` (auditoría completa, incluidas las dependencias de desarrollo) y `seguridad-secretos` (con los valores ocultos).
+
+Integridad del propio pipeline (A08): las actions se fijan por SHA de commit, gitleaks se descarga por versión fija y se verifica su SHA-256, el token del workflow es de solo lectura y `persist-credentials: false` evita guardar el token en el checkout.
+
+Si un control falla:
+
+- **Dependencia vulnerable:** ejecutar `npm audit fix` o actualizar el paquete y confirmar el nuevo `package-lock.json`.
+- **Secreto encontrado:** primero revocar y rotar la credencial; después limpiar el historial. Borrar el archivo no basta, porque el historial conserva el valor.
+- **Valor ficticio marcado como secreto:** documentarlo y agregar su huella a `.gitleaksignore`, o moverlo a una variable de entorno.
+
 ### PWA en un teléfono
 
 Vite expone la app del repartidor en la red local. Abrir `http://<IP-del-PC>:5174`, apuntar `VITE_API_BASE_URL` a un Gateway accesible desde el teléfono y autorizar ese origen en CORS. El Compose local enlaza el Gateway a `127.0.0.1` de forma predeterminada. Para probar instalación y service worker, usar una compilación de producción servida en HTTPS, como la de Vercel.

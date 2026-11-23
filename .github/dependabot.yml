@@ -1,0 +1,34 @@
+# Actualizaciones automáticas de dependencias (OWASP Top 10:2025 A03).
+# Dependabot abre PR contra develop; cada PR pasa por el mismo pipeline,
+# incluida la revisión de seguridad, antes de poder integrarse.
+version: 2
+updates:
+  # Un solo lockfile en la raíz cubre todos los workspaces (apps/* y packages/*).
+  - package-ecosystem: npm
+    directory: /
+    target-branch: develop
+    schedule:
+      interval: weekly
+      day: monday
+      timezone: America/Lima
+    open-pull-requests-limit: 5
+    groups:
+      npm-menores:
+        update-types: [minor, patch]
+    commit-message:
+      prefix: build(deps)
+
+  # Mantiene actualizados los SHA fijados de las actions sin perder el pin.
+  - package-ecosystem: github-actions
+    directory: /
+    target-branch: develop
+    schedule:
+      interval: weekly
+      day: monday
+      timezone: America/Lima
+    open-pull-requests-limit: 3
+    groups:
+      actions:
+        patterns: ['*']
+    commit-message:
+      prefix: ci(deps)
