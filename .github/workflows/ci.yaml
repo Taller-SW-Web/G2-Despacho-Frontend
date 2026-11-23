@@ -80,6 +80,60 @@ jobs:
           retention-days: 7
 
   # ---------------------------------------------------------------------------
+  # 1b. REVISIÓN DE SEGURIDAD: dependencias npm
+  #     OWASP Top 10:2025 A03 (Supply Chain) y A08 (Integrity).
+  #     - npm audit: falla si una dependencia que llega a producción tiene una
+  #       vulnerabilidad high o critical. El informe completo (incluidas las de
+  #       desarrollo) se conserva como artefacto.
+  #     - npm audit signatures: verifica las firmas del registro de los paquetes
+  #       instalados desde el lockfile, para detectar paquetes alterados.
+  # ---------------------------------------------------------------------------
+  dependencias:
+    name: Seguridad (dependencias npm)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Obtener el código
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      - name: Preparar Node.js 22 y la caché de npm
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Instalar exactamente el lockfile
+        run: npm ci --ignore-scripts
+
+      - name: Verificar las firmas del registro
+        run: npm audit signatures
+
+      - name: Auditar las dependencias de producción
+        shell: bash
+        run: |
+          set -uo pipefail
+          npm audit --json > npm-audit-completo.json || true
+          if npm audit --omit=dev --audit-level=high; then
+            echo "npm audit: sin vulnerabilidades high/critical en dependencias de producción." | tee -a "$GITHUB_STEP_SUMMARY"
+          else
+            echo "::error::Hay dependencias de producción con vulnerabilidades high o critical. Ejecutar npm audit fix o actualizar el paquete."
+            echo "npm audit: **vulnerabilidades high/critical en producción**." >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+
+      - name: Conservar el informe de dependencias
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: seguridad-dependencias
+          path: npm-audit-completo.json
+          if-no-files-found: ignore
+          retention-days: 30
+
+  # ---------------------------------------------------------------------------
   # 2. CONSTRUIR los paquetes estáticos de cada aplicación (build de producción)
   #    y conservarlos como artefacto versionado por ejecución.
   # ---------------------------------------------------------------------------
