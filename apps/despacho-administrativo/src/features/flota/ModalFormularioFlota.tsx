@@ -1,5 +1,6 @@
 import type { FormEvent, ReactNode } from 'react';
 import { Alert, Button, Group, Modal, Stack, Text } from '@mantine/core';
+import modales from './ModalesFlota.module.css';
 
 export function ModalFormularioFlota({
   titulo,
@@ -27,6 +28,7 @@ export function ModalFormularioFlota({
         if (!procesando) alCerrar();
       }}
       title={titulo}
+      classNames={{ title: modales.titulo }}
       size="lg"
       radius="lg"
       centered

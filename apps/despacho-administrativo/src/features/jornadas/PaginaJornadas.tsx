@@ -167,7 +167,9 @@ function PanelJornadas() {
         acciones={
           <Group>
             <Button
-              variant="outline"
+              variant="default"
+              type="button"
+              mih={44}
               leftSection={<IconRefresh size={20} aria-hidden="true" />}
               disabled={consulta.cargando}
               onClick={consulta.actualizar}
@@ -175,6 +177,8 @@ function PanelJornadas() {
               Actualizar
             </Button>
             <Button
+              type="button"
+              mih={44}
               leftSection={<IconPlus size={20} aria-hidden="true" />}
               disabled={!habilitada}
               onClick={() => seleccionar({ tipo: 'abrir' })}

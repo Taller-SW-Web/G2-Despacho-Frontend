@@ -6,6 +6,9 @@ import { abrirJornada, cargarRecursos } from './api';
 import { apertura } from './modelo';
 import { useConsultaJornadas } from './useConsultaJornadas';
 import { useMutacionJornada } from './useMutacionJornada';
+import modales from '../flota/ModalesFlota.module.css';
+
+const fechaLegible = (fecha: string) => fecha.split('-').reverse().join('/');
 
 export function FormularioJornada({
   cliente,
@@ -45,7 +48,9 @@ export function FormularioJornada({
         if (!operacion.procesando) alCerrar();
       }}
       title="Abrir jornada"
+      classNames={{ title: modales.titulo }}
       size="lg"
+      radius="lg"
       centered
       closeOnClickOutside={false}
       closeOnEscape={!operacion.procesando}
@@ -76,33 +81,40 @@ export function FormularioJornada({
           <Text>
             Selecciona los recursos del catálogo. El servidor confirmará que siguen disponibles.
           </Text>
-          <Text size="sm">
+          <Alert color="blue" variant="light">
             La cuenta del repartidor debe estar activada en Seguridad. El vínculo del catálogo
             identifica a la persona y no confirma su activación global.
-          </Text>
+          </Alert>
           {operacion.error && (
-            <Alert color="red" role="alert">
+            <Alert color="red" variant="light" title="No se pudo abrir la jornada" role="alert">
               {operacion.error}
             </Alert>
           )}
           {recursos.error && (
-            <Alert color="red" role="alert">
-              {recursos.error}
-              <Button variant="subtle" onClick={recursos.actualizar}>
-                Reintentar catálogos
-              </Button>
+            <Alert color="red" variant="light" title="No pudimos cargar los recursos" role="alert">
+              <Stack gap="sm" align="flex-start">
+                <Text>{recursos.error}</Text>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  mih={44}
+                  onClick={recursos.actualizar}
+                >
+                  Reintentar catálogos
+                </Button>
+              </Stack>
             </Alert>
           )}
           <EstadoVista
             estado={recursos.cargando && !recursos.datos ? 'carga' : 'datos'}
             esqueleto={<Loader aria-label="Cargando recursos" />}
           >
-            <fieldset disabled={cerrado} style={{ border: 0, padding: 0 }}>
+            <fieldset disabled={cerrado} style={{ border: 0, padding: 0, margin: 0, minWidth: 0 }}>
               <Stack gap="md">
                 <TextInput
                   label="Fecha de la jornada"
-                  type="date"
-                  value={fecha}
+                  value={fechaLegible(fecha)}
                   readOnly
                   required
                   description="Fecha actual de Operación en America/Bogota."
@@ -150,6 +162,7 @@ export function FormularioJornada({
             <Button
               type="button"
               variant="outline"
+              mih={44}
               disabled={operacion.procesando}
               onClick={alCerrar}
             >
@@ -157,6 +170,7 @@ export function FormularioJornada({
             </Button>
             <Button
               type="submit"
+              mih={44}
               loading={operacion.procesando}
               disabled={cerrado || !datos.success}
             >

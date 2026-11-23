@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Alert, Select, SimpleGrid, TextInput, Title } from '@mantine/core';
+import modales from './ModalesFlota.module.css';
 import { notificarOperacion } from '@despacho/componentes-compartidos';
 import { editarRepartidor, registrarRepartidor } from './api';
 import { datosContacto, datosRepartidor, erroresCampos, turnos, type Repartidor } from './modelo';
@@ -98,7 +99,7 @@ export function FormularioRepartidor({
         });
       }}
     >
-      <Title order={2} size="h4">
+      <Title order={3} className={modales.seccion}>
         Datos personales
       </Title>
       <SimpleGrid cols={{ base: 1, sm: 2 }}>
@@ -108,7 +109,7 @@ export function FormularioRepartidor({
         {campo('telefono', 'Teléfono', 20)}
         {campo('correo', 'Correo electrónico', 120)}
       </SimpleGrid>
-      <Title order={2} size="h4">
+      <Title order={3} className={modales.seccion}>
         Datos operativos
       </Title>
       <SimpleGrid cols={{ base: 1, sm: 2 }}>
