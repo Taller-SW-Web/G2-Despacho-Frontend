@@ -92,12 +92,17 @@ async function catalogo<T extends z.ZodTypeAny>(
   } while (pagina <= total);
   return filas;
 }
+const zona = z.object({
+  id: z.string().uuid(),
+  nombre: z.string(),
+  estado: z.enum(['ACTIVO', 'INACTIVO']),
+});
+/** Nombres de todas las zonas para presentar el monitoreo; no decide elegibilidad. */
+export async function listarZonas(cliente: ClienteApi, signal: AbortSignal) {
+  const zonas = await catalogo(cliente, '/api/v1/zonas', zona, {}, signal);
+  return zonas.map((z) => ({ value: z.id, label: z.nombre }));
+}
 export async function cargarRecursos(cliente: ClienteApi, signal: AbortSignal) {
-  const zona = z.object({
-    id: z.string().uuid(),
-    nombre: z.string(),
-    estado: z.enum(['ACTIVO', 'INACTIVO']),
-  });
   const [repartidores, furgonetas, zonas] = await Promise.all([
     catalogo(
       cliente,

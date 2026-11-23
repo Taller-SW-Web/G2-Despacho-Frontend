@@ -13,7 +13,7 @@ import {
   type ColumnaDatos,
 } from '@despacho/componentes-compartidos';
 import { useClienteApi } from '../../cliente/useClienteApi';
-import { consultarMonitoreo } from './api';
+import { consultarMonitoreo, listarZonas } from './api';
 import {
   estadosOperativos,
   fechaBogota,
@@ -27,6 +27,7 @@ import { ConfirmarCierreJornada } from './ConfirmarCierreJornada';
 import { DetalleJornada } from './DetalleJornada';
 import { MetricasJornada } from './MetricasJornada';
 import { useVersionSesion } from '../../sesion/useVersionSesion';
+import clases from './Monitoreo.module.css';
 
 const etiquetas = {
   DISPONIBLE: 'Disponible',
@@ -57,6 +58,9 @@ function PanelJornadas() {
     [cliente, clave],
   );
   const consulta = useConsultaJornadas(cargar, !errores.length, 30000);
+  // Los nombres de zona solo se piden después de una consulta válida del tablero.
+  const cargarZonas = useCallback((signal: AbortSignal) => listarZonas(cliente, signal), [cliente]);
+  const zonas = useConsultaJornadas(cargarZonas, Boolean(consulta.datos) && !errores.length);
   const [seleccion, seleccionar] = useState<Seleccion | null>(null);
   const [sinConexion, sinConectar] = useState(!navigator.onLine);
   useEffect(() => {
@@ -97,41 +101,63 @@ function PanelJornadas() {
     seleccionar(null);
     consulta.actualizar();
   };
+  const nombreZona = (id: string) =>
+    zonas.datos?.find(({ value }) => value === id)?.label ?? `Zona ${id}`;
   const columnas: ColumnaDatos<FilaMonitoreo>[] = [
-    { id: 'nombre', encabezado: 'Repartidor', celda: (fila) => fila.nombre },
+    {
+      id: 'nombre',
+      encabezado: 'Repartidor',
+      celda: (fila) => (
+        <Text size="sm" fw={600} className={clases.repartidor}>
+          {fila.nombre}
+        </Text>
+      ),
+    },
     {
       id: 'estado',
-      encabezado: 'Estado operativo',
+      encabezado: 'Estado',
       celda: (fila) => <BadgeEstado contexto="operacionRepartidor" valor={fila.estadoOperativo} />,
     },
     {
       id: 'vehiculo',
-      encabezado: 'Furgoneta / zona',
+      encabezado: 'Furgoneta y zona',
       celda: (fila) =>
         fila.jornada ? (
-          <Stack gap="xs">
-            <Text>{fila.jornada.placa}</Text>
-            <Text size="xs">{fila.jornada.idZona}</Text>
+          <Stack gap={2}>
+            <Text size="sm" fw={600} className={clases.placa}>
+              {fila.jornada.placa}
+            </Text>
+            <Text size="xs" className={clases.zona}>
+              {nombreZona(fila.jornada.idZona)}
+            </Text>
           </Stack>
         ) : (
-          'Sin jornada'
+          <span className={clases.sinDato}>Sin jornada</span>
         ),
     },
     {
       id: 'ocupacion',
       encabezado: 'Ocupación confirmada',
       celda: (fila) =>
-        fila.jornada ? <MetricasJornada jornada={fila.jornada} compacta /> : 'Sin jornada activa',
+        fila.jornada ? (
+          <div className={clases.ocupacion}>
+            <MetricasJornada jornada={fila.jornada} compacta />
+          </div>
+        ) : (
+          <span className={clases.sinDato}>Sin jornada activa</span>
+        ),
     },
     {
       id: 'acciones',
       encabezado: 'Acciones',
       celda: (fila) =>
         fila.jornada && (
-          <Group gap="xs">
+          <Stack gap={0} align="flex-start" className={clases.acciones}>
             <Button
+              type="button"
               variant="subtle"
               size="sm"
+              mih={44}
               disabled={!habilitada}
               onClick={() => seleccionar({ tipo: 'detalle', id: fila.jornada!.idJornada })}
               aria-label={`Ver jornada de ${fila.nombre}`}
@@ -139,8 +165,11 @@ function PanelJornadas() {
               Ver detalle
             </Button>
             <Button
+              type="button"
               variant="subtle"
+              color="red"
               size="sm"
+              mih={44}
               disabled={
                 !habilitada ||
                 fila.jornada.estado !== 'ACTIVA' ||
@@ -153,7 +182,7 @@ function PanelJornadas() {
             >
               Cerrar jornada
             </Button>
-          </Group>
+          </Stack>
         ),
     },
   ];
@@ -272,29 +301,37 @@ function PanelJornadas() {
               . Actualización cada 30 segundos con esta página visible.
             </Text>
           )}
-          <TablaDatos
-            filas={datos?.contenido ?? []}
-            columnas={columnas}
-            obtenerId={(fila) => fila.idRepartidor}
-            tituloAccesible="Monitoreo de flota"
-            estado={
-              !datos && consulta.cargando
-                ? 'carga'
-                : !datos && (consulta.error || errores.length)
-                  ? 'error'
-                  : datos?.contenido.length
-                    ? 'datos'
-                    : 'vacio'
-            }
-            actualizando={consulta.cargando}
-            paginacion={{
-              pagina: datos?.pagina ?? 1,
-              tamanioPagina: datos?.tamanoPagina ?? 50,
-              total: datos?.totalElementos ?? 0,
-            }}
-            alCambiarPagina={(pagina) => cambiar({ pagina: String(pagina) })}
-            alCambiarTamano={(tamano) => cambiar({ tamanoPagina: String(tamano) })}
-          />
+          <div className={clases.tabla}>
+            <TablaDatos
+              filas={datos?.contenido ?? []}
+              columnas={columnas}
+              obtenerId={(fila) => fila.idRepartidor}
+              tituloAccesible="Monitoreo de flota"
+              anchoMinimo={900}
+              estado={
+                !datos && consulta.cargando
+                  ? 'carga'
+                  : !datos && (consulta.error || errores.length)
+                    ? 'error'
+                    : datos?.contenido.length
+                      ? 'datos'
+                      : 'vacio'
+              }
+              actualizando={consulta.cargando}
+              paginacion={{
+                pagina: datos?.pagina ?? 1,
+                tamanioPagina: datos?.tamanoPagina ?? 50,
+                total: datos?.totalElementos ?? 0,
+              }}
+              alCambiarPagina={(pagina) => cambiar({ pagina: String(pagina) })}
+              alCambiarTamano={(tamano) => cambiar({ tamanoPagina: String(tamano) })}
+              estiloFila={(fila) =>
+                fila.estadoOperativo === 'SATURADO'
+                  ? { background: 'var(--ia-color-error-background)' }
+                  : {}
+              }
+            />
+          </div>
         </Stack>
       </EstadoVista>
       {!consulta.denegado && seleccion?.tipo === 'abrir' && (
