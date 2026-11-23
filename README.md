@@ -69,7 +69,7 @@ Requiere Chromium y usa `4187/18080/18090`. Exige catálogo inicial sin límites
 
 ## Pipeline CI/CD
 
-El [workflow](./.github/workflows/ci.yaml) prueba y construye ambas apps. En `main`, Vercel puede promoverlas a producción con el check `CI frontend verde` cuando Deployment Checks está configurado. El workflow verifica las URLs publicadas. Los pasos para configurar Vercel, CORS y las variables están en la [guía de despliegue](./docs/pruebas-y-despliegue.md#despliegue-en-vercel).
+El [workflow](./.github/workflows/ci.yaml) prueba y construye ambas apps e incluye la revisión de seguridad (dependencias npm, firmas del registro y secretos). En `main`, Vercel puede promoverlas a producción con el check `CI frontend verde` cuando Deployment Checks está configurado. El workflow verifica las URLs publicadas. Los pasos para configurar Vercel, CORS y las variables están en la [guía de despliegue](./docs/pruebas-y-despliegue.md#despliegue-en-vercel).
 
 ## Guías y contribuciones
 
