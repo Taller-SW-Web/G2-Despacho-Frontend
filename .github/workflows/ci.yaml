@@ -1,6 +1,7 @@
 name: CI/CD frontend
 
-# Cadena: instalar y probar -> construir artefactos -> compuerta -> desplegar (Vercel) -> verificar.
+# Cadena: instalar y probar + revisión de seguridad -> construir artefactos -> compuerta
+#         -> desplegar (Vercel) -> verificar.
 # Vercel solo promueve a producción un commit de main cuando la compuerta "CI frontend verde" pasó.
 on:
   pull_request:
@@ -192,7 +193,7 @@ jobs:
   # ---------------------------------------------------------------------------
   construccion:
     name: Construir (${{ matrix.app }})
-    needs: [comprobaciones]
+    needs: [comprobaciones, dependencias, secretos]
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     strategy:
@@ -247,13 +248,14 @@ jobs:
           retention-days: 14
 
   # ---------------------------------------------------------------------------
-  # 3. COMPUERTA: un único check que resume todo lo anterior.
+  # 3. COMPUERTA: un único check que resume todo lo anterior, incluida la
+  #    revisión de seguridad. Vercel solo promueve a producción si pasa.
   #    Es el que conviene exigir en la protección de ramas (no depende de la matriz).
   # ---------------------------------------------------------------------------
   ci-ok:
     name: CI frontend verde
     if: ${{ always() }}
-    needs: [comprobaciones, construccion]
+    needs: [comprobaciones, dependencias, secretos, construccion]
     runs-on: ubuntu-24.04
     timeout-minutes: 2
     steps:
