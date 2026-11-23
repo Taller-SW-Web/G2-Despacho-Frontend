@@ -463,6 +463,7 @@ function PanelJornadas() {
         <DetalleJornada
           cliente={cliente}
           id={seleccion.id}
+          nombreZona={nombreZona}
           alCerrar={cerrar}
           alDenegar={consulta.denegar}
         />

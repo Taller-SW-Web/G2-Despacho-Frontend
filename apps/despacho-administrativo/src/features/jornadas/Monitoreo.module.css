@@ -38,3 +38,7 @@
 .actualizacion {
   color: var(--ia-color-text-secondary);
 }
+
+.etiquetaDato {
+  color: var(--ia-color-text-secondary);
+}
