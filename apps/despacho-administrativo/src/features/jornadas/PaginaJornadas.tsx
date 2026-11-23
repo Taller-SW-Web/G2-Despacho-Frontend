@@ -1,6 +1,16 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Alert, Button, Group, Select, SimpleGrid, Stack, Text, TextInput } from '@mantine/core';
-import { IconPlus, IconRefresh } from '@tabler/icons-react';
+import {
+  IconAlertOctagon,
+  IconCircleCheck,
+  IconClockHour4,
+  IconMoon,
+  IconPlus,
+  IconRefresh,
+  IconTruckDelivery,
+} from '@tabler/icons-react';
+import { DatePickerInput } from '@mantine/dates';
+import 'dayjs/locale/es';
 import { useSearchParams } from 'react-router-dom';
 import {
   BadgeEstado,
@@ -36,11 +46,39 @@ const etiquetas = {
   FUERA_DE_TURNO: 'Fuera de turno',
 };
 const kpis = [
-  { id: 'DISPONIBLE', etiqueta: 'Disponibles', clave: 'disponible', tono: 'availability' },
-  { id: 'EN_RUTA', etiqueta: 'En ruta', clave: 'enRuta', tono: 'info' },
-  { id: 'SATURADO', etiqueta: 'Saturados', clave: 'saturado', tono: 'error' },
-  { id: 'FUERA_DE_TURNO', etiqueta: 'Fuera de turno', clave: 'fueraDeTurno', tono: 'neutral' },
+  {
+    id: 'DISPONIBLE',
+    etiqueta: 'Disponibles',
+    clave: 'disponible',
+    tono: 'availability',
+    Icono: IconCircleCheck,
+  },
+  { id: 'EN_RUTA', etiqueta: 'En ruta', clave: 'enRuta', tono: 'info', Icono: IconTruckDelivery },
+  {
+    id: 'SATURADO',
+    etiqueta: 'Saturados',
+    clave: 'saturado',
+    tono: 'error',
+    Icono: IconAlertOctagon,
+  },
+  {
+    id: 'FUERA_DE_TURNO',
+    etiqueta: 'Fuera de turno',
+    clave: 'fueraDeTurno',
+    tono: 'neutral',
+    Icono: IconMoon,
+  },
 ] as const;
+// §5.5: fechas dd/mm/aaaa y horas de 24 h, en la zona horaria de Operación.
+const fechaHora = new Intl.DateTimeFormat('es-CO', {
+  timeZone: 'America/Bogota',
+  day: '2-digit',
+  month: '2-digit',
+  year: 'numeric',
+  hour: '2-digit',
+  minute: '2-digit',
+  hourCycle: 'h23',
+});
 type Seleccion =
   { tipo: 'abrir' } | { tipo: 'cerrar'; jornada: Jornada } | { tipo: 'detalle'; id: string };
 export function PaginaJornadas() {
@@ -97,12 +135,26 @@ function PanelJornadas() {
     }
   }, [consulta.confirmada, datos, clave, establecerParametros]);
   const habilitada = consulta.confirmada && !errores.length && !sinConexion && !consulta.denegado;
+  const nombreZona = (id: string) =>
+    zonas.datos?.find(({ value }) => value === id)?.label ?? `Zona ${id}`;
+  // Sin datos confirmados no se muestran indicadores ni tabla vacíos: solo el error y su acción.
+  const sinDatos = !datos && (Boolean(consulta.error) || errores.length > 0);
+  const filtrosActivos = ['fecha', 'estadoOperativo', 'idZona'].some((id) => parametros.has(id));
+  const idZona = parametros.get('idZona');
+  const opcionesZona =
+    idZona && !zonas.datos?.some(({ value }) => value === idZona)
+      ? [...(zonas.datos ?? []), { value: idZona, label: `Zona ${idZona}` }]
+      : (zonas.datos ?? []);
+  const etiquetaFiltro = (id: string, valor: string) =>
+    id === 'fecha'
+      ? `Fecha: ${valor.split('-').reverse().join('/')}`
+      : id === 'idZona'
+        ? `Zona: ${nombreZona(valor)}`
+        : `Estado: ${etiquetas[valor as keyof typeof etiquetas] ?? 'Estado no disponible'}`;
   const cerrar = () => {
     seleccionar(null);
     consulta.actualizar();
   };
-  const nombreZona = (id: string) =>
-    zonas.datos?.find(({ value }) => value === id)?.label ?? `Zona ${id}`;
   const columnas: ColumnaDatos<FilaMonitoreo>[] = [
     {
       id: 'nombre',
@@ -225,37 +277,65 @@ function PanelJornadas() {
             alQuitarFiltro={(id) => cambiar({ [id]: '' })}
             activos={['fecha', 'estadoOperativo', 'idZona']
               .filter((id) => parametros.has(id))
-              .map((id) => ({
-                id,
-                etiqueta: `${id === 'fecha' ? 'Fecha' : id === 'idZona' ? 'Zona' : 'Estado'}: ${id === 'estadoOperativo' ? (etiquetas[parametros.get(id) as keyof typeof etiquetas] ?? 'Estado no disponible') : parametros.get(id)}`,
-              }))}
+              .map((id) => ({ id, etiqueta: etiquetaFiltro(id, parametros.get(id) ?? '') }))}
             controles={
               <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }}>
-                <TextInput
-                  type="date"
+                <DatePickerInput
                   label="Fecha de consulta"
-                  value={parametros.get('fecha') ?? ''}
-                  description="Sin selección: hoy en America/Bogota."
-                  onChange={(e) => cambiar({ fecha: e.currentTarget.value })}
+                  placeholder="Hoy"
+                  size="md"
+                  locale="es"
+                  valueFormat="DD/MM/YYYY"
+                  clearable
+                  clearButtonProps={{ 'aria-label': 'Limpiar fecha de consulta' }}
+                  nextLabel="Mes siguiente"
+                  previousLabel="Mes anterior"
+                  value={parametros.get('fecha') || null}
+                  onChange={(valor) => cambiar({ fecha: valor ?? '' })}
                 />
                 <Select
                   label="Estado operativo"
+                  placeholder="Todos"
                   clearable
                   value={parametros.get('estadoOperativo')}
                   data={estadosOperativos.map((id) => ({ value: id, label: etiquetas[id] }))}
                   onChange={(v) => cambiar({ estadoOperativo: v ?? '' })}
                 />
-                <TextInput
-                  label="Identificador de zona"
-                  value={parametros.get('idZona') ?? ''}
-                  onChange={(e) => cambiar({ idZona: e.currentTarget.value })}
-                />
+                {zonas.error ? (
+                  <TextInput
+                    label="Identificador de zona"
+                    description="No pudimos cargar los nombres de las zonas."
+                    value={parametros.get('idZona') ?? ''}
+                    onChange={(e) => cambiar({ idZona: e.currentTarget.value })}
+                  />
+                ) : (
+                  <Select
+                    label="Zona"
+                    placeholder="Todas"
+                    searchable
+                    clearable
+                    value={parametros.get('idZona')}
+                    data={opcionesZona}
+                    onChange={(v) => cambiar({ idZona: v ?? '' })}
+                  />
+                )}
               </SimpleGrid>
             }
           />
           {errores.length > 0 && (
-            <Alert role="alert" title="Revisa los filtros" color="red">
-              {errores.join(' ')}
+            <Alert role="alert" title="Revisa los filtros" color="red" variant="light">
+              <Stack gap="sm" align="flex-start">
+                <Text>{errores.join(' ')}</Text>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  mih={44}
+                  onClick={() => establecerParametros({})}
+                >
+                  Restablecer filtros
+                </Button>
+              </Stack>
             </Alert>
           )}
           {sinConexion && <FranjaEstado tipo="sinConexion" />}
@@ -270,68 +350,93 @@ function PanelJornadas() {
               alAccionar={consulta.actualizar}
             />
           )}
-          {consulta.error && !datos && (
-            <EstadoVista
-              estado="error"
-              descripcion={consulta.error}
-              accion={{ id: 'reintentar', etiqueta: 'Reintentar consulta' }}
-              alAccionar={consulta.actualizar}
-            />
-          )}
-          <SimpleGrid cols={{ base: 1, xs: 2, lg: 4 }}>
-            {kpis.map((kpi) => (
-              <TarjetaKpi
-                key={kpi.id}
-                {...kpi}
-                valor={datos?.resumen[kpi.clave] ?? null}
-                cargando={!datos && consulta.cargando}
-                accionable
-                disabled={!habilitada}
-                seleccionada={parametros.get('estadoOperativo') === kpi.id}
-                alSeleccionar={(id) =>
-                  cambiar({ estadoOperativo: parametros.get('estadoOperativo') === id ? '' : id })
-                }
+          {sinDatos ? (
+            !errores.length && (
+              <EstadoVista
+                estado="error"
+                descripcion={consulta.error}
+                accion={{ id: 'reintentar', etiqueta: 'Reintentar consulta' }}
+                alAccionar={consulta.actualizar}
               />
-            ))}
-          </SimpleGrid>
-          {datos && (
-            <Text size="sm" c="dimmed">
-              Última consulta confirmada:{' '}
-              {new Date(datos.consultadoEn).toLocaleString('es-CO', { timeZone: 'America/Bogota' })}
-              . Actualización cada 30 segundos con esta página visible.
-            </Text>
+            )
+          ) : (
+            <>
+              <SimpleGrid cols={{ base: 1, xs: 2, lg: 4 }}>
+                {kpis.map(({ Icono, ...kpi }) => (
+                  <TarjetaKpi
+                    key={kpi.id}
+                    {...kpi}
+                    icono={<Icono size={20} aria-hidden="true" />}
+                    valor={datos?.resumen[kpi.clave] ?? null}
+                    cargando={!datos && consulta.cargando}
+                    accionable
+                    disabled={!habilitada}
+                    seleccionada={parametros.get('estadoOperativo') === kpi.id}
+                    alSeleccionar={(id) =>
+                      cambiar({
+                        estadoOperativo: parametros.get('estadoOperativo') === id ? '' : id,
+                      })
+                    }
+                  />
+                ))}
+              </SimpleGrid>
+              {datos && (
+                <Group gap="xs" justify="flex-end" className={clases.actualizacion}>
+                  <IconClockHour4 size={16} aria-hidden="true" />
+                  <Text size="xs">
+                    Actualizado: {fechaHora.format(new Date(datos.consultadoEn))} · Se actualiza
+                    cada 30 s mientras la página está visible.
+                  </Text>
+                </Group>
+              )}
+              <div className={clases.tabla}>
+                <TablaDatos
+                  filas={datos?.contenido ?? []}
+                  columnas={columnas}
+                  obtenerId={(fila) => fila.idRepartidor}
+                  tituloAccesible="Monitoreo de flota"
+                  anchoMinimo={900}
+                  estado={
+                    !datos
+                      ? 'carga'
+                      : datos.contenido.length
+                        ? 'datos'
+                        : filtrosActivos
+                          ? 'sinResultados'
+                          : 'vacio'
+                  }
+                  renderizarEstado={(estado) =>
+                    estado === 'sinResultados' ? (
+                      <EstadoVista
+                        estado="sinResultados"
+                        accion={{ id: 'limpiar', etiqueta: 'Limpiar filtros' }}
+                        alAccionar={() => establecerParametros({})}
+                      />
+                    ) : (
+                      <EstadoVista
+                        estado="vacio"
+                        titulo="No hay repartidores con jornada para esta fecha"
+                        descripcion="Usa «Abrir jornada» para asignar una furgoneta y una zona a un repartidor."
+                      />
+                    )
+                  }
+                  actualizando={consulta.cargando}
+                  paginacion={{
+                    pagina: datos?.pagina ?? 1,
+                    tamanioPagina: datos?.tamanoPagina ?? 50,
+                    total: datos?.totalElementos ?? 0,
+                  }}
+                  alCambiarPagina={(pagina) => cambiar({ pagina: String(pagina) })}
+                  alCambiarTamano={(tamano) => cambiar({ tamanoPagina: String(tamano) })}
+                  estiloFila={(fila) =>
+                    fila.estadoOperativo === 'SATURADO'
+                      ? { background: 'var(--ia-color-error-background)' }
+                      : {}
+                  }
+                />
+              </div>
+            </>
           )}
-          <div className={clases.tabla}>
-            <TablaDatos
-              filas={datos?.contenido ?? []}
-              columnas={columnas}
-              obtenerId={(fila) => fila.idRepartidor}
-              tituloAccesible="Monitoreo de flota"
-              anchoMinimo={900}
-              estado={
-                !datos && consulta.cargando
-                  ? 'carga'
-                  : !datos && (consulta.error || errores.length)
-                    ? 'error'
-                    : datos?.contenido.length
-                      ? 'datos'
-                      : 'vacio'
-              }
-              actualizando={consulta.cargando}
-              paginacion={{
-                pagina: datos?.pagina ?? 1,
-                tamanioPagina: datos?.tamanoPagina ?? 50,
-                total: datos?.totalElementos ?? 0,
-              }}
-              alCambiarPagina={(pagina) => cambiar({ pagina: String(pagina) })}
-              alCambiarTamano={(tamano) => cambiar({ tamanoPagina: String(tamano) })}
-              estiloFila={(fila) =>
-                fila.estadoOperativo === 'SATURADO'
-                  ? { background: 'var(--ia-color-error-background)' }
-                  : {}
-              }
-            />
-          </div>
         </Stack>
       </EstadoVista>
       {!consulta.denegado && seleccion?.tipo === 'abrir' && (

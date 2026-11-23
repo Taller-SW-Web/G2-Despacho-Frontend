@@ -34,3 +34,7 @@
 .acciones {
   white-space: nowrap;
 }
+
+.actualizacion {
+  color: var(--ia-color-text-secondary);
+}
