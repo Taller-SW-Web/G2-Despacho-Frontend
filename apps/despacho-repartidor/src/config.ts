@@ -7,6 +7,13 @@ export const URL_API = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:80
  */
 export const URL_SEGURIDAD = import.meta.env.VITE_SEGURIDAD_URL || URL_API;
 
+/**
+ * Recuperación de contraseña por enlace (ES-F03-09). Seguridad aún no publica la operación:
+ * mientras no se active, el botón se muestra deshabilitado y la ruta vuelve al acceso.
+ */
+export const RECUPERACION_CONTRASENA_HABILITADA =
+  import.meta.env.VITE_RECUPERACION_CONTRASENA === 'true';
+
 /** Demostración sin backend: datos y operaciones en memoria, nunca contra servicios reales. */
 export const MODO_DEMO = import.meta.env.DEV && import.meta.env.VITE_MODO_DEMO === 'true';
 

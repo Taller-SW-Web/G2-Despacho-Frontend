@@ -8,6 +8,7 @@ import { PaginaDetalle } from './paginas/PaginaDetalle';
 import { PaginaEntrega } from './paginas/PaginaEntrega';
 import { PaginaFallo } from './paginas/PaginaFallo';
 import { PaginaFalloRegistrado } from './paginas/PaginaFalloRegistrado';
+import { PaginaRecuperacion } from './paginas/PaginaRecuperacion';
 import { PaginaResumen } from './paginas/PaginaResumen';
 import { PaginaRuta } from './paginas/PaginaRuta';
 import { useSesion } from './sesion/SesionProveedor';
@@ -29,6 +30,7 @@ export function Aplicacion({ puerto }: { puerto?: PuertoOperacion }) {
         <Route path="/" element={<Navigate to="/repartidor/ruta" replace />} />
         <Route path="/repartidor" element={<Navigate to="/repartidor/ruta" replace />} />
         <Route path="/repartidor/acceso" element={<PaginaAcceso />} />
+        <Route path="/repartidor/recuperar-contrasena" element={<PaginaRecuperacion />} />
         <Route path="/repartidor/ruta" element={protegida(<PaginaRuta />)} />
         <Route path="/repartidor/despachos/:id" element={protegida(<PaginaDetalle />)} />
         <Route path="/repartidor/despachos/:id/entrega" element={protegida(<PaginaEntrega />)} />

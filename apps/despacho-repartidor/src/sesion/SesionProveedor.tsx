@@ -42,11 +42,12 @@ function crearGestor() {
       };
     };
     acceso.cerrar = async () => {};
+    acceso.solicitarRecuperacion = async () => {};
     acceso.renovar = async () => {
       throw new ErrorSesion('REFRESCO_INVALIDO', 'Vuelve a ingresar a la demostración.', 401);
     };
   }
-  return crearGestorSesion(acceso);
+  return { gestor: crearGestorSesion(acceso), solicitarRecuperacion: acceso.solicitarRecuperacion };
 }
 type ContextoSesion = {
   sesion: { token: string; expiraEn: number; usuario: string } | null;
@@ -56,12 +57,14 @@ type ContextoSesion = {
   cerrar: (motivo?: Exclude<MotivoCierre, null>) => void;
   obtenerToken: () => string | null;
   prepararToken: () => Promise<string | null>;
+  /** Pide a Seguridad el enlace de restablecimiento; no inicia sesión. */
+  solicitarRecuperacion: (correo: string) => Promise<void>;
 };
 const Contexto = createContext<ContextoSesion | null>(null);
 export function SesionProveedor({ children }: { children: ReactNode }) {
-  const referencia = useRef<GestorSesion | null>(null);
+  const referencia = useRef<ReturnType<typeof crearGestor> | null>(null);
   if (!referencia.current) referencia.current = crearGestor();
-  const gestor = referencia.current;
+  const { gestor, solicitarRecuperacion } = referencia.current;
   const estado = useSyncExternalStore(gestor.suscribir, gestor.leer);
   useEffect(gestor.activar, [gestor]);
   const cerrar = useCallback(
@@ -95,8 +98,9 @@ export function SesionProveedor({ children }: { children: ReactNode }) {
       cerrar,
       obtenerToken: gestor.obtenerToken,
       prepararToken: gestor.prepararToken,
+      solicitarRecuperacion,
     }),
-    [estado, gestor, cerrar],
+    [estado, gestor, cerrar, solicitarRecuperacion],
   );
   return <Contexto.Provider value={valor}>{children}</Contexto.Provider>;
 }

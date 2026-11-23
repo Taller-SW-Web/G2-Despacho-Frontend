@@ -38,6 +38,7 @@ function adaptador(): AccesoSeguridad {
     renovar: vi.fn(async () => sesion('nuevo', 'refresco-nuevo')),
     cerrar: vi.fn(async () => {}),
     perfil: vi.fn(async () => ({})),
+    solicitarRecuperacion: vi.fn(async () => {}),
   };
 }
 describe('sesión humana compartida', () => {

@@ -203,6 +203,14 @@ export function crearAccesoSeguridad(origen: string, buzonLocal?: string) {
       await llamar('/logout', { refreshToken });
     },
     perfil: async (accessToken: string) => objeto(await llamar('/me', undefined, accessToken)),
+    /**
+     * Propuesta pendiente de G7 (contrato externo §8.6.1): Seguridad envía un enlace de
+     * restablecimiento si el correo existe. La respuesta es neutra para no revelar cuentas;
+     * la app no recibe tokens ni cambia la contraseña.
+     */
+    solicitarRecuperacion: async (correo: string) => {
+      await llamar('/recuperacion-contrasena', { correo: correo.trim() });
+    },
   };
 }
 export type AccesoSeguridad = ReturnType<typeof crearAccesoSeguridad>;
