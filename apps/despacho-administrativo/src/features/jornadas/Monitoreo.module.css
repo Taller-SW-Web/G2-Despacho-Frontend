@@ -1,0 +1,44 @@
+/* Tabla de monitoreo (F-06): datos en una línea y ocupación con ancho suficiente (§12.3, §13.6). */
+.tabla th {
+  white-space: nowrap;
+}
+
+.tabla td :global(.mantine-Badge-label) {
+  white-space: nowrap;
+  overflow-wrap: normal;
+}
+
+.repartidor {
+  min-width: 9rem;
+}
+
+.placa {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.zona {
+  color: var(--ia-color-text-secondary);
+  overflow-wrap: anywhere;
+}
+
+.ocupacion {
+  min-width: 18.25rem;
+}
+
+.sinDato {
+  color: var(--ia-color-text-secondary);
+  white-space: nowrap;
+}
+
+.acciones {
+  white-space: nowrap;
+}
+
+.actualizacion {
+  color: var(--ia-color-text-secondary);
+}
+
+.etiquetaDato {
+  color: var(--ia-color-text-secondary);
+}

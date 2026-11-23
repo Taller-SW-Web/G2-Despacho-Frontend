@@ -1,0 +1,48 @@
+/* Celdas de catálogo de flota: códigos y estados en una sola línea (SYSTEM-DESIGN §5.5 y §12.3). */
+.codigo {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.sinSalto {
+  white-space: nowrap;
+}
+
+.estados {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--mantine-spacing-xs);
+  min-width: 11rem;
+  max-width: 12.5rem;
+}
+
+.persona {
+  min-width: 13rem;
+}
+
+.correo {
+  color: var(--ia-color-text-secondary);
+  white-space: nowrap;
+}
+
+/* Encabezados y badges en una línea; si no caben, la tabla se desplaza (§12.3). */
+.tabla th {
+  white-space: nowrap;
+}
+
+.tabla td :global(.mantine-Badge-label) {
+  white-space: nowrap;
+  overflow-wrap: normal;
+}
+
+/* §12.3: las acciones de fila se agrupan en la última columna sin partirse. */
+.acciones {
+  flex-wrap: nowrap;
+  white-space: nowrap;
+}
+
+/* El estado de vinculación es largo: se parte entre palabras, nunca a mitad de palabra. */
+.tabla td .estados :global(.mantine-Badge-label) {
+  white-space: normal;
+}

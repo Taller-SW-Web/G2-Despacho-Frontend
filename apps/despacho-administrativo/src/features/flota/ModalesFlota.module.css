@@ -1,0 +1,16 @@
+/* SYSTEM-DESIGN §5.4 y §13.7: mismo título de modal que ModalConfirmacion (H3, Oswald, mayúsculas). */
+.titulo {
+  font-family: var(--mantine-font-family-headings);
+  font-size: var(--mantine-h3-font-size);
+  line-height: var(--mantine-h3-line-height);
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+/* Secciones internas del formulario en H4 (Inter 20/28). */
+.seccion.seccion {
+  font-family: var(--mantine-font-family);
+  font-size: var(--mantine-h4-font-size);
+  line-height: var(--mantine-h4-line-height);
+  text-transform: none;
+}
