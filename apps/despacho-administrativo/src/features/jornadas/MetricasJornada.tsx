@@ -10,7 +10,7 @@ export function MetricasJornada({
   compacta?: boolean;
 }) {
   return (
-    <SimpleGrid cols={compacta ? 1 : { base: 1, md: 3 }} spacing="sm">
+    <SimpleGrid cols={1} spacing={compacta ? 'sm' : 'md'}>
       <BarraOcupacion
         metrica="peso"
         usado={jornada.ocupacion.pesoKg}

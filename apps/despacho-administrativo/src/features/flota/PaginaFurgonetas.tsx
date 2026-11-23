@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Button, Group } from '@mantine/core';
+import { Button, Group, Text } from '@mantine/core';
 import { BadgeEstado, type ColumnaDatos } from '@despacho/componentes-compartidos';
 import { listarFurgonetas } from './api';
 import { estadosFurgoneta, transicionesFurgoneta, type Furgoneta } from './modelo';
@@ -8,6 +8,7 @@ import { CatalogoFlota } from './CatalogoFlota';
 import { FormularioFurgoneta } from './FormularioFurgoneta';
 import { ConfirmacionEstadoFlota } from './ConfirmacionEstadoFlota';
 import { useVersionSesion } from '../../sesion/useVersionSesion';
+import clases from './CatalogoFlota.module.css';
 
 const definiciones: DefinicionFiltro[] = [
   { clave: 'estado', etiqueta: 'Estado', opciones: estadosFurgoneta },
@@ -31,35 +32,53 @@ function PanelFurgonetas() {
     consulta.actualizar();
   };
   const columnas: ColumnaDatos<Furgoneta>[] = [
-    { id: 'placa', encabezado: 'Placa', celda: (fila) => fila.placa },
+    {
+      id: 'placa',
+      encabezado: 'Placa',
+      celda: (fila) => (
+        <Text size="sm" fw={600} className={clases.codigo}>
+          {fila.placa}
+        </Text>
+      ),
+    },
     {
       id: 'peso',
-      encabezado: 'Límite de peso (kg)',
+      encabezado: 'Límite de peso',
       alineacion: 'right',
-      celda: (fila) => numero.format(fila.capacidadPesoKg),
+      celda: (fila) => (
+        <span className={clases.codigo}>{numero.format(fila.capacidadPesoKg)} kg</span>
+      ),
     },
     {
       id: 'volumen',
-      encabezado: 'Límite de volumen (m³)',
+      encabezado: 'Límite de volumen',
       alineacion: 'right',
-      celda: (fila) => numero.format(fila.capacidadVolumenM3),
+      celda: (fila) => (
+        <span className={clases.codigo}>{numero.format(fila.capacidadVolumenM3)} m³</span>
+      ),
     },
     {
       id: 'paquetes',
-      encabezado: 'Máximo de paquetes',
+      encabezado: 'Máx. de paquetes',
       alineacion: 'right',
-      celda: (fila) => numero.format(fila.maximoPaquetes),
+      celda: (fila) => (
+        <span className={clases.codigo}>{numero.format(fila.maximoPaquetes)} paq.</span>
+      ),
     },
     {
       id: 'estado',
       encabezado: 'Estado',
-      celda: (fila) => <BadgeEstado contexto="vehiculo" valor={fila.estado} />,
+      celda: (fila) => (
+        <span className={clases.sinSalto}>
+          <BadgeEstado contexto="vehiculo" valor={fila.estado} />
+        </span>
+      ),
     },
     {
       id: 'acciones',
       encabezado: 'Acciones',
       celda: (fila) => (
-        <Group gap="xs" wrap="nowrap">
+        <Group gap="xs" className={clases.acciones}>
           <Button
             type="button"
             size="sm"
@@ -94,6 +113,7 @@ function PanelFurgonetas() {
       consulta={consulta}
       definiciones={definiciones}
       columnas={columnas}
+      anchoMinimo={760}
       obtenerId={(fila) => fila.idFurgoneta}
       alNuevo={() => establecerSeleccion({ tipo: 'nuevo' })}
     >
