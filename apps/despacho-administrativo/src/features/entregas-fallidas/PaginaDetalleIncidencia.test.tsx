@@ -71,7 +71,7 @@ function Ubicacion() {
 }
 function montar(ruta = '/entregas-fallidas/despacho-1', destinos: DestinosDetalleIncidencia = {}) {
   return render(
-    <MantineProvider theme={tema}>
+    <MantineProvider theme={tema} env="test">
       <MemoryRouter
         initialEntries={[ruta]}
         future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
@@ -138,7 +138,7 @@ it('muestra todos los bloqueos y entrega identidad y versión solo a un destino 
   const recibir = vi.fn();
   const terminar = vi.fn();
   const vista = render(
-    <MantineProvider theme={tema}>
+    <MantineProvider theme={tema} env="test">
       <PanelDecisionIncidencia
         detalle={detalle}
         bloqueada={false}
@@ -160,7 +160,7 @@ it('muestra todos los bloqueos y entrega identidad y versión solo a un destino 
     }),
   );
   vista.rerender(
-    <MantineProvider theme={tema}>
+    <MantineProvider theme={tema} env="test">
       <PanelDecisionIncidencia
         detalle={detalle}
         bloqueada
