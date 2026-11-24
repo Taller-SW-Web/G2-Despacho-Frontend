@@ -14,7 +14,7 @@ export const MENSAJE_ENVIADO =
 function mensajeError(fallo: unknown): string {
   if (fallo instanceof ErrorSesion) {
     if (fallo.codigo === 'DEMASIADAS_SOLICITUDES')
-      return 'Hiciste varias solicitudes seguidas. Espera unos minutos antes de intentarlo de nuevo.';
+      return 'Hiciste varias solicitudes seguidas. Puedes pedir hasta tres enlaces por hora; inténtalo más tarde.';
     if (fallo.codigo === 'SIN_CONEXION') return fallo.message;
   }
   return 'No pudimos enviar la solicitud. Inténtalo nuevamente en unos minutos.';
