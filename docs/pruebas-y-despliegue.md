@@ -34,15 +34,19 @@ Tras la compuerta, el job `Verificar producción (Vercel)` comprueba que la raí
 
 ### Revisión de seguridad
 
-La revisión de seguridad forma parte de la compuerta `CI frontend verde`. Como Vercel solo promueve a producción cuando ese check pasa, una revisión fallida también bloquea el despliegue. Cubre los riesgos A02, A03 y A08 del OWASP Top 10:2025.
+La revisión de seguridad forma parte de la compuerta `CI frontend verde`. Como Vercel solo promueve a producción cuando ese check pasa, una revisión fallida también bloquea el despliegue. Cubre los riesgos A02, A03, A05, A07 y A08 del OWASP Top 10:2025.
 
 | Control | Job | Herramienta | Falla cuando |
 |---|---|---|---|
 | Dependencias vulnerables (A03) | `Seguridad (dependencias npm)` | `npm audit --omit=dev --audit-level=high` | Una dependencia que llega a producción tiene una vulnerabilidad high o critical. |
 | Paquetes alterados (A08) | `Seguridad (dependencias npm)` | `npm audit signatures` | La firma del registro de un paquete del lockfile no es válida. |
 | Secretos expuestos (A02, A08) | `Seguridad (secretos en el historial)` | gitleaks 8.30.1 | Hay una credencial en cualquier commit del historial. |
+| Código propio vulnerable, SAST (A02, A05, A07) | `Seguridad (código javascript-typescript)` | CodeQL 4.39.5, suite `security-extended`, sin compilar | Un hallazgo del código de las apps o los paquetes tiene `security-severity` >= 7 (por ejemplo, XSS, redirección abierta, credencial en el bundle o token mal manejado). |
+| Pipeline inseguro (A08) | `Seguridad (código actions)` | CodeQL sobre `.github/workflows` | Un workflow tiene un hallazgo con `security-severity` >= 7 (por ejemplo, inyección de datos del evento en un `run:`). |
 
-Los informes quedan 30 días como artefactos: `seguridad-dependencias` (auditoría completa, incluidas las dependencias de desarrollo) y `seguridad-secretos` (con los valores ocultos).
+Los informes quedan 30 días como artefactos: `seguridad-dependencias` (auditoría completa, incluidas las dependencias de desarrollo), `seguridad-secretos` (con los valores ocultos) y `seguridad-codigo-<lenguaje>` (SARIF de CodeQL). Los hallazgos de CodeQL, también los de severidad menor que 7 (que no bloquean), se publican en **Security > Code scanning**. CodeQL se configura en `.github/codeql/codeql-config.yml`, que excluye las pruebas unitarias y e2e.
+
+Requisito: en **Settings > Code security**, el *Default setup* de CodeQL debe estar desactivado. Este workflow usa la configuración avanzada y ambas no pueden convivir.
 
 Integridad del propio pipeline (A08): las actions se fijan por SHA de commit, gitleaks se descarga por versión fija y se verifica su SHA-256, el token del workflow es de solo lectura y `persist-credentials: false` evita guardar el token en el checkout.
 
@@ -51,6 +55,7 @@ Si un control falla:
 - **Dependencia vulnerable:** ejecutar `npm audit fix` o actualizar el paquete y confirmar el nuevo `package-lock.json`.
 - **Secreto encontrado:** primero revocar y rotar la credencial; después limpiar el historial. Borrar el archivo no basta, porque el historial conserva el valor.
 - **Valor ficticio marcado como secreto:** documentarlo y agregar su huella a `.gitleaksignore`, o moverlo a una variable de entorno.
+- **Hallazgo de CodeQL:** abrir la alerta en Security > Code scanning, que muestra el recorrido del dato, y corregir el código (escapar la salida, evitar `dangerouslySetInnerHTML`, validar las URLs de redirección). Si es un falso positivo, descartarlo en la alerta con el motivo o excluir la regla en `query-filters` de `.github/codeql/codeql-config.yml` con un comentario que lo justifique.
 
 ### PWA en un teléfono
 
