@@ -37,6 +37,13 @@ export const filaMonitoreo = z
     (fila) => !fila.jornada || fila.jornada.idRepartidor === fila.idRepartidor,
     'Jornada de otro perfil.',
   );
+const jornadaAnteriorActiva = z.object({
+  idJornada: uuid,
+  fecha: z.string().date(),
+  nombreRepartidor: z.string(),
+  placa: z.string(),
+  pendientes: z.boolean(),
+});
 export const monitoreoRecibido = esquemaPagina(filaMonitoreo).and(
   z.object({
     resumen: z.object({
@@ -46,6 +53,7 @@ export const monitoreoRecibido = esquemaPagina(filaMonitoreo).and(
       fueraDeTurno: cantidad.int(),
     }),
     consultadoEn: z.string().datetime({ offset: true }),
+    jornadasAnterioresActivas: z.array(jornadaAnteriorActiva).optional(),
   }),
 );
 export const detalleRecibido = jornadaRecibida.and(
@@ -102,9 +110,13 @@ export const disponibilidadRecibida = z.object({
   ),
 });
 export type Jornada = z.infer<typeof jornadaRecibida>;
+export type JornadaParaCierre = Pick<Jornada, 'idJornada' | 'fecha' | 'placa' | 'estado'>;
+export type JornadaAnteriorActiva = z.infer<typeof jornadaAnteriorActiva>;
 export type Monitoreo = z.infer<typeof monitoreoRecibido>;
 export type FilaMonitoreo = z.infer<typeof filaMonitoreo>;
 export type Apertura = z.infer<typeof apertura>;
+
+export const fechaLegible = (fecha: string) => fecha.split('-').reverse().join('/');
 
 export function fechaBogota(instante = new Date()): string {
   const partes = new Intl.DateTimeFormat('en-CA', {

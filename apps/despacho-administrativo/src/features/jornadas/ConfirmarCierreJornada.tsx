@@ -1,7 +1,7 @@
 import { Button, Text } from '@mantine/core';
 import { ModalConfirmacion, notificarOperacion } from '@despacho/componentes-compartidos';
 import type { ClienteApi } from '../../cliente/useClienteApi';
-import type { Jornada } from './modelo';
+import { fechaLegible, type JornadaParaCierre } from './modelo';
 import { cerrarJornada } from './api';
 import { useMutacionJornada } from './useMutacionJornada';
 
@@ -14,7 +14,7 @@ export function ConfirmarCierreJornada({
   alDenegar,
 }: {
   cliente: ClienteApi;
-  jornada: Jornada;
+  jornada: JornadaParaCierre;
   habilitada: boolean;
   alCerrar: () => void;
   alGuardar: () => void;
@@ -25,7 +25,7 @@ export function ConfirmarCierreJornada({
     <ModalConfirmacion
       abierto
       titulo="Cerrar jornada"
-      descripcion={`Se cerrará la jornada de ${jornada.placa} del ${jornada.fecha}. Los despachos pendientes deben resolverse antes; las reservas de retornos no se liberan con este cierre.`}
+      descripcion={`Se cerrará la jornada de ${jornada.placa} del ${fechaLegible(jornada.fecha)}. Resuelve los despachos pendientes antes de cerrar. Las reservas de retornos requieren confirmación en el centro.`}
       etiquetaConfirmar="Cerrar jornada"
       intencion="destructiva"
       procesando={operacion.procesando}

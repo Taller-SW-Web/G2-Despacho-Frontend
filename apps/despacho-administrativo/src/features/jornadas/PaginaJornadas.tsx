@@ -27,15 +27,17 @@ import { consultarMonitoreo, listarZonas } from './api';
 import {
   estadosOperativos,
   fechaBogota,
+  fechaLegible,
   validarParametros,
   type FilaMonitoreo,
-  type Jornada,
+  type JornadaParaCierre,
 } from './modelo';
 import { useConsultaJornadas } from './useConsultaJornadas';
 import { FormularioJornada } from './FormularioJornada';
 import { ConfirmarCierreJornada } from './ConfirmarCierreJornada';
 import { DetalleJornada } from './DetalleJornada';
 import { MetricasJornada } from './MetricasJornada';
+import { AvisoJornadasAnteriores } from './AvisoJornadasAnteriores';
 import { useVersionSesion } from '../../sesion/useVersionSesion';
 import clases from './Monitoreo.module.css';
 
@@ -80,7 +82,9 @@ const fechaHora = new Intl.DateTimeFormat('es-CO', {
   hourCycle: 'h23',
 });
 type Seleccion =
-  { tipo: 'abrir' } | { tipo: 'cerrar'; jornada: Jornada } | { tipo: 'detalle'; id: string };
+  | { tipo: 'abrir' }
+  | { tipo: 'cerrar'; jornada: JornadaParaCierre }
+  | { tipo: 'detalle'; id: string };
 export function PaginaJornadas() {
   const sesion = useVersionSesion();
   return <PanelJornadas key={sesion} />;
@@ -127,6 +131,7 @@ function PanelJornadas() {
     establecerParametros(siguientes);
   };
   const datos = consulta.datos;
+  const jornadasAnteriores = datos?.jornadasAnterioresActivas ?? [];
   useEffect(() => {
     if (consulta.confirmada && datos && datos.pagina > Math.max(1, datos.totalPaginas)) {
       const siguientes = new URLSearchParams(clave);
@@ -147,7 +152,7 @@ function PanelJornadas() {
       : (zonas.datos ?? []);
   const etiquetaFiltro = (id: string, valor: string) =>
     id === 'fecha'
-      ? `Fecha: ${valor.split('-').reverse().join('/')}`
+      ? `Fecha: ${fechaLegible(valor)}`
       : id === 'idZona'
         ? `Zona: ${nombreZona(valor)}`
         : `Estado: ${etiquetas[valor as keyof typeof etiquetas] ?? 'Estado no disponible'}`;
@@ -271,6 +276,19 @@ function PanelJornadas() {
       />
       <EstadoVista estado="datos">
         <Stack gap="lg">
+          {jornadasAnteriores.length > 0 && (
+            <AvisoJornadasAnteriores
+              jornadas={jornadasAnteriores}
+              habilitada={habilitada}
+              alVer={({ idJornada, fecha }) => {
+                cambiar({ fecha, estadoOperativo: '', idZona: '' });
+                seleccionar({ tipo: 'detalle', id: idJornada });
+              }}
+              alCerrar={(jornada) =>
+                seleccionar({ tipo: 'cerrar', jornada: { ...jornada, estado: 'ACTIVA' } })
+              }
+            />
+          )}
           <BarraFiltros
             consultando={consulta.cargando}
             alLimpiar={() => establecerParametros({})}

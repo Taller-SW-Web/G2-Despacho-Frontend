@@ -7,6 +7,7 @@ import {
 import {
   idsPrueba,
   jornadaPrueba,
+  monitoreoPrueba,
 } from '../../apps/despacho-administrativo/src/features/jornadas/fixtures.prueba';
 
 // Navegador real con HTTP simulado. No sustituye PostgreSQL ni Seguridad reales.
@@ -192,6 +193,87 @@ test('F-06: identifica la jornada histórica y la carga que bloquean la apertura
   await expect(alerta).toContainText(/selecciona la fecha de la jornada y abre Ver detalle/);
   await expect(alerta).not.toContainText('Mensaje interno de prueba');
   await page.screenshot({ path: 'test-results/flota/conflicto-jornada-390.png', fullPage: true });
+});
+
+test('F-06: advierte en Hoy sobre jornadas anteriores y permite revisarlas o cerrarlas', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  const anterior = { ...jornadaPrueba, fecha: '2026-10-15' };
+  const idSinCarga = '00000000-0000-4000-8000-000000000005';
+  let cerrada = false;
+  const jornadaConCarga = {
+    idJornada: anterior.idJornada,
+    fecha: anterior.fecha,
+    nombreRepartidor: 'Ana Prueba',
+    placa: anterior.placa,
+    pendientes: true,
+  };
+  const jornadaSinCarga = {
+    idJornada: idSinCarga,
+    fecha: '2026-10-16',
+    nombreRepartidor: 'Luis Prueba',
+    placa: 'DEF-456',
+    pendientes: false,
+  };
+  await page.route('**/api/v1/flota/monitoreo**', (ruta) =>
+    ruta.fulfill({
+      json: {
+        ...monitoreoPrueba,
+        contenido: [],
+        totalElementos: 0,
+        totalPaginas: 0,
+        jornadasAnterioresActivas: cerrada ? [jornadaConCarga] : [jornadaConCarga, jornadaSinCarga],
+      },
+    }),
+  );
+  await page.route(`**/api/v1/jornadas/${anterior.idJornada}`, (ruta) =>
+    ruta.fulfill({
+      json: {
+        ...anterior,
+        despachos: [{ idDespacho: idSinCarga, estado: 'ASIGNADO', secuenciaRuta: 1 }],
+      },
+    }),
+  );
+  await page.route(`**/api/v1/jornadas/${idSinCarga}/cierre`, (ruta) => {
+    cerrada = true;
+    return ruta.fulfill({
+      json: {
+        ...jornadaPrueba,
+        idJornada: idSinCarga,
+        fecha: jornadaSinCarga.fecha,
+        placa: jornadaSinCarga.placa,
+        estado: 'CERRADA',
+        cerradaEn: '2026-10-17T15:30:00Z',
+      },
+    });
+  });
+
+  await iniciarSesionGestor(page, '/jornadas?estadoOperativo=FUERA_DE_TURNO');
+  const aviso = page.getByRole('region', { name: 'Jornadas anteriores sin cerrar' });
+  await expect(aviso).toContainText('Ana Prueba · 15/10/2026 · TEST-01');
+  await expect(aviso).toContainText('Luis Prueba · 16/10/2026 · DEF-456');
+  await expect(
+    aviso.getByRole('button', { name: /Cerrar jornada anterior de Ana/ }),
+  ).toBeDisabled();
+  await expect(aviso).toContainText('Resuelve la carga pendiente antes de cerrar.');
+  await page.screenshot({ path: 'test-results/flota/jornadas-anteriores-390.png', fullPage: true });
+
+  await aviso.getByRole('button', { name: /Ver jornada anterior de Ana/ }).click();
+  await expect(page).toHaveURL(/fecha=2026-10-15/);
+  await expect(page).not.toHaveURL(/estadoOperativo=/);
+  const detalle = page.getByRole('dialog', { name: 'Detalle de jornada' });
+  await expect(detalle.getByText('Asignado', { exact: true })).toBeVisible();
+  await detalle.getByRole('button', { name: 'Volver al monitoreo' }).click();
+
+  await aviso.getByRole('button', { name: /Cerrar jornada anterior de Luis/ }).click();
+  expect(cerrada).toBe(false);
+  await page
+    .getByRole('dialog', { name: 'Cerrar jornada' })
+    .getByRole('button', { name: 'Cerrar jornada', exact: true })
+    .click();
+  await expect(aviso).not.toContainText('Luis Prueba');
+  await expect(aviso).toContainText('Ana Prueba');
 });
 
 for (const ancho of [1440, 390]) {

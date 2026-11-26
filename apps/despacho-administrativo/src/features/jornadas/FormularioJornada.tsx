@@ -14,12 +14,10 @@ import {
 import { EstadoVista, notificarOperacion } from '@despacho/componentes-compartidos';
 import type { ClienteApi } from '../../cliente/useClienteApi';
 import { abrirJornada, cargarRecursos } from './api';
-import { apertura } from './modelo';
+import { apertura, fechaLegible } from './modelo';
 import { useConsultaJornadas } from './useConsultaJornadas';
 import { useMutacionJornada } from './useMutacionJornada';
 import modales from '../flota/ModalesFlota.module.css';
-
-const fechaLegible = (fecha: string) => fecha.split('-').reverse().join('/');
 
 export function FormularioJornada({
   cliente,
