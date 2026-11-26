@@ -151,6 +151,49 @@ async function seleccionar(page: Page, dialogo: Locator, nombre: string, opcion:
   await page.getByRole('option', { name: opcion, exact: true }).click();
 }
 
+test('F-06: identifica la jornada histórica y la carga que bloquean la apertura en móvil', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.route('**/api/v1/jornadas', (ruta) =>
+    ruta.fulfill({
+      status: 409,
+      json: {
+        status: 409,
+        code: 'DESP_ERROR_CONFLICTO_JORNADA',
+        detail: 'Mensaje interno de prueba',
+        jornadasBloqueantes: [
+          {
+            idJornada: idsPrueba.jornada,
+            fecha: '2026-10-15',
+            placa: 'ANT-123',
+            estado: 'ACTIVA',
+            bloqueaRepartidor: true,
+            bloqueaFurgoneta: false,
+            despachosPendientes: ['TRK-001', 'TRK-002'],
+            reservasActivas: 2,
+          },
+        ],
+      },
+    }),
+  );
+  await iniciarSesionGestor(page, '/jornadas');
+  await page.getByRole('button', { name: 'Abrir jornada', exact: true }).click();
+  const dialogo = page.getByRole('dialog', { name: 'Abrir jornada' });
+  await seleccionar(page, dialogo, 'Repartidor', 'Ana Prueba');
+  await seleccionar(page, dialogo, 'Furgoneta', 'ABC-123');
+  await seleccionar(page, dialogo, 'Zona', 'Zona de prueba');
+  await dialogo.getByRole('button', { name: 'Abrir jornada', exact: true }).click();
+  const alerta = dialogo.getByRole('alert').filter({ hasText: 'No se pudo abrir la jornada' });
+  await expect(alerta).toContainText('Jornada activa del 15/10/2026 · Furgoneta ANT-123');
+  await expect(alerta).toContainText('Bloquea al repartidor seleccionado.');
+  await expect(alerta).toContainText('2 despachos pendientes · TRK-001, TRK-002');
+  await expect(alerta).toContainText('2 reservas de capacidad activas');
+  await expect(alerta).toContainText(/selecciona la fecha de la jornada y abre Ver detalle/);
+  await expect(alerta).not.toContainText('Mensaje interno de prueba');
+  await page.screenshot({ path: 'test-results/flota/conflicto-jornada-390.png', fullPage: true });
+});
+
 for (const ancho of [1440, 390]) {
   test(`F-05: alta, edición, vinculación local y baja de repartidor a ${ancho}px`, async ({
     page,

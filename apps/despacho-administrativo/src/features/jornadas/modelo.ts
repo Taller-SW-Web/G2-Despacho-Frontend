@@ -65,6 +65,23 @@ export const apertura = z.object({
   idZona: uuid,
   fecha: z.string().date(),
 });
+export const conflictoAperturaRecibido = z.object({
+  code: z.literal('DESP_ERROR_CONFLICTO_JORNADA'),
+  jornadasBloqueantes: z
+    .array(
+      z.object({
+        idJornada: uuid,
+        fecha: z.string().date(),
+        placa: z.string().min(1),
+        estado: z.enum(['ACTIVA', 'CERRADA']),
+        bloqueaRepartidor: z.boolean(),
+        bloqueaFurgoneta: z.boolean(),
+        despachosPendientes: z.array(z.string().min(1)),
+        reservasActivas: cantidad.int(),
+      }),
+    )
+    .nonempty(),
+});
 export const disponibilidadRecibida = z.object({
   repartidores: z.array(
     z.object({
