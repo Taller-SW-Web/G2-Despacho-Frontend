@@ -171,6 +171,9 @@ export function crearOperacionDemo(): PuertoOperacion {
   };
 
   return {
+    async consultarPendientesAnteriores() {
+      return [];
+    },
     async consultarRuta(): Promise<RutaRepartidor> {
       await esperar();
       if (cerradaEn)

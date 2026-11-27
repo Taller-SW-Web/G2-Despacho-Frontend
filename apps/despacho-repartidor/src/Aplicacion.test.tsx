@@ -95,6 +95,30 @@ afterEach(() => {
   sessionStorage.clear();
 });
 
+it('muestra pendientes anteriores separados y sin acciones cuando hoy no hay jornada', async () => {
+  iniciarSesionGuardada();
+  const puerto = espiar(crearOperacionDemo());
+  vi.mocked(puerto.consultarRuta).mockResolvedValue({
+    idJornada: null,
+    fecha: '2026-11-26',
+    estadoOperativo: 'FUERA_DE_TURNO',
+    despachos: [],
+  });
+  vi.mocked(puerto.consultarPendientesAnteriores).mockResolvedValue([
+    {
+      idDespacho: '00000000-0000-4000-8000-000000009501',
+      codigoRastreoInterno: 'TRK-F06-001',
+      fecha: '2026-11-24',
+      estado: 'ASIGNADO',
+    },
+  ]);
+  montar('/repartidor/ruta', puerto);
+  const bandeja = await screen.findByRole('region', { name: 'Pendientes de regularización' });
+  expect(bandeja).toHaveTextContent('TRK-F06-001 · 24/11/2026 · Asignado');
+  expect(bandeja.querySelector('button, a')).toBeNull();
+  expect(screen.getByText(/No tienes una jornada activa para hoy/)).toBeVisible();
+});
+
 describe('acceso', () => {
   it('sin sesión lleva al ingreso y, con credenciales válidas, abre la ruta', async () => {
     const usuario = userEvent.setup();

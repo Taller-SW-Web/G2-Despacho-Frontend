@@ -1,5 +1,5 @@
 import { useCallback, useEffect } from 'react';
-import { ActionIcon, Box, Progress, Stack, Text } from '@mantine/core';
+import { ActionIcon, Alert, Box, List, Progress, Stack, Text } from '@mantine/core';
 import { IconRefresh } from '@tabler/icons-react';
 import { EstadoVista, FranjaEstado, TarjetaDespacho } from '@despacho/componentes-compartidos';
 import { useNavigate } from 'react-router-dom';
@@ -38,15 +38,25 @@ export function PaginaRuta() {
   const navigate = useNavigate();
   const cargar = useCallback((signal: AbortSignal) => operacion.consultarRuta(signal), [operacion]);
   const { consulta, recargar } = useConsulta(cargar);
+  const cargarPendientes = useCallback(
+    (signal: AbortSignal) => operacion.consultarPendientesAnteriores(signal),
+    [operacion],
+  );
+  const { consulta: consultaPendientes, recargar: recargarPendientes } =
+    useConsulta(cargarPendientes);
+  const actualizar = useCallback(() => {
+    recargar();
+    recargarPendientes();
+  }, [recargar, recargarPendientes]);
 
   // Al volver a la app desde el teléfono o el mapa, la ruta se actualiza sin recargar toda la vista.
   useEffect(() => {
     const alVolver = () => {
-      if (document.visibilityState === 'visible') recargar();
+      if (document.visibilityState === 'visible') actualizar();
     };
     document.addEventListener('visibilitychange', alVolver);
     return () => document.removeEventListener('visibilitychange', alVolver);
-  }, [recargar]);
+  }, [actualizar]);
 
   const ruta = consulta.estado === 'lista' ? consulta.datos : null;
   const total = ruta?.despachos.length ?? 0;
@@ -63,7 +73,7 @@ export function PaginaRuta() {
           variant="subtle"
           color="gray.0"
           aria-label="Actualizar ruta"
-          onClick={recargar}
+          onClick={actualizar}
           size="xl"
         >
           <IconRefresh size={22} aria-hidden="true" />
@@ -145,6 +155,23 @@ export function PaginaRuta() {
             </li>
           ))}
         </Stack>
+      )}
+      {consultaPendientes.estado === 'lista' && consultaPendientes.datos.length > 0 && (
+        <Alert title="Pendientes de regularización" role="region" color="yellow" variant="light">
+          <List spacing="xs">
+            {consultaPendientes.datos.map((despacho) => (
+              <List.Item key={despacho.idDespacho}>
+                {despacho.codigoRastreoInterno} · {despacho.fecha.split('-').reverse().join('/')} ·{' '}
+                {despacho.estado === 'ASIGNADO' ? 'Asignado' : 'En camino'}
+              </List.Item>
+            ))}
+          </List>
+        </Alert>
+      )}
+      {consultaPendientes.estado === 'error' && ruta && (
+        <Alert color="yellow" role="status">
+          No se pudieron consultar los pendientes anteriores. Actualiza la ruta para reintentar.
+        </Alert>
       )}
     </Pantalla>
   );

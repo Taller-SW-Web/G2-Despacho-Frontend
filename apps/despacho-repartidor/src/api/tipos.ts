@@ -52,6 +52,15 @@ export const esquemaDetalle = z.object({
     .nullable(),
 });
 
+export const esquemaPendientesAnteriores = z.array(
+  z.object({
+    idDespacho: z.string().uuid(),
+    codigoRastreoInterno: z.string(),
+    fecha: z.string().date(),
+    estado: z.enum(['ASIGNADO', 'EN_CAMINO']),
+  }),
+);
+
 export const esquemaResumen = z.object({
   idJornada: z.string().uuid().nullable(),
   fecha: z.string(),
@@ -96,6 +105,7 @@ export const esquemaAutorizacionCarga = z.object({
 export type Hitos = z.infer<typeof esquemaHitos>;
 export type DespachoRuta = z.infer<typeof esquemaDespachoRuta>;
 export type RutaRepartidor = z.infer<typeof esquemaRuta>;
+export type PendienteRegularizacion = z.infer<typeof esquemaPendientesAnteriores>[number];
 export type DetalleDespacho = z.infer<typeof esquemaDetalle>;
 export type ResumenJornada = z.infer<typeof esquemaResumen>;
 export type MotivoFallo = z.infer<typeof esquemaMotivos>['motivos'][number];
@@ -104,6 +114,7 @@ export type TipoEvidencia = 'ENTREGA' | 'FALLO';
 /** Puerto único de la app hacia Operación; la implementación HTTP y la de demostración lo cumplen igual. */
 export interface PuertoOperacion {
   consultarRuta(signal?: AbortSignal): Promise<RutaRepartidor>;
+  consultarPendientesAnteriores(signal?: AbortSignal): Promise<PendienteRegularizacion[]>;
   consultarDetalle(idDespacho: string, signal?: AbortSignal): Promise<DetalleDespacho>;
   consultarResumen(signal?: AbortSignal): Promise<ResumenJornada>;
   consultarMotivos(signal?: AbortSignal): Promise<MotivoFallo[]>;

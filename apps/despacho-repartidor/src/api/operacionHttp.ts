@@ -6,6 +6,7 @@ import {
   esquemaAutorizacionCarga,
   esquemaDetalle,
   esquemaMotivos,
+  esquemaPendientesAnteriores,
   esquemaResumen,
   esquemaRuta,
   type DetalleDespacho,
@@ -43,6 +44,12 @@ export function crearOperacionHttp(
     consultarRuta: (signal) =>
       ejecutar(async () =>
         esquemaRuta.parse((await cliente.get('/api/v1/repartidor/mi-ruta', { signal })).data),
+      ),
+    consultarPendientesAnteriores: (signal) =>
+      ejecutar(async () =>
+        esquemaPendientesAnteriores.parse(
+          (await cliente.get('/api/v1/repartidor/pendientes-regularizacion', { signal })).data,
+        ),
       ),
     consultarDetalle: (idDespacho, signal) =>
       ejecutar(async () =>
