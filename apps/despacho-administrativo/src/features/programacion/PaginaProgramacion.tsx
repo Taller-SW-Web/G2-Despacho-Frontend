@@ -39,6 +39,7 @@ import { FiltrosProgramacion } from './FiltrosProgramacion';
 import { TablaCola } from './TablaCola';
 import { ModalSimulacion } from './ModalSimulacion';
 import { ModalAsignacion } from './ModalAsignacion';
+import { ModalAdelanto } from './ModalAdelanto';
 import { ResumenDespacho } from './ResumenDespacho';
 import { RutasProgramacion } from './RutasProgramacion';
 import clases from './Programacion.module.css';
@@ -72,6 +73,7 @@ function PanelProgramacion() {
   const valida = Object.keys(errores).length === 0;
   const [denegada, establecerDenegada] = useState(false);
   const [asignacion, establecerAsignacion] = useState<Pendiente | null>(null);
+  const [adelanto, establecerAdelanto] = useState<Pendiente | null>(null);
   const [detalle, establecerDetalle] = useState<Pendiente | null>(null);
   const [personalizada, establecerPersonalizada] = useState(false);
   const [generando, establecerGenerando] = useState(false);
@@ -102,6 +104,8 @@ function PanelProgramacion() {
   const denegar = useCallback(() => {
     establecerDenegada(true);
     establecerAsignacion(null);
+    establecerAdelanto(null);
+    establecerAdelanto(null);
     establecerDetalle(null);
     establecerPersonalizada(false);
   }, []);
@@ -116,6 +120,7 @@ function PanelProgramacion() {
       !sinPermiso &&
       valida &&
       !asignacion &&
+      !adelanto &&
       !detalle &&
       !personalizada &&
       !generando,
@@ -146,6 +151,8 @@ function PanelProgramacion() {
     });
   const recargarCola = () => {
     establecerAsignacion(null);
+    establecerAdelanto(null);
+    establecerAdelanto(null);
     establecerDetalle(null);
     establecerPersonalizada(false);
     refrescar();
@@ -248,7 +255,14 @@ function PanelProgramacion() {
         <Tabs
           value={pestania}
           onChange={(valor) => {
-            if (!rutaOcupada && !asignacion && !detalle && !personalizada && !generando)
+            if (
+              !rutaOcupada &&
+              !asignacion &&
+              !adelanto &&
+              !detalle &&
+              !personalizada &&
+              !generando
+            )
               establecerPestania(valor);
           }}
           keepMounted={false}
@@ -309,7 +323,9 @@ function PanelProgramacion() {
                   </Tabs.Tab>
                   <Tabs.Tab
                     value="rutas"
-                    disabled={Boolean(asignacion || detalle || personalizada || generando)}
+                    disabled={Boolean(
+                      asignacion || adelanto || detalle || personalizada || generando,
+                    )}
                   >
                     Rutas por repartidor
                   </Tabs.Tab>
@@ -446,6 +462,10 @@ function PanelProgramacion() {
                     recordarFoco();
                     establecerAsignacion(d);
                   }}
+                  alAdelantar={(d) => {
+                    recordarFoco();
+                    establecerAdelanto(d);
+                  }}
                   alVerDetalle={(d) => {
                     recordarFoco();
                     establecerDetalle(d);
@@ -471,6 +491,18 @@ function PanelProgramacion() {
                       }
                     }}
                     alConsultar={revisarResultado}
+                  />
+                )}
+                {adelanto && hoy && (
+                  <ModalAdelanto
+                    despacho={adelanto}
+                    hoy={hoy}
+                    alCerrar={() => {
+                      establecerAdelanto(null);
+                      devolverFoco();
+                    }}
+                    alActualizarCola={recargarCola}
+                    alDenegar={denegar}
                   />
                 )}
                 {asignacion && (

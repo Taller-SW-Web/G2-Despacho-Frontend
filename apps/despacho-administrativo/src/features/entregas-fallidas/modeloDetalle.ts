@@ -63,6 +63,14 @@ const recepcion = z
     'Recepción incoherente',
   );
 const datosHistorial = z.object({
+  fechaProgramadaAnterior: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .optional(),
+  fechaProgramada: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .optional(),
   idIncidencia: identificador.optional(),
   idRepartidor: identificador.optional(),
   idJornada: identificador.optional(),
@@ -127,6 +135,7 @@ export const esquemaDetalle = z.object({
         'REORDENAMIENTO',
         'RECEPCION_EN_CENTRO',
         'ANULACION_REGISTRADA',
+        'ADELANTO_PROGRAMACION',
       ]),
       estadoAnterior: estadoDespacho.nullable(),
       estadoNuevo: estadoDespacho,
@@ -184,8 +193,11 @@ const nombresOperacion = {
   REORDENAMIENTO: 'Reordenamiento',
   RECEPCION_EN_CENTRO: 'Recepción en centro',
   ANULACION_REGISTRADA: 'Anulación registrada',
+  ADELANTO_PROGRAMACION: 'Programación adelantada',
 };
 const nombresDatos: Record<string, string> = {
+  fechaProgramadaAnterior: 'Fecha programada anterior',
+  fechaProgramada: 'Fecha programada adelantada',
   idIncidencia: 'ID de incidencia',
   idRepartidor: 'ID del repartidor',
   idJornada: 'ID de jornada',
