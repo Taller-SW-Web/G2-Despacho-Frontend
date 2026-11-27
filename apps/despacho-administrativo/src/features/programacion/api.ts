@@ -123,3 +123,51 @@ export function interpretarError(error: unknown, mutacion = false) {
   };
 }
 export type ErrorProgramacion = ReturnType<typeof interpretarError>;
+
+export type ComandoAdelanto = {
+  idDespacho: string;
+  version: number;
+  clave: string;
+  fechaAnterior: string;
+  motivo: string;
+};
+const esquemaAdelanto = z.object({
+  idDespacho: z.string().min(1),
+  estado: z.literal('PENDIENTE_ASIGNACION'),
+  fechaProgramadaAnterior: z.string().date(),
+  fechaProgramada: z.string().date(),
+  versionDespacho: z.number().int().positive(),
+  motivo: z.string(),
+  actualizadoEn: z.string().datetime(),
+});
+
+export async function adelantarDespacho(cliente: ClienteApi, comando: ComandoAdelanto) {
+  const respuesta = esquemaAdelanto.parse(
+    (
+      await cliente.post(
+        `/api/v1/despachos/${encodeURIComponent(comando.idDespacho)}/adelanto`,
+        { motivo: comando.motivo },
+        { headers: { 'If-Match': `"${comando.version}"`, 'Idempotency-Key': comando.clave } },
+      )
+    ).data,
+  );
+  // Validar el día del instante confirmado, no el reloj del navegador ni el día del reintento.
+  const partes = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/Lima',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(new Date(respuesta.actualizadoEn));
+  const parte = (tipo: string) => partes.find((p) => p.type === tipo)?.value;
+  const hoyConfirmado = `${parte('year')}-${parte('month')}-${parte('day')}`;
+  if (
+    respuesta.idDespacho !== comando.idDespacho ||
+    respuesta.fechaProgramadaAnterior !== comando.fechaAnterior ||
+    respuesta.fechaProgramada !== hoyConfirmado ||
+    respuesta.fechaProgramada >= respuesta.fechaProgramadaAnterior ||
+    respuesta.motivo !== comando.motivo ||
+    respuesta.versionDespacho !== comando.version + 1
+  )
+    throw new Error('No se pudo comprobar el adelanto.');
+  return respuesta;
+}

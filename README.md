@@ -37,6 +37,8 @@ El acceso habitual mantiene la sesión en memoria y pide volver a ingresar al re
 
 ## Pruebas y construcción
 
+En **Programación y asignación**, los despachos futuros ofrecen **Adelantar a hoy**. Requiere motivo y confirmación; mantiene el despacho pendiente y no reserva capacidad. Tras recargar la cola se asigna mediante el flujo habitual. Un resultado incierto ofrece **Recuperar adelanto** con el comando original, sin doble envío. Requiere el backend que implemente [Gestión §3.2.3](https://github.com/Taller-SW-Web/G2-Despacho-Specs/blob/main/integraciones/api-contract-gestion-despachos.md#323-adelantar-un-despacho-a-hoy).
+
 ```powershell
 npm test
 npm run test:f01
@@ -69,7 +71,7 @@ Requiere Chromium y usa `4187/18080/18090`. Exige catálogo inicial sin límites
 
 ## Pipeline CI/CD
 
-El [workflow](./.github/workflows/ci.yaml) prueba y construye ambas apps e incluye la revisión de seguridad (dependencias npm, firmas del registro y secretos). En `main`, Vercel puede promoverlas a producción con el check `CI frontend verde` cuando Deployment Checks está configurado. El workflow verifica las URLs publicadas. Los pasos para configurar Vercel, CORS y las variables están en la [guía de despliegue](./docs/pruebas-y-despliegue.md#despliegue-en-vercel).
+El [workflow](./.github/workflows/ci.yaml) prueba y construye ambas apps e incluye la revisión de seguridad (dependencias npm, firmas del registro, secretos y código con CodeQL). En `main`, Vercel puede promoverlas a producción con el check `CI frontend verde` cuando Deployment Checks está configurado. El workflow verifica las URLs publicadas. Los pasos para configurar Vercel, CORS y las variables están en la [guía de despliegue](./docs/pruebas-y-despliegue.md#despliegue-en-vercel).
 
 ## Guías y contribuciones
 

@@ -15,6 +15,7 @@ export function TablaCola({
   nuevo,
   bloqueada,
   alAsignar,
+  alAdelantar,
   alVerDetalle,
   alCambiarPagina,
   alCambiarTamano,
@@ -27,6 +28,7 @@ export function TablaCola({
   nuevo: string | null;
   bloqueada: boolean;
   alAsignar: (d: Pendiente) => void;
+  alAdelantar: (d: Pendiente) => void;
   alVerDetalle: (d: Pendiente) => void;
   alCambiarPagina: (p: number) => void;
   alCambiarTamano: (t: number) => void;
@@ -193,9 +195,24 @@ export function TablaCola({
             Asignar
           </Button>
           {!d.asignable && (
-            <Text size="xs">
-              Disponible desde {formatearFecha(d.disponibleDesde ?? d.fechaProgramada)}
-            </Text>
+            <>
+              <Text size="xs">
+                Disponible desde {formatearFecha(d.disponibleDesde ?? d.fechaProgramada)}
+              </Text>
+              {pagina && d.fechaProgramada > pagina.fechaActualServidor && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  px="xs"
+                  mih={44}
+                  disabled={bloqueada}
+                  onClick={() => alAdelantar(d)}
+                >
+                  Adelantar a hoy
+                </Button>
+              )}
+            </>
           )}
           <Button
             type="button"

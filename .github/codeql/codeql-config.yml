@@ -1,0 +1,21 @@
+# Configuración del análisis estático de seguridad (SAST) con CodeQL.
+# La usa el job "Seguridad (código ...)" de .github/workflows/ci.yaml.
+#
+# Suite security-extended: solo reglas de seguridad (sin reglas de calidad de código).
+# El job bloquea los hallazgos con security-severity >= 7, el mismo umbral que usa
+# el backend (CVSS >= 7 en Dependency-Check).
+name: Revisión de código del frontend de Despacho
+
+paths-ignore:
+  # Pruebas unitarias y e2e (Playwright): no llegan al build de producción.
+  - '**/*.test.ts'
+  - '**/*.test.tsx'
+  - pruebas
+  - 'playwright.*.config.ts'
+  - '**/dist/**'
+
+# Excepciones justificadas, como el allowlist de .gitleaks.toml.
+# Cada exclusión debe indicar la regla, el motivo y quién la revisó.
+# query-filters:
+#   - exclude:
+#       id: js/<regla>   # motivo
