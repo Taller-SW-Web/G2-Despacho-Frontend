@@ -37,6 +37,8 @@ El acceso habitual mantiene la sesión en memoria y pide volver a ingresar al re
 
 ## Pruebas y construcción
 
+En **Programación y asignación**, los despachos futuros ofrecen **Adelantar a hoy**. Requiere motivo y confirmación; mantiene el despacho pendiente y no reserva capacidad. Tras recargar la cola se asigna mediante el flujo habitual. Un resultado incierto ofrece **Recuperar adelanto** con el comando original, sin doble envío. Requiere el backend que implemente [Gestión §3.2.3](https://github.com/Taller-SW-Web/G2-Despacho-Specs/blob/main/integraciones/api-contract-gestion-despachos.md#323-adelantar-un-despacho-a-hoy).
+
 ```powershell
 npm test
 npm run test:f01

@@ -71,6 +71,111 @@ it('presenta cifras del servidor, reintentos con contador cero y el bloqueo de f
   expect(screen.getByRole('tab', { name: 'Rutas por repartidor' })).toBeDisabled();
 });
 
+it('adelanta a hoy con motivo, evita doble envío y relee sin asignar automáticamente', async () => {
+  const usuario = userEvent.setup();
+  let resolver!: (respuesta: unknown) => void;
+  publicar.mockImplementation(
+    () =>
+      new Promise((r) => {
+        resolver = r;
+      }),
+  );
+  montar();
+  const fila = (await screen.findByText('TRK-78902')).closest('tr')!;
+  await usuario.click(within(fila).getByRole('button', { name: 'Adelantar a hoy' }));
+  const modal = within(screen.getByRole('dialog'));
+  expect(modal.getByText(/No asigna un repartidor ni reserva capacidad/)).toBeVisible();
+  expect(modal.getByRole('button', { name: 'Confirmar adelanto' })).toBeDisabled();
+  await usuario.type(
+    modal.getByRole('textbox', { name: 'Motivo del adelanto' }),
+    ' Disponibilidad inmediata ',
+  );
+  await usuario.dblClick(modal.getByRole('button', { name: 'Confirmar adelanto' }));
+  expect(publicar).toHaveBeenCalledTimes(1);
+  expect(publicar).toHaveBeenCalledWith(
+    '/api/v1/despachos/despacho-2/adelanto',
+    { motivo: 'Disponibilidad inmediata' },
+    { headers: { 'If-Match': '"1"', 'Idempotency-Key': expect.any(String) } },
+  );
+  pagina.contenido[2] = {
+    ...pagina.contenido[2],
+    fechaProgramada: '2026-10-17',
+    asignable: true,
+    disponibleDesde: null,
+    versionDespacho: 2,
+  };
+  pagina.indicadores.pendientesHoy++;
+  pagina.indicadores.programadosFuturo--;
+  await act(async () =>
+    resolver({
+      data: {
+        idDespacho: 'despacho-2',
+        estado: 'PENDIENTE_ASIGNACION',
+        fechaProgramadaAnterior: '2026-10-20',
+        fechaProgramada: '2026-10-17',
+        versionDespacho: 2,
+        motivo: 'Disponibilidad inmediata',
+        actualizadoEn: '2026-10-17T17:30:00Z',
+      },
+    }),
+  );
+  await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+  await waitFor(() =>
+    expect(screen.getByRole('button', { name: 'Pendientes para hoy: 33' })).toBeEnabled(),
+  );
+  expect(
+    within(screen.getByText('TRK-78902').closest('tr')!).getByRole('button', { name: 'Asignar' }),
+  ).toBeEnabled();
+  expect(publicar).toHaveBeenCalledTimes(1);
+  expect(notificar).toHaveBeenCalledWith(
+    expect.objectContaining({
+      mensaje: expect.stringContaining('Continúa pendiente de asignación'),
+    }),
+  );
+});
+
+it('recupera un adelanto incierto con la misma clave, versión y motivo', async () => {
+  const usuario = userEvent.setup();
+  publicar.mockRejectedValueOnce(new Error('Sin respuesta'));
+  montar();
+  const fila = (await screen.findByText('TRK-78902')).closest('tr')!;
+  await usuario.click(within(fila).getByRole('button', { name: 'Adelantar a hoy' }));
+  const modal = within(screen.getByRole('dialog'));
+  await usuario.type(modal.getByRole('textbox', { name: 'Motivo del adelanto' }), 'Motivo');
+  await usuario.click(modal.getByRole('button', { name: 'Confirmar adelanto' }));
+  await modal.findByRole('button', { name: 'Recuperar adelanto' });
+  expect(modal.getByRole('textbox', { name: 'Motivo del adelanto' })).toBeDisabled();
+  publicar.mockRejectedValueOnce(new Error('Sin respuesta'));
+  await usuario.click(modal.getByRole('button', { name: 'Recuperar adelanto' }));
+  await waitFor(() => expect(publicar).toHaveBeenCalledTimes(2));
+  expect(publicar.mock.calls[1]).toEqual(publicar.mock.calls[0]);
+  expect(notificar).not.toHaveBeenCalled();
+});
+
+it('un conflicto de adelanto exige recargar y un permiso revocado cierra el modal', async () => {
+  const usuario = userEvent.setup();
+  publicar.mockRejectedValueOnce(fallo(409));
+  montar();
+  const abrir = async () => {
+    const fila = (await screen.findByText('TRK-78902')).closest('tr')!;
+    await usuario.click(within(fila).getByRole('button', { name: 'Adelantar a hoy' }));
+    await usuario.type(screen.getByRole('textbox', { name: 'Motivo del adelanto' }), 'Motivo');
+    await usuario.click(screen.getByRole('button', { name: 'Confirmar adelanto' }));
+  };
+  await abrir();
+  await screen.findByRole('button', { name: 'Cerrar y consultar cola' });
+  expect(screen.queryByRole('button', { name: 'Confirmar adelanto' })).not.toBeInTheDocument();
+  await usuario.click(screen.getByRole('button', { name: 'Cerrar y consultar cola' }));
+  await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+  await waitFor(() =>
+    expect(screen.getByRole('button', { name: 'Adelantar a hoy' })).toBeEnabled(),
+  );
+  publicar.mockRejectedValueOnce(fallo(403));
+  await abrir();
+  await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+  expect(notificar).not.toHaveBeenCalled();
+});
+
 it('sincroniza filtros y KPI con la URL usando hoy del servidor y conserva el tamaño de página', async () => {
   const usuario = userEvent.setup();
   montar('/programacion?tamanoPagina=50&idZona=zona-centro');
