@@ -1,14 +1,23 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Alert, Button, Group, Loader, Modal, Select, Stack, Text, TextInput } from '@mantine/core';
+import {
+  Alert,
+  Button,
+  Group,
+  List,
+  Loader,
+  Modal,
+  Select,
+  Stack,
+  Text,
+  TextInput,
+} from '@mantine/core';
 import { EstadoVista, notificarOperacion } from '@despacho/componentes-compartidos';
 import type { ClienteApi } from '../../cliente/useClienteApi';
 import { abrirJornada, cargarRecursos } from './api';
-import { apertura } from './modelo';
+import { apertura, fechaLegible } from './modelo';
 import { useConsultaJornadas } from './useConsultaJornadas';
 import { useMutacionJornada } from './useMutacionJornada';
 import modales from '../flota/ModalesFlota.module.css';
-
-const fechaLegible = (fecha: string) => fecha.split('-').reverse().join('/');
 
 export function FormularioJornada({
   cliente,
@@ -87,7 +96,46 @@ export function FormularioJornada({
           </Alert>
           {operacion.error && (
             <Alert color="red" variant="light" title="No se pudo abrir la jornada" role="alert">
-              {operacion.error}
+              {operacion.conflicto ? (
+                <Stack gap="sm">
+                  <List spacing="sm">
+                    {operacion.conflicto.jornadasBloqueantes.map((jornada) => (
+                      <List.Item key={jornada.idJornada}>
+                        <Text fw={600}>
+                          Jornada {jornada.estado === 'ACTIVA' ? 'activa' : 'cerrada'} del{' '}
+                          {fechaLegible(jornada.fecha)} · Furgoneta {jornada.placa}
+                        </Text>
+                        <Text size="sm">
+                          {jornada.bloqueaRepartidor && jornada.bloqueaFurgoneta
+                            ? 'Bloquea al repartidor y a la furgoneta seleccionados.'
+                            : jornada.bloqueaRepartidor
+                              ? 'Bloquea al repartidor seleccionado.'
+                              : 'Bloquea a la furgoneta seleccionada.'}
+                        </Text>
+                        <Text size="sm" style={{ overflowWrap: 'anywhere' }}>
+                          {jornada.despachosPendientes.length === 1
+                            ? '1 despacho pendiente'
+                            : `${jornada.despachosPendientes.length} despachos pendientes`}
+                          {!!jornada.despachosPendientes.length &&
+                            ` · ${jornada.despachosPendientes.join(', ')}`}
+                        </Text>
+                        {jornada.reservasActivas > 0 && (
+                          <Text size="sm">
+                            {jornada.reservasActivas === 1
+                              ? '1 reserva de capacidad activa'
+                              : `${jornada.reservasActivas} reservas de capacidad activas`}
+                          </Text>
+                        )}
+                      </List.Item>
+                    ))}
+                  </List>
+                  <Text size="sm">
+                    En Jornadas y monitoreo, selecciona la fecha de la jornada y abre Ver detalle.
+                  </Text>
+                </Stack>
+              ) : (
+                operacion.error
+              )}
             </Alert>
           )}
           {recursos.error && (
@@ -126,7 +174,10 @@ export function FormularioJornada({
                   clearable
                   data={recursos.datos?.repartidores ?? []}
                   value={repartidor}
-                  onChange={seleccionarRepartidor}
+                  onChange={(id) => {
+                    seleccionarRepartidor(id);
+                    operacion.limpiarError();
+                  }}
                   nothingFoundMessage="No hay repartidores activos y vinculados"
                 />
                 <Select
@@ -136,7 +187,10 @@ export function FormularioJornada({
                   clearable
                   data={recursos.datos?.furgonetas ?? []}
                   value={furgoneta}
-                  onChange={seleccionarFurgoneta}
+                  onChange={(id) => {
+                    seleccionarFurgoneta(id);
+                    operacion.limpiarError();
+                  }}
                   nothingFoundMessage="No hay furgonetas disponibles"
                 />
                 <Select
