@@ -101,9 +101,16 @@ function leerSesion(valor: unknown): Sesion {
   };
 }
 
+/** Quita las barras finales sin regex (evita ReDoS, CodeQL js/polynomial-redos). */
+function sinBarraFinal(texto: string): string {
+  let fin = texto.length;
+  while (fin > 0 && texto.charCodeAt(fin - 1) === 47 /* '/' */) fin--;
+  return texto.slice(0, fin);
+}
+
 /** Transporte aislado: origen sin /api/v1. No almacena credenciales ni reintenta operaciones. */
 export function crearAccesoSeguridad(origen: string, buzonLocal?: string) {
-  const base = `${origen.replace(/\/+$/, '')}/api/v1/auth`;
+  const base = `${sinBarraFinal(origen)}/api/v1/auth`;
   async function llamar(ruta: string, cuerpo?: Datos, token?: string): Promise<unknown> {
     let respuesta: Response;
     try {
