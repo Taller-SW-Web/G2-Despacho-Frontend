@@ -103,11 +103,17 @@ function leerSesion(valor: unknown): Sesion {
 
 /** Transporte aislado: origen sin /api/v1. No almacena credenciales ni reintenta operaciones. */
 export function crearAccesoSeguridad(origen: string, buzonLocal?: string) {
-  const base = `${origen.replace(/\/+$/, '')}/api/v1/auth`;
-  async function llamar(ruta: string, cuerpo?: Datos, token?: string): Promise<unknown> {
+  const raiz = `${origen.replace(/\/+$/, '')}/api/v1`;
+  const base = `${raiz}/auth`;
+  async function llamar(
+    ruta: string,
+    cuerpo?: Datos,
+    token?: string,
+    prefijo = base,
+  ): Promise<unknown> {
     let respuesta: Response;
     try {
-      respuesta = await fetch(`${base}${ruta}`, {
+      respuesta = await fetch(`${prefijo}${ruta}`, {
         method: cuerpo ? 'POST' : 'GET',
         headers: {
           Accept: 'application/json',
@@ -203,6 +209,15 @@ export function crearAccesoSeguridad(origen: string, buzonLocal?: string) {
       await llamar('/logout', { refreshToken });
     },
     perfil: async (accessToken: string) => objeto(await llamar('/me', undefined, accessToken)),
+    /**
+     * POST /password/recuperar de G7 (OpenAPI 1.2.0, SPEC-08; contrato externo §8.6.1).
+     * Siempre 202, exista o no la cuenta; G7 envía un enlace de un solo uso (30 min) y el
+     * restablecimiento ocurre en su propia página. Sin `canalOrigen`: G7 aún no tiene un canal
+     * para la app del repartidor y usa WEB por omisión.
+     */
+    solicitarRecuperacion: async (correo: string) => {
+      await llamar('/recuperar', { correo: correo.trim() }, undefined, `${raiz}/password`);
+    },
   };
 }
 export type AccesoSeguridad = ReturnType<typeof crearAccesoSeguridad>;

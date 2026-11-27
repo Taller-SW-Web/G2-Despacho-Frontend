@@ -38,6 +38,7 @@ function adaptador(): AccesoSeguridad {
     renovar: vi.fn(async () => sesion('nuevo', 'refresco-nuevo')),
     cerrar: vi.fn(async () => {}),
     perfil: vi.fn(async () => ({})),
+    solicitarRecuperacion: vi.fn(async () => {}),
   };
 }
 describe('sesión humana compartida', () => {
@@ -205,5 +206,36 @@ it('el adaptador envía JSON y no guarda los tokens de G7 en almacenamiento del 
   } finally {
     vi.unstubAllGlobals();
     guardarLocal.mockRestore();
+  }
+});
+
+it('ES-F03-09: la recuperación usa /api/v1/password/recuperar de G7 y respeta el límite', async () => {
+  const solicitud = vi
+    .fn()
+    .mockResolvedValueOnce(new Response(null, { status: 202 }))
+    .mockResolvedValueOnce(
+      new Response(JSON.stringify({ code: 'DEMASIADAS_SOLICITUDES', status: 429 }), {
+        status: 429,
+        headers: { 'Retry-After': '1200' },
+      }),
+    );
+  vi.stubGlobal('fetch', solicitud);
+  try {
+    const acceso = crearAccesoSeguridad('http://seguridad.example.test/');
+    await acceso.solicitarRecuperacion('  persona@example.test ');
+    expect(solicitud).toHaveBeenCalledWith(
+      'http://seguridad.example.test/api/v1/password/recuperar',
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({ correo: 'persona@example.test' }),
+        credentials: 'omit',
+      }),
+    );
+    const fallo = await acceso.solicitarRecuperacion('persona@example.test').catch((e) => e);
+    expect(fallo).toBeInstanceOf(ErrorSesion);
+    expect(fallo).toMatchObject({ codigo: 'DEMASIADAS_SOLICITUDES', estado: 429 });
+    expect(fallo.reintentarEn).toBeGreaterThan(Date.now());
+  } finally {
+    vi.unstubAllGlobals();
   }
 });

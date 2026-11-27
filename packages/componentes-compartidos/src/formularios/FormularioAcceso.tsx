@@ -29,6 +29,8 @@ export type FormularioAccesoProps = {
   alVerificar: (codigo: string) => Promise<void>;
   alReenviar: () => Promise<void>;
   alCancelar: () => void;
+  /** Enlace «¿Olvidaste tu contraseña?». Sin `habilitada`, se muestra deshabilitado. */
+  recuperacion?: { habilitada: boolean; alAbrir: () => void };
 };
 
 /** Vista controlada: el consumidor resuelve transporte, sesión y permisos. */
@@ -42,6 +44,7 @@ export function FormularioAcceso({
   alVerificar,
   alReenviar,
   alCancelar,
+  recuperacion,
 }: FormularioAccesoProps) {
   const [correo, setCorreo] = useState('');
   const [contrasena, setContrasena] = useState('');
@@ -222,6 +225,27 @@ export function FormularioAcceso({
               <Button type="submit" fullWidth loading={ocupado}>
                 Ingresar
               </Button>
+              {recuperacion && (
+                <Stack gap={2} align="center">
+                  <Button
+                    type="button"
+                    variant="subtle"
+                    size="compact-sm"
+                    disabled={ocupado || !recuperacion.habilitada}
+                    aria-describedby={
+                      recuperacion.habilitada ? undefined : 'recuperacion-no-disponible'
+                    }
+                    onClick={recuperacion.alAbrir}
+                  >
+                    ¿Olvidaste tu contraseña?
+                  </Button>
+                  {!recuperacion.habilitada && (
+                    <Text id="recuperacion-no-disponible" size="xs" c="dimmed" ta="center">
+                      La recuperación de contraseña estará disponible próximamente.
+                    </Text>
+                  )}
+                </Stack>
+              )}
               {local && (
                 <Text size="xs" c="dimmed">
                   Gestor: gestor@despacho.pe. Repartidores: gerardo@despacho.pe y kevin@despacho.pe.

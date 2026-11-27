@@ -40,3 +40,50 @@ it('un desafío nuevo usa la hora actual aunque la pantalla de ingreso lleve abi
     vi.useRealTimers();
   }
 });
+
+const accionesBase = {
+  titulo: 'Despacho',
+  subtitulo: 'Acceso',
+  desafio: null,
+  alIngresar: vi.fn(async () => {}),
+  alVerificar: vi.fn(async () => {}),
+  alReenviar: vi.fn(async () => {}),
+  alCancelar: vi.fn(),
+};
+
+it('sin recuperación configurada no muestra el enlace de contraseña olvidada', () => {
+  render(
+    <MantineProvider env="test">
+      <FormularioAcceso {...accionesBase} />
+    </MantineProvider>,
+  );
+  expect(screen.queryByRole('button', { name: '¿Olvidaste tu contraseña?' })).toBeNull();
+});
+
+it('con la recuperación pendiente el botón se ve deshabilitado y no ejecuta nada', () => {
+  const alAbrir = vi.fn();
+  render(
+    <MantineProvider env="test">
+      <FormularioAcceso {...accionesBase} recuperacion={{ habilitada: false, alAbrir }} />
+    </MantineProvider>,
+  );
+  const boton = screen.getByRole('button', { name: '¿Olvidaste tu contraseña?' });
+  expect(boton).toBeDisabled();
+  expect(boton).toHaveAccessibleDescription(
+    'La recuperación de contraseña estará disponible próximamente.',
+  );
+  boton.click();
+  expect(alAbrir).not.toHaveBeenCalled();
+});
+
+it('con la recuperación habilitada el botón abre la recuperación', () => {
+  const alAbrir = vi.fn();
+  render(
+    <MantineProvider env="test">
+      <FormularioAcceso {...accionesBase} recuperacion={{ habilitada: true, alAbrir }} />
+    </MantineProvider>,
+  );
+  screen.getByRole('button', { name: '¿Olvidaste tu contraseña?' }).click();
+  expect(alAbrir).toHaveBeenCalledOnce();
+  expect(screen.queryByText(/disponible próximamente/)).toBeNull();
+});
